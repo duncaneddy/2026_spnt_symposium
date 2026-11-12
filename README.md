@@ -46,6 +46,7 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 |---|---|
 | `basemap.py` | Natural Earth 1:110m land outline as longitude/latitude polylines, for the maps |
 | `skyplot.py` | Azimuth and elevation of every GPS satellite from the Stanford campus at the talk time, from an IGS ultra-rapid orbit, with tracks one hour either side |
+| `three_levels.py` | The same sky-plot question answered three ways (Keplerian orbits on a spinning sphere, TLEs with SGP4, the IGS orbit product), with the count above the mask and the position and sky-direction errors of the two simpler answers |
 | `gps_constellation.py` | Every GPS satellite's position in GCRF over one orbital period, from the IGS ultra-rapid orbit, for the title animation |
 | `quick_hits.py` | Three short examples: GPS ground tracks from public GP elements with SGP4, two-body against full force-model propagation, and one GPS orbit in GCRF and ITRF |
 | `tle_vs_sp3.py` | Difference between SGP4 from the public GP elements and the IGS orbit for one GPS satellite, in radial, along-track and cross-track components |
@@ -58,8 +59,9 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 
 ## Code on the slides
 
-Every code card in the deck is a complete program in `deck/snippets/`, shown on its slide exactly as the
-file reads below its PEP 723 header (the deck loads the files directly). Each runs on its own and prints
+Every code card in the deck is a complete program in `deck/snippets/`, shown on its slide as the file
+reads below its PEP 723 header (the deck loads the files directly), except for a few lines each card
+leaves out (alias constants and the closing `print`). Each runs on its own and prints
 its result:
 
 ```bash
