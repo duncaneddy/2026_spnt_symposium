@@ -1,0 +1,25 @@
+/* ---------- module slides (modules.js) ---------- */
+.mod-flip { display: inline-block; }
+.header.mod-title { left: 340px; }
+.mod-icon { position: absolute; left: 116px; top: 104px; width: 198px; height: 92px; }
+.mod-easy { position: absolute; margin: 0; font-family: var(--sans); font-size: 28px; color: var(--ink-50); }
+.mod-supports { position: absolute; left: 140px; width: 680px; margin: 0; font-family: var(--sans); }
+.mod-supports .lead { margin: 0 0 18px; font-size: 26px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-50); }
+.mod-supports h4 { margin: 0 0 4px; font-size: 28px; font-weight: 600; }
+.mod-supports ul { margin: 0 0 20px; padding: 0; list-style: none; }
+.mod-supports li { font-size: 26px; line-height: 1.3; margin: 0 0 2px; }
+.mod-supports code { font-family: "Source Code Pro", ui-monospace, Menlo, monospace; font-size: 24px; color: var(--lagunita); }
+
+/* ---------- benchmark detail (backup) ---------- */
+.bd-table { position: absolute; left: 0; top: 0; width: 1680px; font-family: var(--sans); font-size: 26px; }
+.bd-row { display: grid; padding: 6px 0; grid-template-columns: 620px repeat(var(--bd-cols), 1fr); align-items: baseline; border-bottom: 1px solid var(--ink-15); }
+.bd-row.head { font-size: 22px; color: var(--ink-50); }
+.bd-row .v { text-align: right; font-variant-numeric: tabular-nums; }
+.bd-row.head .v { text-align: right; }
+.bd-list { position: absolute; left: 0; top: 390px; width: 1680px; font-family: var(--sans); font-size: 24px; }
+.bd-sub { font-size: 24px; color: var(--ink-50); margin-bottom: 10px; }
+.bd-items { display: grid; grid-template-columns: 1fr 1fr; column-gap: 80px; }
+.bd-fast { display: grid; grid-template-columns: 1fr 110px 90px; align-items: baseline; padding: 3px 0; }
+.bd-fast code { font-family: "Source Code Pro", ui-monospace, Menlo, monospace; font-size: 22px; }
+.bd-fast .v, .bd-row .v.faster { text-align: right; font-variant-numeric: tabular-nums; }
+.bd-row .v.faster, .bd-fast .v.faster { font-weight: 600; }

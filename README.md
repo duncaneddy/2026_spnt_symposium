@@ -37,7 +37,9 @@ The `justfile` recipes are `data`, `benchmarks`, `run <name>` (one script), `ser
   `SPACETRACK_USER` and `SPACETRACK_PASS`. They are not needed while CelesTrak responds.
 - **`benchmarks.py`** reads the results of brahe's comparative benchmark suite from a brahe checkout
   (`~/repos/brahe/benchmarks/comparative/results/run_latest.json` by default; pass `--results` for
-  another path), so it is not part of `just data`.
+  another path), so it is not part of `just data`. The deck's `benchmarks.json` is built with
+  `--results` pointing at the comparative run in the Brahe-and-Astrojax-JAIS- paper repository
+  (`reproducibility/results/comparative/run_latest.json`), which has the same format and more libraries.
 - **IGS orbit products** come from the BKG mirror of the IGS archive, which needs no login.
 
 Downloads are cached under `deck/data/raw/`, so the deck does not need the network during the talk.

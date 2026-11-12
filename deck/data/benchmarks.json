@@ -1,261 +1,337 @@
 {
-  "generated_utc": "2026-11-12T07:34:51Z",
-  "brahe_version": "1.5.2",
-  "benchmark_run_utc": "2026-05-22T22:05:21.296133+00:00",
-  "statistic": "median of per-iteration wall-clock time, 200 iterations",
-  "source": "benchmarks/comparative/results/run_latest.json",
+  "generated_utc": "2026-11-12T09:05:51Z",
+  "brahe_version": "1.6.1",
+  "brahe_build": "development build of main (1.6.1-dev) with SPK ephemeris-query caching, pending release",
+  "benchmark_run_utc": "2026-06-16T02:31:06.664579+00:00",
+  "statistic": "median of per-iteration wall-clock time",
+  "iterations": 200,
+  "source": "Brahe-and-Astrojax-JAIS- repository: reproducibility/results/comparative/run_latest.json",
+  "hardware": "AMD EPYC 9554, 64 cores, Ubuntu Linux",
+  "library_versions": {
+    "basilisk": "2.10.2",
+    "nyx": "2.4.0",
+    "orekit": "13.1.5",
+    "ostk": "17.9.0"
+  },
+  "excluded": {
+    "freeflyer": {
+      "reason": "one subprocess per invocation; medians measure process startup",
+      "version": "7.10.1",
+      "min_median_s": 0.17666536360047758
+    }
+  },
+  "tasks_in_run": 32,
   "tasks": [
     {
       "name": "time.utc_to_gps",
       "label": "UTC to GPS time conversion",
+      "batch": "50 epochs",
       "results": [
         {
           "library": "brahe",
           "language": "rust",
-          "median_s": 1.67e-07,
+          "median_s": 2.21e-07,
           "ratio_to_brahe": 1.0
         },
         {
           "library": "nyx",
           "language": "nyx",
-          "median_s": 2.417e-06,
-          "ratio_to_brahe": 14.47305389221557
+          "median_s": 1.983e-06,
+          "ratio_to_brahe": 8.972850678733032
         },
         {
           "library": "brahe",
           "language": "python",
-          "median_s": 3.3329997677356005e-06,
-          "ratio_to_brahe": 19.958082441530543
+          "median_s": 4.326924681663513e-06,
+          "ratio_to_brahe": 19.578844713409563
         },
         {
           "library": "orekit",
           "language": "java",
-          "median_s": 9.520500000000001e-06,
-          "ratio_to_brahe": 57.00898203592815
+          "median_s": 1.78265e-05,
+          "ratio_to_brahe": 80.66289592760181
         },
         {
           "library": "gmat",
           "language": "gmat",
-          "median_s": 3.433300298638642e-05,
-          "ratio_to_brahe": 205.5868442298588
+          "median_s": 7.12275505065918e-05,
+          "ratio_to_brahe": 322.2966086271122
+        },
+        {
+          "library": "ostk",
+          "language": "ostk",
+          "median_s": 0.00017461925745010376,
+          "ratio_to_brahe": 790.1323866520532
         }
       ]
     },
     {
       "name": "coordinates.geodetic_to_ecef",
       "label": "Geodetic to ECEF position",
+      "batch": "50 positions",
       "results": [
         {
           "library": "brahe",
           "language": "rust",
-          "median_s": 7.92e-07,
+          "median_s": 1.513e-06,
           "ratio_to_brahe": 1.0
         },
         {
           "library": "nyx",
           "language": "nyx",
-          "median_s": 1.333e-06,
-          "ratio_to_brahe": 1.6830808080808082
+          "median_s": 2.984e-06,
+          "ratio_to_brahe": 1.972240581625909
         },
         {
           "library": "basilisk",
           "language": "basilisk",
-          "median_s": 3.21669940603897e-05,
-          "ratio_to_brahe": 40.61489149039103
+          "median_s": 4.096701741218567e-05,
+          "ratio_to_brahe": 27.076680378179557
         },
         {
           "library": "brahe",
           "language": "python",
-          "median_s": 4.862499190494418e-05,
-          "ratio_to_brahe": 61.39519179917195
+          "median_s": 6.921496242284775e-05,
+          "ratio_to_brahe": 45.74683570578173
         },
         {
           "library": "orekit",
           "language": "java",
-          "median_s": 4.9520499999999995e-05,
-          "ratio_to_brahe": 62.525883838383834
+          "median_s": 8.0071e-05,
+          "ratio_to_brahe": 52.92200925313946
         },
         {
           "library": "gmat",
           "language": "gmat",
-          "median_s": 0.00011566698958631605,
-          "ratio_to_brahe": 146.04417877060106
-        }
-      ]
-    },
-    {
-      "name": "coordinates.ecef_to_azel",
-      "label": "ECEF to azimuth/elevation",
-      "results": [
-        {
-          "library": "brahe",
-          "language": "rust",
-          "median_s": 1.0917e-05,
-          "ratio_to_brahe": 1.0
+          "median_s": 0.00020994688384234905,
+          "ratio_to_brahe": 138.7619853551547
         },
         {
-          "library": "nyx",
-          "language": "nyx",
-          "median_s": 5.61455e-05,
-          "ratio_to_brahe": 5.14294220023816
-        },
-        {
-          "library": "brahe",
-          "language": "python",
-          "median_s": 0.0001185830042231828,
-          "ratio_to_brahe": 10.862233601097627
-        },
-        {
-          "library": "orekit",
-          "language": "java",
-          "median_s": 0.0001606665,
-          "ratio_to_brahe": 14.7170926078593
+          "library": "ostk",
+          "language": "ostk",
+          "median_s": 0.00024239602498710155,
+          "ratio_to_brahe": 160.20887309127664
         }
       ]
     },
     {
       "name": "frames.state_eci_to_ecef",
       "label": "ECI to ECEF state transformation",
+      "batch": "50 states",
       "results": [
         {
           "library": "brahe",
           "language": "rust",
-          "median_s": 0.00017245850000000002,
+          "median_s": 0.000205656,
           "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "ostk",
+          "language": "ostk",
+          "median_s": 0.00023002736270427704,
+          "ratio_to_brahe": 1.1185054785869464
         },
         {
           "library": "brahe",
           "language": "python",
-          "median_s": 0.00021862499124836177,
-          "ratio_to_brahe": 1.2676962356066053
-        },
-        {
-          "library": "orekit",
-          "language": "java",
-          "median_s": 0.0002255415,
-          "ratio_to_brahe": 1.3078015870484783
+          "median_s": 0.0002685061190277338,
+          "ratio_to_brahe": 1.3056080008739537
         },
         {
           "library": "nyx",
           "language": "nyx",
-          "median_s": 0.0003163545,
-          "ratio_to_brahe": 1.834380445150572
+          "median_s": 0.000313744,
+          "ratio_to_brahe": 1.5255766911736104
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.000419489,
+          "ratio_to_brahe": 2.0397605710506865
         },
         {
           "library": "basilisk",
           "language": "basilisk",
-          "median_s": 0.0004877290048170835,
-          "ratio_to_brahe": 2.828094902930754
+          "median_s": 0.0006251449231058359,
+          "ratio_to_brahe": 3.0397601971536736
         },
         {
           "library": "gmat",
           "language": "gmat",
-          "median_s": 0.041699686997162644,
-          "ratio_to_brahe": 241.79548701376063
+          "median_s": 0.024113209219649434,
+          "ratio_to_brahe": 117.25021015506202
         }
       ]
     },
     {
       "name": "propagation.sgp4_trajectory",
       "label": "SGP4 trajectory propagation",
+      "batch": "1 day at 60 s",
       "results": [
         {
           "library": "brahe",
           "language": "rust",
-          "median_s": 0.0003921045,
+          "median_s": 0.000386789,
           "ratio_to_brahe": 1.0
         },
         {
           "library": "brahe",
           "language": "python",
-          "median_s": 0.0008650630043121055,
-          "ratio_to_brahe": 2.2062052445511475
+          "median_s": 0.0011124559678137302,
+          "ratio_to_brahe": 2.8761313476177714
         },
         {
           "library": "orekit",
           "language": "java",
-          "median_s": 0.0022605205,
-          "ratio_to_brahe": 5.765097059584881
+          "median_s": 0.004056857,
+          "ratio_to_brahe": 10.48855319049921
         },
         {
           "library": "gmat",
           "language": "gmat",
-          "median_s": 0.13525872950413032,
-          "ratio_to_brahe": 344.95582046145944
-        }
-      ]
-    },
-    {
-      "name": "propagation.numerical_rk4_grav20x20_sun_moon",
-      "label": "Numerical propagation, 20x20 gravity + Sun/Moon",
-      "results": [
-        {
-          "library": "orekit",
-          "language": "java",
-          "median_s": 0.0048257084999999995,
-          "ratio_to_brahe": 0.5725182131939369
+          "median_s": 0.13397568534128368,
+          "ratio_to_brahe": 346.3792541703194
         },
         {
-          "library": "brahe",
-          "language": "rust",
-          "median_s": 0.008428917000000001,
-          "ratio_to_brahe": 1.0
-        },
-        {
-          "library": "brahe",
-          "language": "python",
-          "median_s": 0.008937499995226972,
-          "ratio_to_brahe": 1.0603378815127698
-        },
-        {
-          "library": "nyx",
-          "language": "nyx",
-          "median_s": 0.01834425,
-          "ratio_to_brahe": 2.1763472104423376
-        },
-        {
-          "library": "gmat",
-          "language": "gmat",
-          "median_s": 0.07256129199231509,
-          "ratio_to_brahe": 8.608613893376228
-        },
-        {
-          "library": "basilisk",
-          "language": "basilisk",
-          "median_s": 0.09897662499861326,
-          "ratio_to_brahe": 11.742507963788615
+          "library": "ostk",
+          "language": "ostk",
+          "median_s": 0.15320944460108876,
+          "ratio_to_brahe": 396.1060025003006
         }
       ]
     },
     {
       "name": "access.sgp4_access",
-      "label": "Ground-station access windows (SGP4)",
+      "label": "Ground-station access windows",
+      "batch": "100 sites, 1 day",
       "results": [
         {
           "library": "brahe",
           "language": "rust",
-          "median_s": 0.14096895799999998,
+          "median_s": 0.157289772,
           "ratio_to_brahe": 1.0
         },
         {
           "library": "brahe",
           "language": "python",
-          "median_s": 0.1420523749984568,
-          "ratio_to_brahe": 1.0076855005089618
+          "median_s": 0.15780408401042223,
+          "ratio_to_brahe": 1.0032698375989904
         },
         {
           "library": "orekit",
           "language": "java",
-          "median_s": 0.6472489795,
-          "ratio_to_brahe": 4.591429125126967
+          "median_s": 0.650267061,
+          "ratio_to_brahe": 4.134198001126227
         },
         {
           "library": "gmat",
           "language": "gmat",
-          "median_s": 8.720265854506579,
-          "ratio_to_brahe": 61.85947586068261
+          "median_s": 8.069335147971287,
+          "ratio_to_brahe": 51.30235135677663
+        },
+        {
+          "library": "ostk",
+          "language": "ostk",
+          "median_s": 36.8562480090186,
+          "ratio_to_brahe": 234.3206906614284
         }
       ]
+    },
+    {
+      "name": "propagation.numerical_rk4_grav20x20_sun_moon",
+      "label": "Numerical propagation, 20x20 gravity, Sun and Moon",
+      "batch": "about one LEO orbit",
+      "results": [
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.0071297925,
+          "ratio_to_brahe": 0.9245534037198732
+        },
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 0.007711607,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.008183914935216308,
+          "ratio_to_brahe": 1.0612463699480936
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 0.018666085,
+          "ratio_to_brahe": 2.4205181877136632
+        },
+        {
+          "library": "basilisk",
+          "language": "basilisk",
+          "median_s": 0.03706228290684521,
+          "ratio_to_brahe": 4.8060388589363034
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 0.13085865415632725,
+          "ratio_to_brahe": 16.96905121803111
+        },
+        {
+          "library": "ostk",
+          "language": "ostk",
+          "median_s": 0.5522584510035813,
+          "ratio_to_brahe": 71.61392573604715
+        }
+      ]
+    }
+  ],
+  "faster_elsewhere": [
+    {
+      "task": "coordinates.ecef_to_geodetic",
+      "library": "nyx",
+      "ratio_to_brahe": 0.7717486604968338
+    },
+    {
+      "task": "force_model.accel_spherical_harmonics_20",
+      "library": "ostk",
+      "ratio_to_brahe": 0.6410095858662174
+    },
+    {
+      "task": "force_model.accel_spherical_harmonics_80",
+      "library": "ostk",
+      "ratio_to_brahe": 0.6767967529243608
+    },
+    {
+      "task": "force_model.accel_third_body_moon",
+      "library": "orekit",
+      "ratio_to_brahe": 0.5024486985740824
+    },
+    {
+      "task": "frames.state_ecef_to_eci",
+      "library": "nyx",
+      "ratio_to_brahe": 0.7672048053418605
+    },
+    {
+      "task": "propagation.numerical_rk4_grav20x20_sun_moon",
+      "library": "orekit",
+      "ratio_to_brahe": 0.9245534037198732
+    },
+    {
+      "task": "propagation.numerical_twobody",
+      "library": "nyx",
+      "ratio_to_brahe": 0.1616807115696379
+    },
+    {
+      "task": "time.epoch_creation",
+      "library": "nyx",
+      "ratio_to_brahe": 0.521965959864666
+    },
+    {
+      "task": "time.utc_to_ut1",
+      "library": "nyx",
+      "ratio_to_brahe": 0.02810725325282151
     }
   ]
 }
