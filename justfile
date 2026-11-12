@@ -11,3 +11,7 @@ run name:
 # Serve the deck at http://localhost:8280
 serve:
     uv run scripts/serve.py 8280
+
+# Run every code snippet shown on the slides
+snippets:
+    for f in deck/snippets/*.py; do echo "$f"; uv run "$f" || exit 1; done
