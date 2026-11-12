@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <link rel="stylesheet" href="css/deck.css">
+<link rel="stylesheet" href="css/modules.css">
 <script defer src="vendor/katex/katex.min.js"></script>
 <script defer src="vendor/katex/contrib/auto-render.min.js"></script>
 </head>
@@ -141,6 +142,142 @@
     <p>Each example in the documentation is compiled and run on every commit, so the docs match the code.</p>
   </div>
   <aside class="notes">Four choices that make the library usable as a dependency. SI units everywhere: no guessing whether a function wants kilometers. Planned remark: "SI everywhere. I promised myself I would not tell the Mars Climate Orbiter story at a navigation conference, so I will just say: meters." Click: composable pieces; the same propagator feeds access, events and estimation, which we will see when the receiver moves from the ground to orbit with one line changed. Click: compiled core; the expensive loops are in Rust. Click: every documentation example is compiled and run in continuous integration on each commit, so a copied example works.</aside>
+</section>
+
+<section class="slide" data-label="Modules zoom" data-clone="Modules">
+  <div class="fig" data-fig="moduleZoomKeys" style="left:0; top:0; width:0; height:0;"></div>
+  <aside class="notes">One slide per module, starting with time.</aside>
+</section>
+
+<section class="slide" data-label="Module Time">
+  <h2 class="header center" style="opacity:0;" data-dim-to="0" aria-hidden="true">The modules in brahe</h2>
+  <div class="fig cloned" data-fig="moduleMap" style="left:120px; top:330px; width:1680px; height:320px; opacity:0;" data-dim-to="0" aria-hidden="true"></div>
+  <div class="fig mod-icon" data-fig="modIcon" data-state="time" data-flip="mod-time-icon"></div>
+  <h2 class="header mod-title"><span class="mod-flip" data-flip="mod-time">Time</span></h2>
+  <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="500">
+    <p class="lead">Supports</p>
+    <h4>Time systems</h4>
+    <ul><li>UTC, TAI, GPS, TT, UT1</li><li>TDB, TCG, TCB</li><li>BeiDou (BDT) and Galileo (GST) time</li></ul>
+    <h4>Epoch</h4>
+    <ul><li>Nanosecond resolution, compensated sums</li><li>Calendar, JD, MJD, GPS week and seconds, ISO 8601</li><li><code>TimeRange</code> grids of epochs</li></ul>
+    <h4>Earth orientation and leap seconds</h4>
+    <ul><li>Leap seconds from SOFA, compiled in</li><li>IERS Bulletin A and EOP 14 C04 files</li><li>UT1−UTC, polar motion, dX and dY, LOD</li></ul>
+  </div>
+  <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="600">The same instant in four time scales</p>
+  <div class="fig" data-fig="code-modTime" style="left:846px; top:300px; width:954px; height:240px;" data-in="up" data-delay="700"></div>
+  <p class="cite">snippets/mod_time.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Time. An epoch is one instant, stored to the nanosecond. Asking for it in GPS time, TAI, TT or UT1 is one call; leap seconds and Earth orientation are handled for you.<br><br>If asked: GPS, Galileo and BeiDou time are fixed offsets from TAI. There is no GLONASS time scale and no satellite clock modeling.</aside>
+</section>
+
+<section class="slide" data-label="Module Frames">
+  <div class="fig mod-icon" data-fig="modIcon" data-state="frames" data-in="fade"></div>
+  <h2 class="header mod-title" data-in="up">Frames and coordinates</h2>
+  <div class="mod-supports" style="top:236px;" data-in="fade" data-delay="200">
+    <p class="lead">Supports</p>
+    <h4>Earth frames</h4>
+    <ul><li>GCRF, ITRF, EME2000, MOD, TOD, TEME</li></ul>
+    <h4>Other bodies and interplanetary frames</h4>
+    <ul><li>Moon: LCI, LFPA, LFME; Mars: MCI, MCMF</li><li>Barycentric EMBI, SSBI; synodic EMR, SER, GSE</li><li>IAU body-fixed frames by NAIF ID</li><li>Any to any: <code>state_frame_to_frame</code></li></ul>
+    <h4>Earth rotation models</h4>
+    <ul><li>IAU 2006/2000A, CIO based, from SOFA</li><li>IAU 2000B option; GAST and GMST 1982 chains</li></ul>
+    <h4>Coordinates</h4>
+    <ul><li>Keplerian, equinoctial, geodetic (WGS84), geocentric</li><li>ENZ, SEZ, azimuth and elevation, RA and Dec</li><li>RTN, LVLH and relative orbital elements</li></ul>
+  </div>
+  <p class="mod-easy" style="left:846px; top:236px;" data-in="fade" data-delay="300">100,000 states between frames in one call, and by frame name</p>
+  <div class="fig" data-fig="code-modFrames" style="left:846px; top:286px; width:954px; height:400px;" data-in="up" data-delay="400"></div>
+  <p class="cite">snippets/mod_frames.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Frames and coordinates. The Earth frames you would expect, plus the Moon, Mars and the barycenters. Transformations take whole arrays: 100,000 states change frame in one call, and the router takes any two frames by name.<br><br>If asked: the one GCRF to ITRF call on 100,000 states took 4.6 ms on a laptop, against about 11 s for a Python loop of single calls. ITRF here is the IERS rotation chain; there are no transforms between ITRF realizations.</aside>
+</section>
+
+<section class="slide" data-label="Module Orbits">
+  <div class="fig mod-icon" data-fig="modIcon" data-state="orbits" data-in="fade"></div>
+  <h2 class="header mod-title" data-in="up">Orbits</h2>
+  <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="200">
+    <p class="lead">Supports</p>
+    <h4>Elements</h4>
+    <ul><li>Keplerian and equinoctial elements, anomalies</li><li>Period, apsides, sun-synchronous inclination</li><li>Osculating to mean: Brouwer-Lyddane (first-order J2) or numerical averaging</li></ul>
+    <h4>Element sets</h4>
+    <ul><li>TLE and 3LE read and write, Alpha-5 catalog numbers</li><li>GP records (OMM) to SGP4 or numerical propagators</li></ul>
+    <h4>Constellations</h4>
+    <ul><li>Walker Delta and Walker Star generators</li><li>A Keplerian, SGP4 or numerical propagator per satellite</li></ul>
+  </div>
+  <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">A GPS-like Walker constellation from one builder call</p>
+  <div class="fig" data-fig="code-modOrbits" style="left:846px; top:300px; width:954px; height:360px;" data-in="up" data-delay="400"></div>
+  <p class="cite">snippets/mod_orbits.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Orbits. Element sets of every common kind, TLEs and GP records, and constellation generators. A GPS-like Walker 24/6/2 constellation is one builder call, and it hands back a propagator for every satellite.<br><br>If asked: the Walker output is an idealized two-body constellation, not a GPS almanac; the real GPS elements come from the data clients.</aside>
+</section>
+
+<section class="slide" data-label="Module Propagation">
+  <div class="fig mod-icon" data-fig="modIcon" data-state="propagation" data-in="fade"></div>
+  <h2 class="header mod-title" data-in="up">Propagation</h2>
+  <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="200">
+    <p class="lead">Supports</p>
+    <h4>Propagators</h4>
+    <ul><li>Keplerian, SGP4, numerical orbit, general ODE</li><li>Many propagators in parallel in one call</li><li>Events: eclipse, nodes, altitude, any function</li></ul>
+    <h4>Force models</h4>
+    <ul><li>Gravity: EGM2008 to 120, GGM05S to 180, JGM3, ICGEM</li><li>Drag: NRLMSISE-00, Harris-Priester, exponential</li><li>Cannonball SRP, cylindrical or conical eclipse</li><li>Sun, Moon, planets (DE440); relativity; tides</li></ul>
+    <h4>Integrators and variational equations</h4>
+    <ul><li>RK4, RKF45, DP54, RKF78, RKN1210</li><li>State transition matrix, sensitivity, covariance</li></ul>
+  </div>
+  <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">One day at GPS altitude with 80×80 gravity, Sun, Moon, relativity and the STM</p>
+  <div class="fig" data-fig="code-modPropagation" style="left:846px; top:300px; width:954px; height:380px;" data-in="up" data-delay="400"></div>
+  <p class="cite">snippets/mod_propagation.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Propagation. Analytic, SGP4 and numerical propagators share one interface. The force model is a configuration object: this preset is 80 by 80 gravity, Sun, Moon and relativity, propagated one day with the state transition matrix.<br><br>If asked: solar radiation pressure is a cannonball model; there is no GNSS box-wing or ECOM model and no albedo. Numerical propagation is marked experimental in the documentation.</aside>
+</section>
+
+<section class="slide" data-label="Module Access">
+  <div class="fig mod-icon" data-fig="modIcon" data-state="access" data-in="fade"></div>
+  <h2 class="header mod-title" data-in="up">Access</h2>
+  <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="200">
+    <p class="lead">Supports</p>
+    <h4>Locations and satellites</h4>
+    <ul><li>Point and polygon ground locations, GeoJSON</li><li>Any propagator or trajectory</li><li>Many locations and satellites in parallel</li></ul>
+    <h4>Constraints</h4>
+    <ul><li>Elevation, elevation mask, off-nadir, azimuth, range</li><li>Local time, look direction, ascending or descending</li><li>All, Any, Not, and custom Python constraints</li></ul>
+    <h4>Window properties</h4>
+    <ul><li>Open, close, duration, azimuth, elevation</li><li>Doppler, range and range rate, or your own</li></ul>
+  </div>
+  <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">Every KSAT ground station against one satellite for a day</p>
+  <div class="fig" data-fig="code-modAccess" style="left:846px; top:300px; width:954px; height:460px;" data-in="up" data-delay="400"></div>
+  <p class="cite">snippets/mod_access.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Access. Visibility windows between ground locations and any propagator, with constraints you combine. One call checks every KSAT ground station against a satellite for a day, in parallel.<br><br>If asked: one end must be a ground location; satellite-to-satellite access is not supported yet, which is why the MMS example computes its geometry directly. There is no link budget.</aside>
+</section>
+
+<section class="slide" data-label="Module Data">
+  <div class="fig mod-icon" data-fig="modIcon" data-state="data" data-in="fade"></div>
+  <h2 class="header mod-title" data-in="up">Data clients</h2>
+  <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="200">
+    <p class="lead">Supports</p>
+    <h4>GNSS orbit products</h4>
+    <ul><li>IGS products from CDDIS, Garner (SIO) and BKG</li><li>SP3 versions a to d, read and write</li></ul>
+    <h4>Orbit catalogs</h4>
+    <ul><li>CelesTrak GP and SATCAT</li><li>Space-Track GP, GP history, SATCAT, CDM</li><li>Starlink public ephemerides</li></ul>
+    <h4>Reference data</h4>
+    <ul><li>NAIF SPICE kernels, DE440 and others</li><li>Ground station networks: KSAT, AWS, NASA NEN and more</li><li>IERS EOP, CSSI space weather, ICGEM gravity</li></ul>
+    <h4>Message formats</h4>
+    <ul><li>CCSDS OEM, OMM, OPM, CDM, APM, AEM</li></ul>
+  </div>
+  <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">List and read an IGS rapid orbit from the BKG mirror</p>
+  <div class="fig" data-fig="code-modData" style="left:846px; top:300px; width:954px; height:300px;" data-in="up" data-delay="400"></div>
+  <p class="cite">snippets/mod_data.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Data clients. IGS orbit products, CelesTrak, Space-Track and reference data, cached locally. Finding and reading an IGS rapid orbit from the BKG mirror is three calls, with no login.<br><br>If asked: only SP3 is parsed. There is no RINEX, broadcast ephemeris, clock, ANTEX or IONEX support.</aside>
+</section>
+
+<section class="slide" data-label="Module Estimation">
+  <div class="fig mod-icon" data-fig="modIcon" data-state="estimation" data-in="fade"></div>
+  <h2 class="header mod-title" data-in="up">Estimation</h2>
+  <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="200">
+    <p class="lead">Supports</p>
+    <h4>Estimators</h4>
+    <ul><li>Extended Kalman filter, Joseph-form update</li><li>Unscented Kalman filter</li><li>Batch least squares with consider parameters</li></ul>
+    <h4>Measurement models</h4>
+    <ul><li>Inertial and ECEF position, velocity and state</li><li>Azimuth, elevation and range from a ground sensor</li><li>Custom models in Python</li></ul>
+    <h4>Dynamics and noise</h4>
+    <ul><li>Any force model, with the state transition matrix</li><li>Process noise from a user Q matrix, scaled with time</li></ul>
+  </div>
+  <div class="fig" data-fig="code-modEstimation" style="left:846px; top:222px; width:954px; height:700px;" data-in="up" data-delay="400"></div>
+  <p class="cite">snippets/mod_estimation.py · brahe 1.8.1 documentation, brahe.space</p>
+  <aside class="notes">Estimation. Extended and unscented Kalman filters and batch least squares, driven by the same propagators. Here an EKF takes thirty simulated GNSS position fixes with 5 meter noise.<br><br>If asked: there are no pseudorange, carrier-phase or receiver clock states yet; that is on the roadmap. The printed error is one simulated run with one random seed, not a performance figure. The module is marked experimental.</aside>
 </section>
 
 <section class="slide" data-label="Quick TLE">
@@ -305,10 +442,12 @@
 </section>
 
 <section class="slide" data-label="Benchmarks">
-  <h2 class="header" data-in="up">Median run time of common tasks, relative to brahe</h2>
-  <div class="fig" data-fig="benchmarkRatios" style="left:120px; top:250px; width:1680px; height:680px;"></div>
-  <p class="cite" data-bind-wrap>brahe <span data-bind="bench.version">--</span> comparative benchmark suite, run <span data-bind="bench.date">--</span> · <span data-bind="bench.statistic">--</span> · open-source libraries only: <span data-bind="bench.libs">--</span> · scripts/benchmarks.py</p>
-  <aside class="notes">brahe ships a comparative benchmark suite that runs the same task with the same inputs in each library. These are the results for brahe <span data-bind="bench.version">--</span>: for each task, every library's median time divided by brahe's Rust median. The blue line is brahe at 1. The blue bars are brahe called from Python, which is what most of you would use. Read it plainly. brahe from Rust is the fastest on six of the seven tasks. On numerical propagation with 20 by 20 gravity and Sun and Moon, Orekit is faster: its bar is to the left of the line, about 0.57 times brahe's time. That is a real result and a target. brahe from Python costs a few microseconds per call, which dominates the tiny tasks like a time conversion, and disappears on the large ones like access windows. Open-source libraries only, one machine, median of 200 iterations. Planned remark: "I put the one where brahe loses on the slide on purpose. It is easier than having someone else do it."</aside>
+  <h2 class="header" data-in="up">Median run time of common tasks in other libraries, relative to brahe</h2>
+  <div class="fig" data-fig="benchmarkRatios" style="left:120px; top:228px; width:1680px; height:530px;"></div>
+  <p class="caption" style="position:absolute; left:120px; right:120px; top:772px; margin:0; text-wrap:balance;" data-in="fade" data-delay="900">Each dot is one library's median time divided by brahe's (Rust) for the same task and inputs; dots left of the blue line are faster than brahe.</p>
+  <p class="caption" style="position:absolute; left:120px; right:120px; top:812px; margin:0; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1000" data-bind-wrap>brahe from Python takes <span data-bind="benchmark.pyHeavy">--</span> times its Rust time on the <span data-bind="benchmark.nHeavy">--</span> tasks above <span data-bind="benchmark.heavyUs">--</span> µs and <span data-bind="benchmark.pyLight">--</span> times on the <span data-bind="benchmark.nLight">--</span> microsecond-scale tasks. Another library is faster than brahe (Rust) on <span data-bind="benchmark.nFaster">--</span> of the <span data-bind="benchmark.nRun">--</span> tasks in the run, listed in the backup.</p>
+  <p class="cite" style="left:120px; right:120px;" data-bind-wrap>brahe comparative benchmark suite, run <span data-bind="benchmark.run">--</span> · <span data-bind="benchmark.brahe">--</span> · <span data-bind="benchmark.hardware">--</span> · median of <span data-bind="benchmark.iterations">--</span> iterations · <span data-bind="benchmark.libs">--</span> · <span data-bind="benchmark.excluded">--</span> not shown: one subprocess per call, at least <span data-bind="benchmark.excludedMin">--</span> s each · scripts/benchmarks.py</p>
+  <aside class="notes">The same task with the same inputs in each library, timed 200 times; each dot is that library's median divided by brahe's. Almost everything sits to the right: slower than brahe. Not everywhere. On numerical propagation with 20 by 20 gravity, Sun and Moon, Orekit is about 8 percent faster. Across the full suite Nyx wins five tasks, including UTC to UT1, Orekit two, OSTk two; the backup lists them. Python adds per-call overhead, large on tiny tasks, negligible on heavy ones.<br><br>If asked: this brahe was a development build with ephemeris caching that has not been released, on a 64-core server. Each timed call is a batch, for example 50 epochs, so divide by 50 for one conversion.</aside>
 </section>
 
 <!-- ======================= CLOSE ======================= -->
@@ -414,6 +553,13 @@
     <p>The existing test suite is what makes LLM-assisted extension and maintenance practical: new code, written by hand or with an LLM, has to pass the same tests and examples.</p>
   </div>
   <aside class="notes">brahe started in 2014 as research code and has been rebuilt around a Rust core with Python bindings. Two things keep it dependable. Every example in the documentation is real code that is compiled and run in continuous integration, so the docs cannot drift from the library, and the unit tests run on all three operating systems. And the test suite is what makes it practical to extend and maintain the library with LLM assistance: the tests define what correct means, so generated code is checked against the same bar as hand-written code.</aside>
+</section>
+
+<section class="slide" data-label="Benchmark detail">
+  <h2 class="header" data-in="up">Benchmark detail: median time relative to brahe (Rust)</h2>
+  <div class="fig" data-fig="benchmarkDetail" style="left:120px; top:240px; width:1680px; height:640px;" data-in="fade" data-delay="300"></div>
+  <p class="cite" style="left:120px; right:120px;" data-bind-wrap>brahe comparative benchmark suite, run <span data-bind="benchmark.run">--</span> · <span data-bind="benchmark.brahe">--</span> · <span data-bind="benchmark.hardware">--</span> · median of <span data-bind="benchmark.iterations">--</span> iterations · scripts/benchmarks.py</p>
+  <aside class="notes">Every ratio behind the benchmark slide, plus every task in the full run where another library beats brahe's Rust core. Values below 1 are faster than brahe.</aside>
 </section>
 
 <div id="chrome" style="visibility:hidden">

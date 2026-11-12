@@ -87,7 +87,7 @@ pocs/         gitignored scratch
 
 ### Act 4: Making the hard part fast (about 3 min)
 15. Spherical harmonic gravity cost and the parallel crossover. [S:gravity_crossover]
-16. Benchmarks against Orekit, GMAT, Nyx, Basilisk (brahe 1.5.2 results). [S:benchmarks]
+16. Benchmarks against Orekit, Nyx, Basilisk, OSTk and GMAT (June 2026 comparative run, brahe 1.6.1 development build). [S:benchmarks]
 
 ### Close (about 2 min)
 17. Adoption by industry (logos).
@@ -124,7 +124,7 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | `mms_visibility.json` | `{generated_utc, gp_source, gps_source, span_utc, gps_products, object:{name, norad, gp_epoch_utc, perigee_alt_km, apogee_re}, gps_radius_km, pattern:{main_half_angle_deg, side_lobe_max_deg, earth_mask_alt_km, model, source}, receiver_note, t_h, radius_re, n_main, n_side, orbit_xyz_km, apogee_t_h, gps_xyz_at_apogee_km, gps_lobe_at_apogee, frac_time_4plus_main, frac_time_4plus_with_side}` |
 | `walker_pnt.json` | `{generated_utc, config:{pattern, t, p, f, alt_km, inc_deg, source, force_model, integrator, mass_kg, drag_area_m2, cd, srp_area_m2, cr}, span_h, threads, wall_s_serial, wall_s_parallel, speedup, snapshot_xyz_km, planes, one_orbit_xyz_km, in_view:{lat_deg, walker_mean, gps_mean, el_mask_deg}, dop:{lat_deg, walker_pdop_median, gps_pdop_median, skipped:{walker, gps}, samples_per_lat}}` (a null median PDOP means no sample had 4 satellites in view) |
 | `gravity_crossover.json` | `{generated_utc, machine:{cpu, threads, load_avg_1min_start, load_avg_1min_end}, model, model_file_bytes, max_degree_available, kernel, integrator, steps, passes, repeats_per_pass, stages_per_step, method, degrees, serial_us, parallel_us, serial_us_q25, serial_us_q75, parallel_us_q25, parallel_us_q75, overhead_us_degree2, auto_threshold_nmax, measured_crossover_nmax, crossover_range_nmax}` |
-| `benchmarks.json` | `{generated_utc, brahe_version, benchmark_run_utc, statistic, source, tasks:[{name, label, results:[{library, language, median_s, ratio_to_brahe}]}]}` |
+| `benchmarks.json` | `{generated_utc, brahe_version, brahe_build, benchmark_run_utc, statistic, iterations, source, hardware, library_versions, excluded:{<library>:{reason, version, min_median_s}}, tasks_in_run, tasks:[{name, label, batch, results:[{library, language, median_s, ratio_to_brahe}]}], faster_elsewhere:[{task, library, ratio_to_brahe}]}` |
 
 ## Slide registry
 
@@ -140,6 +140,14 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | 6 | brahe | `check` x4 / facts from `BRAHE` in figs.js | magic move: property cards fly from their Tradeoff positions into a row; checks draw; facts and install line fade |
 | 7 | Modules | `moduleMap` | fresh; cards rise one by one (overview for the module dividers) |
 | 8 | Design choices | none | fresh; first panel on entry, clicks 1 to 3: one panel each |
+| 8 | Modules zoom | `moduleMap` (clone of Modules), `moduleZoomKeys` | continuation of Modules; `moduleZoomKeys` gives each cloned card title and icon a `data-flip` key (`mod-<key>`, `mod-<key>-icon`) |
+| M1 | Module Time | `modIcon`, `code-modTime` (snippets/mod_time.py) | magic move: the Time card title and icon fly into the header while a hidden copy of the map and its header fade out (`data-dim-to="0"`); supports list fades, code card rises |
+| M2 | Module Frames | `modIcon`, `code-modFrames` (snippets/mod_frames.py) | fresh; icon, header, supports list (four groups), code card |
+| M3 | Module Orbits | `modIcon`, `code-modOrbits` (snippets/mod_orbits.py) | fresh; same layout |
+| M4 | Module Propagation | `modIcon`, `code-modPropagation` (snippets/mod_propagation.py) | fresh; same layout |
+| M5 | Module Access | `modIcon`, `code-modAccess` (snippets/mod_access.py) | fresh; same layout |
+| M6 | Module Data | `modIcon`, `code-modData` (snippets/mod_data.py) | fresh; same layout |
+| M7 | Module Estimation | `modIcon`, `code-modEstimation` (snippets/mod_estimation.py) | fresh; same layout, no label above the code card (the card fills the column) |
 | 9 | Quick TLE | `code-tle`, `groundTracks` / quick_hits.json, land.json, skyplot.json | fresh; code card rises, tracks draw on |
 | 9 | Quick force model | `code-propagate`, `forceModelEffect` / quick_hits.json | fresh; curves draw on, labels fade |
 | 9 | Quick frames | `code-frames`, `eciVsEcef` / quick_hits.json | fresh; both frames draw on together |
@@ -158,7 +166,7 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | 19 | Walker in view | `inViewByLat` / walker_pnt.json | fresh; GPS by latitude; click 1: Walker shell with inclination line, GPS dims, comparison sentence; cite is `config.source` |
 | 20 | Section Speed | `moduleMap` | divider: propagation lit |
 | 21 | Gravity | `gravityCrossover` / gravity_crossover.json | fresh; log-log axes, serial line with interquartile band draws on, serial values at the low and highest degree; click 1: parallel line and band (Lagunita) draw on, parallel values; click 2: brahe's automatic threshold as an exact vertical line, measured crossover range as a shaded band, sentence on the automatic switch |
-| 22 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one panel per task in file order, bars from the brahe (Rust) 1x line to each library's median ratio on a shared log axis (brahe Python in Lagunita), key in the last row; panels fade in one by one |
+| 22 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one row per task on a shared log axis of time relative to brahe (Rust), brahe as the Lagunita 1x line, every other library an ink dot with its name (ratio added for dots on the faster side); rows fade in one by one; captions bind the Python overhead range and the count of tasks in the run where another library is faster |
 | 23 | Adopters | `adopters` | fresh; nine logos in a 3 x 3 grid, cells fade in |
 | 24 | Next | none | fresh; roadmap panel; click 1: the request for shareable orbital observations |
 | 25 | Links | `closeLinks` | fresh; two QR codes side by side at the same size, each with its label and URLs beneath: brahe (`img/brahe-qr.webp`, brahe.space and github.com/duncaneddy/brahe) and the talk repository (`img/repo-qr.webp`, github.com/duncaneddy/2026_spnt_symposium) |
@@ -170,12 +178,15 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | B5 | Sensitivity | `code-sensitivity` (snippets/sensitivity.py) | fresh, same header as B4 without entry motion; after brahe example sensitivity_analysis.py |
 | B6 | Property computer | `code-propertyComputer`, `code-propertyAccess` (one program, snippets/property_computer.py, split before `t0 = bh.Epoch(`) | fresh; after brahe example custom_property_computer.py, note that access takes ground locations |
 | B7 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
+| B8 | Benchmark detail | `benchmarkDetail` / benchmarks.json | fresh; table of every ratio on the Benchmarks slide, and every task in the run where another library is faster than brahe (Rust) |
 
 ## Deck implementation
 
 - Shell: `deck/js/deck.js` (stage scaling, keys, hash routing, chrome, continuations, entry choreography, FLIP).
 - Strokes: `deck/js/sketch.js` (seeded hand-drawn lines, boxes and ellipses; `[data-rough]` auto-decoration,
   seed from `data-rough-key` or text so clones redraw identically).
+- Module slides and the benchmark figures: `deck/js/modules.js` and `deck/css/modules.css`, registered into
+  `figures`, `binds` and `CODE` by a hook in figs.js after `CODE`.
 - Figures: `deck/js/figs.js` (`figures.<name> = {needs, render(el, data, state), animate(el, data, state, A)}`,
   `binds` for `[data-bind]` numbers, `DATA_FILES` lists the JSON files loaded at startup).
 - A figure with `needs: ['<file>']` shows "data pending: run scripts/<file>.py" when that JSON is missing.

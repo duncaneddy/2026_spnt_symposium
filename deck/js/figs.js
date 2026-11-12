@@ -1,6 +1,7 @@
 // Figures: every renderer draws from deck/data/*.json produced by scripts/*.py.
 // Hand-drawn strokes (sketch.js) for frames, axes and diagrams; exact paths for orbits and data.
 import { roughLine, roughRect, roughEllipse, roughArrow, roughPolyline, svgEl, strokePath, hashSeed, mulberry32 } from './sketch.js';
+import { moduleCode, moduleFigures, moduleBinds } from './modules.js';
 
 export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt', 'gravity_crossover', 'benchmarks'];
 
@@ -246,11 +247,9 @@ const MIN_SATS = 4;
 const gravLow = G => Math.max(0, G.degrees.findIndex(n => n >= 10));
 const signed = (v, d) => `${v < 0 ? '−' : '+'}${fmt(Math.abs(v), d)}`;
 // Benchmark library names as written on the slide.
-const LIB_NAMES = { brahe: 'brahe', orekit: 'Orekit', gmat: 'GMAT', nyx: 'Nyx', basilisk: 'Basilisk' };
+const LIB_NAMES = { brahe: 'brahe', orekit: 'Orekit', gmat: 'GMAT', nyx: 'Nyx', basilisk: 'Basilisk', ostk: 'OSTk', freeflyer: 'FreeFlyer' };
 const LANG_NAMES = { rust: 'Rust', python: 'Python' };
 const libName = r => (r.library === 'brahe' ? `brahe ${LANG_NAMES[r.language] ?? r.language}` : LIB_NAMES[r.library] ?? r.library);
-const isBraheRust = r => r.library === 'brahe' && r.language === 'rust';
-const ratioFmt = v => (v < 1 ? fmt(v, 2) : v < 10 ? fmt(v, 1) : fmtInt(v));
 
 export const binds = {
   'brahe.since': () => String(BRAHE.since),
@@ -483,6 +482,12 @@ const CODE = {
   propertyComputer: { file: 'property_computer', to: 't0 = bh.Epoch(' },
   propertyAccess: { file: 'property_computer', from: 't0 = bh.Epoch(' },
 };
+
+// Module slides and benchmarks (modules.js).
+Object.assign(CODE, moduleCode);
+Object.assign(figures, moduleFigures);
+Object.assign(binds, moduleBinds);
+export { svgFor, text, haloText, exactPath, fadeIn, fmt, fmtInt, scaleLog, decades, moduleIcon, libName, listAnd, C };
 
 const snippetBody = src => {
   const lines = src.replace(/\r\n/g, '\n').split('\n');
@@ -1229,57 +1234,6 @@ figures.gravityCrossover = {
     fadeIn(el.__axes, A, 0, 500);
     drawOnAnim([el.__serialPath], A, 200, 1300);
     return onStep(el, 1, () => drawOnAnim([el.__parPath], A, 100, 1300));
-  },
-};
-
-/* ---------- Act 4: benchmarks against other open-source libraries ---------- */
-// One panel per task: a bar per library from the brahe (Rust) 1x line to its median-time ratio on a
-// shared log axis (left of the line is faster than brahe, right is slower), brahe Python in
-// Lagunita, the other libraries in ink, in the order of the results file. The last row holds the key.
-figures.benchmarkRatios = {
-  needs: ['benchmarks'],
-  render(el, d) {
-    const B = d.benchmarks, svg = svgFor(el), W = el.offsetWidth;
-    const cols = 3, gapX = 56, gapY = 24, pw = (W - gapX * (cols - 1)) / cols;
-    const rows = B.tasks.map(t => t.results.filter(r => !isBraheRust(r)));
-    const pitch = 28, barH = 18, titleH = 38, axisH = 34, nameW = 132, valW = 66;
-    const ph = titleH + Math.max(...rows.map(r => r.length)) * pitch + axisH;
-    const ratios = B.tasks.flatMap(t => t.results.map(r => r.ratio_to_brahe));
-    const lo = 10 ** Math.floor(Math.log10(Math.min(...ratios))), hi = 10 ** Math.ceil(Math.log10(Math.max(...ratios)));
-    const X = scaleLog(lo, hi, nameW, pw - valW), x1 = X(1);
-    el.__panels = B.tasks.map((t, k) => {
-      const g = svgEl('g', { transform: `translate(${(k % cols) * (pw + gapX)} ${Math.floor(k / cols) * (ph + gapY)})` }, svg);
-      text(g, 0, 26, t.label, { size: 24, weight: 600 });
-      const yAxis = titleH + rows[k].length * pitch + 6;
-      strokePath(g, roughLine(nameW - 4, yAxis, pw - valW + 6, yAxis, { seed: 7200 + k, rough: 0.6, passes: 1 }), { color: 'rgba(46,45,41,.5)', width: 2 });
-      decades([lo, hi]).forEach(v => {
-        svgEl('line', { x1: X(v), x2: X(v), y1: yAxis, y2: yAxis + 7, stroke: 'rgba(46,45,41,.45)', 'stroke-width': 2 }, g);
-        text(g, X(v), yAxis + 30, v < 1 ? fmt(v, 1) : fmtInt(v), { size: 22, anchor: 'middle', color: 'rgba(46,45,41,.6)' });
-      });
-      rows[k].forEach((r, i) => {
-        const y = titleH + i * pitch, v = r.ratio_to_brahe, xv = X(v), py = r.library === 'brahe';
-        text(g, nameW - 12, y + barH - 1, libName(r), { size: 22, anchor: 'end', color: py ? C.lagunita : C.ink, weight: py ? 600 : 400 });
-        svgEl('rect', { x: Math.min(x1, xv), y: y + 2, width: Math.max(2, Math.abs(xv - x1)), height: barH, fill: py ? C.lagunita : C.ink, opacity: py ? 0.85 : 0.7 }, g);
-        text(g, v < 1 ? xv - 8 : xv + 8, y + barH - 1, `${ratioFmt(v)}×`, { size: 22, anchor: v < 1 ? 'end' : 'start', color: py ? C.lagunita : C.ink });
-      });
-      exactPath(g, [[x1, titleH - 6], [x1, yAxis]], { color: C.lagunita, width: 3 });
-      return g;
-    });
-    // Key in the cells after the last panel.
-    const k = B.tasks.length, kx = (k % cols) * (pw + gapX), ky = Math.floor(k / cols) * (ph + gapY);
-    el.__key = svgEl('g', { transform: `translate(${kx} ${ky})` }, svg);
-    exactPath(el.__key, [[8, 6], [8, 34]], { color: C.lagunita, width: 3 });
-    text(el.__key, 30, 28, 'brahe (Rust), the 1× line', { size: 24, color: C.lagunita, weight: 600 });
-    svgEl('rect', { x: 0, y: 50, width: 18, height: barH, fill: C.lagunita, opacity: 0.85 }, el.__key);
-    text(el.__key, 30, 50 + barH - 1, 'brahe (Python)', { size: 24, color: C.lagunita, weight: 600 });
-    svgEl('rect', { x: 0, y: 86, width: 18, height: barH, fill: C.ink, opacity: 0.7 }, el.__key);
-    text(el.__key, 30, 86 + barH - 1, 'other open-source libraries', { size: 24, color: C.ink });
-    el.insertAdjacentHTML('beforeend', `<p class="caption bench-key" style="position:absolute; left:${kx + 420}px; top:${ky - 6}px; width:${W - kx - 420}px; margin:0; text-wrap:balance;">Median time of each library divided by the median time of brahe (Rust) on the same task, log scale. Bars left of the line are faster than brahe, bars to the right are slower.</p>`);
-  },
-  animate(el, d, s, A) {
-    el.__panels.forEach((g, i) => fadeIn(g, A, 150 + i * 120, 600));
-    fadeIn(el.__key, A, 150 + el.__panels.length * 120, 600);
-    fadeIn(el.querySelector('.bench-key'), A, 150 + el.__panels.length * 120, 600);
   },
 };
 
