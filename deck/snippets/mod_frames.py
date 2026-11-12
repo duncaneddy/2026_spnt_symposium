@@ -8,10 +8,9 @@ import numpy as np
 
 bh.initialize_eop()
 epc = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.UTC)
-oe = np.zeros((100_000, 6))
-oe[:, 0], oe[:, 2] = bh.R_EARTH + 20_200e3, 55.0
-oe[:, 5] = np.linspace(0.0, 360.0, 100_000)
-x = bh.state_koe_to_eci(oe, bh.AngleFormat.DEGREES)
+oe = np.array([bh.R_EARTH + 20_200e3, 0.0, 55.0, 0.0, 0.0, 0.0])
+x0 = bh.state_koe_to_eci(oe, bh.AngleFormat.DEGREES)
+x = np.tile(x0, (100_000, 1))  # 100,000 states
 x_itrf = bh.state_gcrf_to_itrf(epc, x)
 F = bh.CelestialFrame
 x_teme = bh.state_frame_to_frame(F.GCRF, F.TEME, epc, x)

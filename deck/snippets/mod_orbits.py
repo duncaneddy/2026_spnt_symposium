@@ -12,5 +12,4 @@ gen = bh.WalkerConstellationGenerator.builder(
     24, 6, 2, a, 55.0, epc
 )
 sats = gen.build().as_keplerian_propagators(60.0)
-hours = bh.orbital_period(a) / 3600
-print(f"{len(sats)} satellites, period {hours:.2f} h")
+print(len(sats), "satellites")
