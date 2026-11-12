@@ -2,7 +2,7 @@
 // Hand-drawn strokes (sketch.js) for frames, axes and diagrams; exact paths for orbits and data.
 import { roughLine, roughRect, roughEllipse, roughArrow, roughPolyline, svgEl, strokePath, hashSeed, mulberry32 } from './sketch.js';
 
-export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation'];
+export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt'];
 
 const EASE_IN = 'cubic-bezier(.2,.7,.2,1)';
 const EASE_MOVE = 'cubic-bezier(.65,0,.25,1)';
@@ -162,6 +162,49 @@ function onStep(el, step, fn) {
   return () => sec.removeEventListener('deckstep', h);
 }
 
+// Run fn now, or on the click that reveals el when el or an ancestor carries data-step.
+function whenShown(el, fn) {
+  const host = el.closest('[data-step]');
+  if (!host) { fn(); return () => {}; }
+  return onStep(el, +host.dataset.step, fn);
+}
+
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Dim g to `op` while the slide is at `step` or later, in both directions of navigation.
+function dimFromStep(el, g, step, op = 0.4) {
+  el.closest('section').addEventListener('deckstep', e => {
+    const to = e.detail.step >= step ? op : 1, from = +(g.getAttribute('opacity') ?? 1);
+    g.setAttribute('opacity', to);
+    if (e.detail.animate && from !== to && !reducedMotion()) g.animate([{ opacity: from }, { opacity: to }], { duration: 600, easing: EASE_IN });
+  });
+}
+
+// SVG text with a board-colored halo so it stays legible over lines and fills.
+function haloText(parent, x, y, str, opts) {
+  const t = text(parent, x, y, str, opts);
+  t.setAttribute('stroke', C.board); t.setAttribute('stroke-width', 6); t.setAttribute('paint-order', 'stroke');
+  return t;
+}
+
+// Step line through (x, y) samples: hold each value until the next sample.
+const stepPts = (xs, ys, X, Y) => xs.flatMap((x, i) => (i ? [[X(x), Y(ys[i - 1])], [X(x), Y(ys[i])]] : [[X(x), Y(ys[i])]]));
+
+// Many points as one path of zero-length round-capped segments.
+const dotsPath = pts => pts.map(([x, y]) => `M${x.toFixed(1)} ${y.toFixed(1)}l0 0`).join('');
+
+// Vector helpers for 3D positions.
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const unit3 = a => { const n = Math.hypot(...a); return a.map(v => v / n); };
+
+// Pick label y positions near the targets, at least `gap` px apart.
+function spreadLabels(ys, gap = 30) {
+  const order = ys.map((y, i) => [y, i]).sort((a, b) => a[0] - b[0]), out = [];
+  order.forEach(([y, i], k) => { out[i] = k ? Math.max(y, out[order[k - 1][1]] + gap) : y; });
+  return out;
+}
+
 /* ======================= data bindings ======================= */
 
 // Project facts shown on the brahe introduction slide.
@@ -171,6 +214,17 @@ const PT_TIME = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angele
 const PT_DATE = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', month: 'long', day: 'numeric', year: 'numeric' });
 const last = a => a[a.length - 1];
 const prn = n => `G${String(n).padStart(2, '0')}`;
+const GP_SOURCE = { spacetrack: 'Space-Track', celestrak: 'CelesTrak' };
+const UTC_DAY = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric' });
+const UTC_STAMP = iso => { const t = new Date(iso.endsWith('Z') ? iso : `${iso}Z`); return `${UTC_DAY.format(t)}, ${iso.slice(11, 16)} UTC`; };
+const dateSpan = (a, b) => {
+  const [ta, tb] = [new Date(a), new Date(b)];
+  const sameMonth = ta.getUTCMonth() === tb.getUTCMonth();
+  return `${UTC_DAY.format(ta)} to ${sameMonth ? tb.getUTCDate() : UTC_DAY.format(tb)}, ${tb.getUTCFullYear()}`;
+};
+const listAnd = a => (a.length < 3 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${last(a)}`);
+// Minimum satellites for a position fix: the threshold behind the frac_time_4plus_* keys of mms_visibility.json.
+const MIN_SATS = 4;
 
 export const binds = {
   'brahe.since': () => String(BRAHE.since),
@@ -194,6 +248,54 @@ export const binds = {
   'qh.drDragEnd': d => fmt(last(d.quick_hits.propagate.dr_drag_km), 1),
   'qh.prn': d => prn(d.quick_hits.frames.prn),
   'qh.frameH': d => fmt(last(d.quick_hits.frames.t_h), 0),
+  'tle.prn': d => prn(d.tle_vs_sp3.prn),
+  'tle.norad': d => String(d.tle_vs_sp3.norad),
+  'tle.source': d => GP_SOURCE[d.tle_vs_sp3.gp_source] ?? d.tle_vs_sp3.gp_source,
+  'tle.epoch': d => UTC_STAMP(d.tle_vs_sp3.tle_epoch_utc),
+  'tle.product': d => d.tle_vs_sp3.product.replace(/\.SP3(\.gz)?$/i, ''),
+  'tle.span': d => fmt(d.tle_vs_sp3.span_h, 1),
+  'tle.rms': d => fmt(d.tle_vs_sp3.rms_km, 2),
+  'tle.max': d => fmt(d.tle_vs_sp3.max_km, 2),
+  'range.prn': d => prn(d.station_range.prn),
+  'range.dt': d => String(d.station_range.gps_minus_utc_s),
+  'range.pos': d => fmt(d.station_range.pos_err_km, 1),
+  'range.product': d => d.station_range.product.replace(/\.SP3(\.gz)?$/i, ''),
+  'leo.rx': d => d.leo_receiver.receiver.name.split(' ')[0],
+  'leo.alt': d => fmtInt(d.leo_receiver.receiver.alt_km),
+  'leo.nLinks': d => String(d.leo_receiver.links_at_epoch.visible.filter(Boolean).length),
+  'leo.mask': d => fmt(d.leo_receiver.el_mask_deg, 0),
+  'leo.meanLeo': d => fmt(d.leo_receiver.mean_leo, 1),
+  'leo.meanGround': d => fmt(d.leo_receiver.mean_ground, 1),
+  'leo.minutes': d => fmt(last(d.leo_receiver.t_min), 0),
+  'leo.stepS': d => fmt((d.leo_receiver.t_min[1] - d.leo_receiver.t_min[0]) * 60, 0),
+  'leo.source': d => GP_SOURCE[d.leo_receiver.gp_source] ?? d.leo_receiver.gp_source,
+  'leo.product': d => d.leo_receiver.product.replace(/\.SP3(\.gz)?$/i, ''),
+  'mms.name': d => d.mms_visibility.object.name,
+  'mms.source': d => GP_SOURCE[d.mms_visibility.gp_source] ?? d.mms_visibility.gp_source,
+  'mms.span': d => dateSpan(...d.mms_visibility.span_utc),
+  'mms.patternSource': d => d.mms_visibility.pattern.source,
+  'mms.minSats': () => String(MIN_SATS),
+  'mms.stepMin': d => fmt((d.mms_visibility.t_h[1] - d.mms_visibility.t_h[0]) * 60, 0),
+  'mms.fracMain': d => fmt(100 * d.mms_visibility.frac_time_4plus_main, 1),
+  'mms.fracSide': d => fmt(100 * d.mms_visibility.frac_time_4plus_with_side, 0),
+  'walker.t': d => String(d.walker_pnt.config.t),
+  'walker.p': d => String(d.walker_pnt.config.p),
+  'walker.alt': d => fmtInt(d.walker_pnt.config.alt_km),
+  'walker.inc': d => fmt(d.walker_pnt.config.inc_deg, 0),
+  'walker.minutes': d => fmt(d.walker_pnt.span_h * 60, 0),
+  'walker.force': d => d.walker_pnt.config.force_model.replace(/-/g, '\u2011'),
+  'walker.integrator': d => d.walker_pnt.config.integrator,
+  'walker.serial': d => fmt(d.walker_pnt.wall_s_serial, 2),
+  'walker.parallel': d => fmt(d.walker_pnt.wall_s_parallel, 2),
+  'walker.threads': d => String(d.walker_pnt.threads),
+  'walker.speedup': d => fmt(d.walker_pnt.speedup, 1),
+  'walker.source': d => d.walker_pnt.config.source,
+  'walker.moreLats': d => { const v = d.walker_pnt.in_view; return listAnd(v.lat_deg.filter((_, i) => v.walker_mean[i] > v.gps_mean[i]).map(l => `${fmt(l, 0)}°`)); },
+  'walker.eqW': d => fmt(d.walker_pnt.in_view.walker_mean[0], 1),
+  'walker.eqG': d => fmt(d.walker_pnt.in_view.gps_mean[0], 1),
+  'walker.topLat': d => fmt(last(d.walker_pnt.in_view.lat_deg), 0),
+  'walker.topW': d => fmt(last(d.walker_pnt.in_view.walker_mean), 1),
+  'walker.topG': d => fmt(last(d.walker_pnt.in_view.gps_mean), 1),
 };
 
 /* ======================= figures ======================= */
@@ -261,9 +363,17 @@ function pyHTML(line) {
 //   lines      source lines, one string per line ('' for a blank line)
 //   highlight  1-based line numbers drawn in Cardinal; [n, step] turns line n Cardinal on click `step`
 //   steps      {lineNumber: step}: the line stays hidden until that click
+//   marks      [[lineNumber, 'text', 'cardinal' | 'green']]: that text on the line drawn in the color
 //   size       font size in px (22 minimum)
 //   key        seed for the hand-drawn box, so clones redraw the same outline
-function codeCard(el, lines, { highlight = [], steps = {}, size = 22, key = '' } = {}) {
+function markedHTML(line, mark) {
+  const i = mark ? line.indexOf(mark[1]) : -1;
+  if (i < 0) return pyHTML(line);
+  const j = i + mark[1].length;
+  return `${pyHTML(line.slice(0, i))}<span class="tok tok-${mark[2]}">${pyHTML(line.slice(i, j))}</span>${pyHTML(line.slice(j))}`;
+}
+
+function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22, key = '' } = {}) {
   const box = document.createElement('div');
   box.className = 'code-card';
   box.dataset.rough = 'box';
@@ -274,7 +384,7 @@ function codeCard(el, lines, { highlight = [], steps = {}, size = 22, key = '' }
   lines.forEach((ln, i) => {
     const n = i + 1, row = document.createElement('div');
     row.className = 'ln';
-    row.innerHTML = pyHTML(ln) || '​';
+    row.innerHTML = markedHTML(ln, marks.find(m => m[0] === n)) || '​';
     if (hl.get(n) === 0) row.classList.add('hl');
     else if (hl.has(n)) {
       const over = document.createElement('span');
@@ -370,6 +480,72 @@ const CODE = {
       '    "ecef_xyz_km":',
       '        np.array(sat.states_itrf(epochs))[:, :3] / 1e3,',
       '}',
+    ],
+  },
+  tleSp3: {
+    needs: ['tle_vs_sp3'],
+    lines: [
+      'client = bh.IGSProductsClient(bh.IGSProductSource.BKG)',
+      'product = newest_product_covering(client, EPOCH)',
+      'sp3 = bh.SP3.from_file(str(fetch_sp3(product, client)))',
+      '',
+      'query = (',
+      '    bh.SpaceTrackQuery(bh.RequestClass.GP)',
+      '    .filter("OBJECT_NAME", "~~NAVSTAR")',
+      '    .filter("DECAY_DATE", "null-val")',
+      '    .order_by("NORAD_CAT_ID", bh.SortOrder.ASC)',
+      ')',
+      '',
+      'x_sp3 = np.array(sat.states_gcrf(epochs))',
+      'x_sgp4 = np.array(sgp.states_gcrf(epochs))',
+      'd_rtn_km = bh.state_eci_to_rtn(x_sp3, x_sgp4)[:, :3] / 1e3',
+    ],
+  },
+  rangeEpochs: {
+    needs: ['station_range'],
+    lines: [
+      'correct = bh.Epoch(2026, 11, 12, 19, 0, 0.0, 0.0, time_system=bh.GPS)',
+      'mistaken = bh.Epoch(2026, 11, 12, 19, 0, 0.0, 0.0, time_system=bh.UTC)',
+      '',
+      'def range_m(sat, t):',
+      '    return float(np.linalg.norm(sat.state_ecef(t)[:3] - site_ecef))',
+      '',
+      'range_km = np.array([range_m(sat, correct + dt) for dt in offsets]) / 1e3',
+      'range_wrong_km = np.array([range_m(sat, mistaken + dt) for dt in offsets]) / 1e3',
+    ],
+    opts: { marks: [[1, 'bh.GPS', 'green'], [2, 'bh.UTC', 'cardinal']] },
+  },
+  leoReceiver: {
+    needs: ['leo_receiver'],
+    lines: [
+      'gp, gp_source = fetch_gp()',
+      'iss = bh.GPRecord.from_json(',
+      '    json.dumps(gp)).to_sgp_propagator(STEP_S)',
+      '',
+      'n_ground, _ = visible_count(',
+      '    lambda t: site_ecef, gps_sats, epochs)',
+      'n_leo, visible_leo = visible_count(',
+      '    lambda t: iss.state_itrf(t)[:3], gps_sats, epochs)',
+    ],
+    opts: { marks: [[8, 'lambda t: iss.state_itrf(t)[:3]', 'cardinal']] },
+  },
+  walker: {
+    needs: ['walker_pnt'],
+    lines: [
+      'walker = (',
+      '    bh.WalkerConstellationGenerator.builder(',
+      '        T, P, F, bh.R_EARTH + ALT_KM * 1e3, INC_DEG, EPOCH)',
+      '    .pattern(bh.WalkerPattern.DELTA)',
+      '    .base_name("PULSAR")',
+      '    .build()',
+      ')',
+      'props = walker.as_numerical_propagators(',
+      '    prop_config, force_model(), params)',
+      '',
+      'for prop in serial:',
+      '    prop.propagate_to(t_end)',
+      '',
+      'bh.par_propagate_to(props, t_end)',
     ],
   },
 };
@@ -691,6 +867,331 @@ figures.gpsConstellation = {
     drawOnAnim(el.__paths, A, 200, 1600, 0);
     fadeIn(el.__dotLayer, A, 1500, 700);
     return loop(t => { el.__set((el.__t0 + t / GPS_LOOP_MS * el.__nI) % el.__nI); });
+  },
+};
+
+/* ---------- Act 3: public TLE against the IGS orbit ---------- */
+// SGP4 from the public GP element set minus the IGS ultra-rapid orbit, in the RTN frame of the IGS
+// orbit. Along-track is the highlighted series; labels sit at the line ends.
+figures.tleVsSp3 = {
+  needs: ['tle_vs_sp3'],
+  render(el, d) {
+    const T = d.tle_vs_sp3, D = T.diff_rtn_km, svg = svgFor(el);
+    const all = [...D.R, ...D.T, ...D.N];
+    const lo = Math.min(0, Math.floor(Math.min(...all) * 2) / 2), hi = Math.ceil(Math.max(...all));
+    const xr = [T.t_h[0], last(T.t_h)];
+    const ax = axes(svg, { left: 100, right: 170, top: 20, bottom: 80, xr, yr: [lo, hi], xlabel: 'hours from the talk time', ylabel: 'TLE minus IGS orbit (km)', xticks: niceTicks(...xr, 5), yticks: niceTicks(lo, hi, 5).filter(v => v >= lo), seed: 6101 });
+    svgEl('line', { x1: ax.box.x0, x2: ax.box.x1, y1: ax.y(0), y2: ax.y(0), stroke: 'rgba(46,45,41,.25)', 'stroke-width': 1.5, 'stroke-dasharray': '4 6' }, ax.g);
+    const series = [['radial', D.R, C.ink, 3], ['cross-track', D.N, C.gray, 3], ['along-track', D.T, C.cardinal, 4.5]];
+    el.__paths = series.map(([, v, color, width]) => exactPath(svg, v.map((y, i) => [ax.x(T.t_h[i]), ax.y(y)]), { color, width }));
+    const ly = spreadLabels(series.map(([, v]) => ax.y(last(v)) + 8), 30);
+    el.__labels = svgEl('g', {}, svg);
+    series.forEach(([name, , color], i) => text(el.__labels, ax.box.x1 + 14, ly[i], name, { size: 24, color, weight: color === C.cardinal ? 600 : 400 }));
+  },
+  animate(el, d, s, A) {
+    return whenShown(el, () => {
+      drawOnAnim(el.__paths, A, 150, 1400, 200);
+      fadeIn(el.__labels, A, 1300, 500);
+    });
+  },
+};
+
+/* ---------- Act 3: GPS time read as UTC ---------- */
+// Range error over the pass when the epoch is labeled UTC instead of GPS time, with its largest value.
+figures.rangeMistake = {
+  needs: ['station_range'],
+  render(el, d) {
+    const S = d.station_range, E = S.range_err_km, svg = svgFor(el);
+    const lo = Math.floor(Math.min(0, ...E) / 5) * 5, hi = Math.ceil(Math.max(0, ...E) / 5) * 5;
+    const xr = [S.t_h[0], last(S.t_h)];
+    const ax = axes(svg, { left: 100, right: 40, top: 40, bottom: 80, xr, yr: [lo, hi], xlabel: `hours, over the pass of ${prn(S.prn)} above Stanford`, ylabel: 'range error (km)', xticks: niceTicks(...xr, 6), yticks: niceTicks(lo, hi, 5), seed: 6201 });
+    svgEl('line', { x1: ax.box.x0, x2: ax.box.x1, y1: ax.y(0), y2: ax.y(0), stroke: 'rgba(46,45,41,.25)', 'stroke-width': 1.5, 'stroke-dasharray': '4 6' }, ax.g);
+    el.__path = exactPath(svg, E.map((y, i) => [ax.x(S.t_h[i]), ax.y(y)]), { color: C.cardinal, width: 4.5 });
+    const k = E.reduce((b, v, i) => (Math.abs(v) > Math.abs(E[b]) ? i : b), 0), px = ax.x(S.t_h[k]), py = ax.y(E[k]);
+    el.__max = svgEl('g', {}, svg);
+    svgEl('circle', { cx: px, cy: py, r: 8, fill: C.cardinal }, el.__max);
+    const right = px > (ax.box.x0 + ax.box.x1) / 2;
+    haloText(el.__max, px + (right ? -16 : 16), py + (E[k] > 0 ? -16 : 34), `largest: ${fmt(Math.abs(E[k]), 1)} km`, { size: 26, color: C.cardinal, weight: 600, anchor: right ? 'end' : 'start' });
+  },
+  animate(el, d, s, A) {
+    return whenShown(el, () => {
+      drawOnAnim([el.__path], A, 150, 1500);
+      fadeIn(el.__max, A, 1500, 500);
+    });
+  },
+};
+
+/* ---------- Act 3: receiver on the ISS ---------- */
+// Orthographic view at the talk time, to scale: the ISS orbit (GCRF), every GPS satellite, and a
+// line of sight from the ISS to each GPS satellite it sees. Behind-Earth runs are drawn at 20%.
+figures.leoLinks = {
+  needs: ['leo_receiver'],
+  render(el, d) {
+    const L = d.leo_receiver, K = L.links_at_epoch, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
+    const rmax = Math.max(...K.gps_xyz_km.map(p => Math.hypot(...p)));
+    const cx = W / 2, cy = H / 2, kmPerPx = rmax / (Math.min(W, H) / 2 - 16), re = R_EARTH / kmPerPx;
+    // Choose the view so the ISS orbit opens into an ellipse (about 55 degrees from edge-on) and
+    // the ISS sits on the near side of the Earth, off center.
+    const hN = unit3(cross3(L.orbit_xyz_km[0], L.orbit_xyz_km[1])), rxU = unit3(K.rx_xyz_km);
+    let best = [0, 0, Infinity];
+    for (let yw = 0; yw < 360; yw += 2) for (let tl = -60; tl <= 60; tl += 2) {
+      const y = yw * Math.PI / 180, t = tl * Math.PI / 180, dir = [Math.sin(y) * Math.cos(t), Math.cos(y) * Math.cos(t), -Math.sin(t)];
+      const cost = (Math.abs(dot3(dir, hN)) - 0.8) ** 2 + (dot3(dir, rxU) + 0.45) ** 2 + 0.02 * (tl / 60) ** 2;
+      if (cost < best[2]) best = [yw, tl, cost];
+    }
+    const proj = projector(cx, cy, kmPerPx, best[0], best[1]);
+    const back = svgEl('g', {}, svg);
+    el.__earth = svgEl('g', {}, svg);
+    earth(el.__earth, cx, cy, re, 6301);
+    const front = svgEl('g', {}, svg);
+    const runs = (pts, opts, behindOp) => frontBack(pts.map(proj), cx, cy, re).filter(r => r.pts.length > 1)
+      .map(r => exactPath(r.h ? back : front, r.pts, { ...opts, opacity: r.h ? behindOp : opts.opacity ?? 1 }));
+    el.__orbit = runs(L.orbit_xyz_km, { color: C.lagunita, width: 3 }, 0.2);
+    const rx = K.rx_xyz_km;
+    el.__links = K.gps_xyz_km.filter((_, j) => K.visible[j]).map(g =>
+      runs(Array.from({ length: 41 }, (_, i) => rx.map((v, c) => v + (g[c] - v) * i / 40)), { color: C.lagunita, width: 2, opacity: 0.7 }, 0.14));
+    el.__dots = svgEl('g', {}, svg);
+    K.gps_xyz_km.forEach((g, j) => {
+      const p = proj(g), vis = K.visible[j];
+      svgEl('circle', { cx: p[0], cy: p[1], r: vis ? 9 : 6, fill: vis ? C.lagunita : C.gray, opacity: hidden(p, cx, cy, re) ? 0.25 : 1 }, el.__dots);
+    });
+    const r = proj(rx);
+    el.__rx = svgEl('g', {}, svg);
+    svgEl('circle', { cx: r[0], cy: r[1], r: 9, fill: C.ink, stroke: C.board, 'stroke-width': 3 }, el.__rx);
+    haloText(el.__rx, r[0] + 16, r[1] + 30, L.receiver.name.split(' ')[0], { size: 26, weight: 600 });
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__earth, A, 0, 600);
+    drawOnAnim(el.__orbit, A, 200, 1000, 0);
+    fadeIn(el.__rx, A, 700, 400);
+    fadeIn(el.__dots, A, 700, 500);
+    el.__links.forEach((ls, i) => drawOnAnim(ls, A, 1000 + i * 70, 600, 0));
+  },
+};
+
+// GPS satellites in view against time for the ground station and the ISS, step lines with dashed
+// means. The ISS series appears on click 1 and the ground series dims.
+figures.leoCounts = {
+  needs: ['leo_receiver'],
+  render(el, d) {
+    const L = d.leo_receiver, svg = svgFor(el), t = L.t_min;
+    const hi = Math.max(...L.n_visible_leo, ...L.n_visible_ground) + 1;
+    const ax = axes(svg, { left: 100, right: 300, top: 30, bottom: 80, xr: [0, last(t)], yr: [0, hi], xlabel: 'minutes from the talk time', ylabel: 'GPS satellites in view', xticks: niceTicks(0, last(t), 5), yticks: niceTicks(0, hi, 4), seed: 6401 });
+    const series = [['Stanford', L.n_visible_ground, L.mean_ground, C.ink], [L.receiver.name.split(' ')[0], L.n_visible_leo, L.mean_leo, C.lagunita]];
+    const ly = spreadLabels(series.map(([, , m]) => ax.y(m) + 8), 34);
+    el.__groups = series.map(([name, n, mean, color], i) => {
+      const g = svgEl('g', i ? { 'data-step': 1 } : {}, svg);
+      const path = exactPath(g, stepPts(t, n, ax.x, ax.y), { color, width: i ? 3.5 : 3 });
+      svgEl('line', { x1: ax.box.x0, x2: ax.box.x1, y1: ax.y(mean), y2: ax.y(mean), stroke: color, 'stroke-width': 2, 'stroke-dasharray': '8 7', opacity: 0.8 }, g);
+      text(g, ax.box.x1 + 16, ly[i], `${name}, mean ${fmt(mean, 1)}`, { size: 26, color, weight: 600 });
+      g.__path = path;
+      return g;
+    });
+    dimFromStep(el, el.__groups[0], 1, 0.4);
+  },
+  animate(el, d, s, A) {
+    drawOnAnim([el.__groups[0].__path], A, 200, 1400);
+    return onStep(el, 1, () => drawOnAnim([el.__groups[1].__path], A, 100, 1400));
+  },
+};
+
+/* ---------- Act 3: MMS above the GPS constellation ---------- */
+// The MMS 1 orbit seen face-on in its own plane (GCRF), to scale, apogee to the left; the GPS orbit
+// radius as an exact circle; one GPS satellite opposite the apogee with its main-lobe and side-lobe
+// half angles drawn exactly from the pattern, and the shadow of the Earth plus mask altitude.
+// Click 1 starts a replay of MMS along the orbit; the slide's [data-readout] fields show the
+// distance and the main-lobe and main-plus-side-lobe counts for the current sample.
+const MMS_LOOP_MS = 16000;
+
+figures.mmsOrbit = {
+  needs: ['mms_visibility'],
+  render(el, d) {
+    const M = d.mms_visibility, P = M.pattern, O = M.orbit_xyz_km, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
+    const n = O.length, kApo = M.t_h.indexOf(M.apogee_t_h);
+    const h = unit3(O.slice(1).reduce((acc, p, i) => cross3(O[i], p).map((v, c) => acc[c] + v), [0, 0, 0]));
+    const e1 = unit3(O[kApo]), e2 = cross3(h, e1);
+    const uv = O.map(p => [dot3(p, e1), dot3(p, e2)]);
+    const gR = M.gps_radius_km, umax = Math.max(...uv.map(q => q[0])), umin = Math.min(-gR, ...uv.map(q => q[0]));
+    const vmax = Math.max(gR, ...uv.map(q => Math.abs(q[1]))), pad = 30;
+    const k = Math.max((umax - umin) / (W - 2 * pad), 2 * vmax / (H - 2 * pad));
+    const ox = pad + umax / k, oy = H / 2, to = ([u, v]) => [ox - u / k, oy - v / k];
+    const clipId = `clip-${Math.random().toString(36).slice(2)}`;
+    svgEl('rect', { x: 0, y: 0, width: W, height: H }, svgEl('clipPath', { id: clipId }, svgEl('defs', {}, svg)));
+
+    // One GPS satellite on the far side of the Earth from the apogee, boresight toward the Earth.
+    const G = to([-gR, 0]), L = 4 * W, ray = a => [G[0] - L * Math.cos(a), G[1] - L * Math.sin(a)];
+    const aMain = P.main_half_angle_deg * Math.PI / 180, aSide = P.side_lobe_max_deg * Math.PI / 180;
+    const rm = R_EARTH + P.earth_mask_alt_km, ab = Math.asin(rm / gR), tl = Math.sqrt(gR * gR - rm * rm) / k;
+    const tp = a => [G[0] - tl * Math.cos(a), G[1] - tl * Math.sin(a)];
+    const poly = (pts, attrs, parent) => svgEl('path', { d: `${linPath(pts)}Z`, ...attrs }, parent);
+    el.__cones = svgEl('g', { 'clip-path': `url(#${clipId})` }, svg);
+    poly([G, ray(aSide), ray(aMain)], { fill: C.sky, opacity: 0.1 }, el.__cones);
+    poly([G, ray(-aMain), ray(-aSide)], { fill: C.sky, opacity: 0.1 }, el.__cones);
+    poly([G, ray(aMain), ray(-aMain)], { fill: C.sky, opacity: 0.2 }, el.__cones);
+    poly([tp(ab), ray(ab), ray(-ab), tp(-ab)], { fill: C.board }, el.__cones);
+    [aSide, -aSide].forEach(a => exactPath(el.__cones, [G, ray(a)], { color: C.lagunita, width: 1.8, opacity: 0.45 }));
+    [aMain, -aMain].forEach(a => exactPath(el.__cones, [G, ray(a)], { color: C.lagunita, width: 2.2, opacity: 0.8 }));
+
+    el.__shell = exactPath(svg, circlePts(ox, oy, gR / k, gR / k, 0, 180), { color: C.ink, width: 2, opacity: 0.55 });
+    svgEl('circle', { cx: ox, cy: oy, r: R_EARTH / k, fill: C.board }, svg);
+    el.__earth = earth(svg, ox, oy, R_EARTH / k, 6501);
+    el.__orbit = exactPath(svg, uv.map(to), { color: C.lagunita, width: 3.5 });
+
+    el.__labels = svgEl('g', {}, svg);
+    svgEl('circle', { cx: G[0], cy: G[1], r: 7, fill: C.ink }, el.__labels);
+    haloText(el.__labels, G[0] + 4, G[1] + 40, 'one GPS satellite', { size: 22, anchor: 'middle', color: C.ink });
+    haloText(el.__labels, ox, oy - gR / k - 12, 'GPS orbit radius', { size: 22, anchor: 'middle', color: 'rgba(46,45,41,.7)' });
+    const lab = (a, dist, str, dy) => { const [x, y] = [G[0] - dist * Math.cos(a), G[1] - dist * Math.sin(a)]; haloText(el.__labels, x, y + dy, str, { size: 24, anchor: 'end', color: C.lagunita, weight: 600 }); };
+    lab(aMain, 0.62 * (G[0] - pad), `main lobe, ${fmt(P.main_half_angle_deg, 1)}°`, -14);
+    lab(aSide, 0.9 * (G[1] - pad) / Math.sin(aSide), `side lobes to ${fmt(P.side_lobe_max_deg, 0)}°`, 6);
+    haloText(el.__labels, G[0] - 0.62 * (G[0] - pad), oy - 12, 'blocked by the Earth', { size: 22, anchor: 'middle', color: 'rgba(46,45,41,.6)' });
+    const [apoX, apoY] = to(uv[kApo]);
+    haloText(el.__labels, apoX + 6, apoY + 44, M.object.name, { size: 26, color: C.lagunita, weight: 600 });
+
+    el.__mms = svgEl('circle', { r: 11, fill: C.lagunita, stroke: C.board, 'stroke-width': 3 }, svg);
+    const sec = el.closest('section'), out = {};
+    sec.querySelectorAll('[data-readout]').forEach(f => { out[f.dataset.readout] = f; });
+    let shown = -1;
+    el.__set = i => {
+      if (i === shown) return;
+      shown = i;
+      const [x, y] = to(uv[i]);
+      el.__mms.setAttribute('cx', x.toFixed(1));
+      el.__mms.setAttribute('cy', y.toFixed(1));
+      if (out.r) out.r.textContent = fmt(M.radius_re[i], 1);
+      if (out.main) out.main.textContent = String(M.n_main[i]);
+      if (out.side) out.side.textContent = String(M.n_side[i]);
+    };
+    el.__n = n;
+    el.__kApo = kApo;
+    el.__set(kApo);
+  },
+  animate(el, d, s, A) {
+    const sec = el.closest('section');
+    fadeIn(el.__cones, A, 0, 700);
+    fadeIn(el.__earth, A, 0, 600);
+    drawOnAnim([el.__shell], A, 200, 1100);
+    drawOnAnim([el.__orbit], A, 500, 1500);
+    fadeIn(el.__labels, A, 1400, 500);
+    let stop = null;
+    const start = () => { stop?.(); stop = loop(t => el.__set(Math.floor((t / MMS_LOOP_MS % 1) * el.__n))); };
+    if ((sec.__step || 0) >= 1) start(); else el.__set(0);
+    const off = onStep(el, 1, start);
+    return () => { off(); stop?.(); };
+  },
+};
+
+// GPS satellites usable by MMS against its distance from Earth's center, one dot per sample over the
+// orbit: main lobe first, main plus side lobes on click 1 (main lobe dims).
+figures.mmsCounts = {
+  needs: ['mms_visibility'],
+  render(el, d) {
+    const M = d.mms_visibility, svg = svgFor(el);
+    const xr = [0, Math.ceil(Math.max(...M.radius_re) / 5) * 5], hi = Math.ceil((Math.max(...M.n_side) + 1) / 5) * 5;
+    const ax = axes(svg, { left: 100, right: 40, top: 30, bottom: 80, xr, yr: [0, hi], xlabel: 'distance from Earth\'s center (Earth radii)', ylabel: 'usable GPS satellites', xticks: niceTicks(...xr, 6), yticks: niceTicks(0, hi, 6), seed: 6601 });
+    const gx = ax.x(M.gps_radius_km / R_EARTH);
+    const ref = svgEl('g', {}, svg);
+    svgEl('line', { x1: gx, x2: gx, y1: ax.box.y0, y2: ax.box.y1, stroke: 'rgba(46,45,41,.4)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, ref);
+    haloText(ref, gx + 10, ax.box.y1 + 20, 'GPS orbit radius', { size: 22, color: 'rgba(46,45,41,.7)' });
+    svgEl('line', { x1: ax.box.x0, x2: ax.box.x1, y1: ax.y(MIN_SATS), y2: ax.y(MIN_SATS), stroke: 'rgba(140,21,21,.5)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, ref);
+    haloText(ref, ax.box.x1, ax.y(MIN_SATS) - 10, `${MIN_SATS} satellites`, { size: 22, anchor: 'end', color: 'rgba(140,21,21,.8)' });
+    const pts = n => M.radius_re.map((r, i) => [ax.x(r), ax.y(n[i])]);
+    el.__side = svgEl('g', { 'data-step': 1 }, svg);
+    svgEl('path', { d: dotsPath(pts(M.n_side)), stroke: C.sky, 'stroke-width': 8, 'stroke-linecap': 'round', fill: 'none', opacity: 0.4 }, el.__side);
+    haloText(el.__side, ax.x(xr[1]) - 6, ax.y(Math.max(...M.n_side)) - 14, 'main or side lobes', { size: 24, anchor: 'end', color: C.sky, weight: 600 });
+    el.__main = svgEl('g', {}, svg);
+    svgEl('path', { d: dotsPath(pts(M.n_main)), stroke: C.lagunita, 'stroke-width': 8, 'stroke-linecap': 'round', fill: 'none', opacity: 0.7 }, el.__main);
+    haloText(el.__main, ax.x(xr[1]) - 6, ax.y(MIN_SATS) + 34, 'main lobe', { size: 24, anchor: 'end', color: C.lagunita, weight: 600 });
+    el.__ref = ref;
+    dimFromStep(el, el.__main, 1, 0.45);
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__ref, A, 200, 600);
+    fadeIn(el.__main, A, 400, 900);
+  },
+};
+
+/* ---------- Act 3: a Walker constellation ---------- */
+// Orthographic view of the Walker shell (GCRF). Each plane is the exact circle through its satellites
+// at the start epoch; the planes draw on one by one, then every satellite moves along its own plane
+// at the orbital rate of the shell, one period per WALKER_LOOP_MS of wall time.
+const WALKER_LOOP_MS = 20000;
+
+figures.walkerGlobe = {
+  needs: ['walker_pnt'],
+  render(el, d) {
+    const Wd = d.walker_pnt, S = Wd.snapshot_xyz_km, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
+    const r = Math.hypot(...S[0]), cx = W / 2, cy = H / 2, kmPerPx = r / (Math.min(W, H) / 2 - 12), re = R_EARTH / kmPerPx;
+    const proj = projector(cx, cy, kmPerPx, 25, 28);
+    const nP = Math.max(...Wd.planes) + 1;
+    const normals = Array.from({ length: nP }, (_, p) => { const [a, b] = S.filter((_, i) => Wd.planes[i] === p); return unit3(cross3(a, b)); });
+    const back = svgEl('g', {}, svg);
+    el.__earth = svgEl('g', {}, svg);
+    earth(el.__earth, cx, cy, re, 6701);
+    const front = svgEl('g', {}, svg);
+    el.__planes = normals.map((nv, p) => {
+      const e1 = unit3(S[Wd.planes.indexOf(p)]), e2 = cross3(nv, e1);
+      const pts = Array.from({ length: 181 }, (_, i) => { const a = i / 180 * 2 * Math.PI; return e1.map((v, c) => r * (v * Math.cos(a) + e2[c] * Math.sin(a))); });
+      return frontBack(pts.map(proj), cx, cy, re).filter(q => q.pts.length > 1)
+        .map(q => exactPath(q.h ? back : front, q.pts, { color: C.lagunita, width: 1.6, opacity: q.h ? 0.09 : 0.45 }));
+    });
+    const dots = svgEl('g', {}, svg);
+    el.__planeDots = Array.from({ length: nP }, () => svgEl('g', {}, dots));
+    el.__dots = S.map((_, i) => svgEl('circle', { r: 5, fill: C.lagunita }, el.__planeDots[Wd.planes[i]]));
+    const omega = 2 * Math.PI / (Wd.span_h * 3600);
+    el.__set = tSim => S.forEach((p, i) => {
+      const nv = normals[Wd.planes[i]], q = cross3(nv, p), c = Math.cos(omega * tSim), s = Math.sin(omega * tSim);
+      const pp = proj(p.map((v, k) => v * c + q[k] * s)), dot = el.__dots[i];
+      dot.setAttribute('cx', pp[0].toFixed(1));
+      dot.setAttribute('cy', pp[1].toFixed(1));
+      dot.setAttribute('opacity', hidden(pp, cx, cy, re) ? 0.15 : 1);
+    });
+    el.__period = Wd.span_h * 3600;
+    el.__set(0);
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__earth, A, 0, 600);
+    el.__planes.forEach((paths, p) => {
+      drawOnAnim(paths, A, 250 + p * 150, 700, 0);
+      fadeIn(el.__planeDots[p], A, 550 + p * 150, 400);
+    });
+    const begin = 600 + el.__planes.length * 150;
+    return loop(t => { if (t > begin) el.__set((t - begin) / WALKER_LOOP_MS * el.__period); });
+  },
+};
+
+// Mean satellites in view above the elevation mask against latitude: GPS first, the Walker shell on
+// click 1 (GPS dims), with the shell inclination marked.
+figures.inViewByLat = {
+  needs: ['walker_pnt'],
+  render(el, d) {
+    const V = d.walker_pnt.in_view, inc = d.walker_pnt.config.inc_deg, svg = svgFor(el);
+    const hi = Math.ceil(Math.max(...V.walker_mean, ...V.gps_mean) / 2) * 2 + 1;
+    const xr = [V.lat_deg[0], last(V.lat_deg)];
+    const ax = axes(svg, { left: 100, right: 40, top: 30, bottom: 80, xr, yr: [0, hi], xlabel: 'latitude (degrees)', ylabel: `mean satellites above ${fmt(V.el_mask_deg, 0)}° elevation`, xticks: V.lat_deg, yticks: niceTicks(0, hi, 5), xfmt: v => `${v}°`, seed: 6801 });
+    const series = (vals, color, width, g) => {
+      const pts = vals.map((v, i) => [ax.x(V.lat_deg[i]), ax.y(v)]);
+      const path = exactPath(g, pts, { color, width });
+      pts.forEach(([x, y]) => svgEl('circle', { cx: x, cy: y, r: 6, fill: color }, g));
+      return path;
+    };
+    el.__gps = svgEl('g', {}, svg);
+    el.__gpsPath = series(V.gps_mean, C.ink, 3, el.__gps);
+    haloText(el.__gps, ax.x(last(V.lat_deg)) - 4, ax.y(last(V.gps_mean)) - 18, 'GPS', { size: 26, anchor: 'end', weight: 600 });
+    el.__walker = svgEl('g', { 'data-step': 1 }, svg);
+    const ix = ax.x(inc);
+    svgEl('line', { x1: ix, x2: ix, y1: ax.box.y0, y2: ax.box.y1, stroke: 'rgba(0,108,184,.45)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, el.__walker);
+    haloText(el.__walker, ix + 10, ax.box.y1 + 20, `shell inclination, ${fmt(inc, 0)}°`, { size: 22, color: C.lagunita });
+    el.__walkerPath = series(V.walker_mean, C.lagunita, 4.5, el.__walker);
+    const pk = V.walker_mean.indexOf(Math.max(...V.walker_mean));
+    haloText(el.__walker, ax.x(V.lat_deg[pk]) - 14, ax.y(V.walker_mean[pk]) - 18, `Walker shell, ${d.walker_pnt.config.t} satellites`, { size: 26, anchor: 'end', color: C.lagunita, weight: 600 });
+    el.__axes = ax.g;
+    dimFromStep(el, el.__gps, 1, 0.45);
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__axes, A, 0, 500);
+    drawOnAnim([el.__gpsPath], A, 200, 1200);
+    return onStep(el, 1, () => drawOnAnim([el.__walkerPath], A, 100, 1300));
   },
 };
 

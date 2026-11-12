@@ -363,6 +363,8 @@ em { font-style: italic; }
 .code-card .st { color: rgba(46, 45, 41, 0.72); }
 .code-card .cm { color: var(--gray); font-style: italic; }
 .code-card .ln.hl, .code-card .ln.hl span { color: var(--cardinal); font-weight: 600; }
+.code-card .tok-cardinal, .code-card .tok-cardinal span { color: var(--cardinal); font-weight: 600; }
+.code-card .tok-green, .code-card .tok-green span { color: var(--paloverde); font-weight: 600; }
 .code-card .ln-hl { position: absolute; left: 0; top: 0; right: 0; display: block; background: var(--board); color: var(--cardinal); font-weight: 600; white-space: pre; }
 
 /* ---------- module map cards (figs.js moduleMap) ---------- */
