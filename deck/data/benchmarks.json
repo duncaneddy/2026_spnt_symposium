@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-12T09:05:51Z",
+  "generated_utc": "2026-11-12T14:50:46Z",
   "brahe_version": "1.6.1",
   "brahe_build": "development build of main (1.6.1-dev) with SPK ephemeris-query caching, pending release",
   "benchmark_run_utc": "2026-06-16T02:31:06.664579+00:00",
@@ -283,6 +283,49 @@
           "language": "ostk",
           "median_s": 0.5522584510035813,
           "ratio_to_brahe": 71.61392573604715
+        }
+      ]
+    },
+    {
+      "name": "propagation.numerical_rk4_grav80x80_full",
+      "label": "Numerical propagation, 80x80 gravity, Sun, Moon, drag and SRP",
+      "batch": "about one LEO orbit",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 0.0354134655,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.03632649569772184,
+          "ratio_to_brahe": 1.025782006500376
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.039116723000000006,
+          "ratio_to_brahe": 1.104572016539867
+        },
+        {
+          "library": "basilisk",
+          "language": "basilisk",
+          "median_s": 0.05890772910788655,
+          "ratio_to_brahe": 1.6634274075178144
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 0.0635719995,
+          "ratio_to_brahe": 1.79513635851312
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 0.2528013065457344,
+          "ratio_to_brahe": 7.138564469092539
         }
       ]
     }

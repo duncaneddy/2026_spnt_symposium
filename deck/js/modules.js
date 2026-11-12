@@ -21,6 +21,8 @@ export const moduleCode = {
 
 // Tasks whose brahe (Rust) median is at least this long count as heavy in the Python overhead line.
 const HEAVY_S = 1e-4;
+// Ratios to brahe (Rust) below this are close enough to the 1x line to be labeled with their value.
+const CLOSE = 1.2;
 const B = d => d.benchmarks;
 const rustOf = t => t.results.find(r => r.library === 'brahe' && r.language === 'rust');
 const pyRatio = t => t.results.find(r => r.library === 'brahe' && r.language === 'python')?.ratio_to_brahe;
@@ -52,12 +54,13 @@ export const moduleBinds = {
   'benchmark.nRun': d => String(B(d).tasks_in_run),
 };
 
-// One row per task on a shared log axis of time relative to brahe (Rust): brahe is the 1x
-// line in Poppy, every other library a dot in its own color (one color per library) with its name centered above or below its own dot (a label
-// that has to move sideways gets a leader line to its dot). Dots left of the line (faster than
-// brahe) carry their ratio as well. A task label wider than the label column wraps at its last
-// comma that fits, and its second line carries the batch size. brahe's Python bindings are not
-// plotted (the slide states their overhead in a caption line).
+// One row per task on a shared log axis of time relative to brahe (Rust): brahe is the 1x line in
+// Poppy, every other library a dot in its own color (one color per library) with its name centered
+// above or below its own dot (a label that has to move sideways gets a leader line to its dot).
+// Dots left of the line (faster than brahe) and dots within 20% of it carry their ratio as well. A
+// task label wider than the label column wraps at its last comma that fits, and its second line
+// carries the batch size. brahe's Python bindings are not plotted (the slide states their overhead
+// in a caption line).
 function benchmarkRender(el, d) {
   const T = B(d).tasks, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
   const labelW = 500, top = 70, axisH = 78, right = 70;
@@ -97,9 +100,9 @@ function benchmarkRender(el, d) {
     svgEl('tspan', { 'font-size': 22, 'font-weight': 400, fill: 'rgba(46,45,41,.55)' }, sub).textContent = cut === undefined ? batch : ` · ${batch}`;
     svgEl('line', { x1: labelW + 20, x2: W - right, y1: y, y2: y, stroke: 'rgba(46,45,41,.12)', 'stroke-width': 1.5 }, g);
     [...marks[k]].sort((a, b) => a.ratio_to_brahe - b.ratio_to_brahe).forEach(r => {
-      const v = r.ratio_to_brahe, x = X(v), faster = v < 1;
+      const v = r.ratio_to_brahe, x = X(v), faster = v < 1, close = v < CLOSE;
       svgEl('circle', { cx: x, cy: y, r: 9, fill: libColor[r.library] }, g);
-      const lbl = faster ? `${libName(r)} ${ratioFmt(v)}×` : libName(r);
+      const lbl = close ? `${libName(r)} ${ratioFmt(v)}×` : libName(r);
       const t0 = haloText(g, 0, 0, lbl, { size: 22, color: libColor[r.library], weight: 600 });
       const w = t0.getComputedTextLength();
       const cands = faster

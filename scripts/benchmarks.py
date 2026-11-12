@@ -75,6 +75,10 @@ TASKS = {
         "Numerical propagation, 20x20 gravity, Sun and Moon",
         "about one LEO orbit",
     ),
+    "propagation.numerical_rk4_grav80x80_full": (
+        "Numerical propagation, 80x80 gravity, Sun, Moon, drag and SRP",
+        "about one LEO orbit",
+    ),
 }
 
 
