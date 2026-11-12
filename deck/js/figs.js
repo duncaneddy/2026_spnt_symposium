@@ -934,7 +934,7 @@ figures.leoCounts = {
   render(el, d) {
     const L = d.leo_receiver, svg = svgFor(el), t = L.t_min;
     const hi = Math.max(...L.n_visible_leo, ...L.n_visible_ground) + 1;
-    const ax = axes(svg, { left: 100, right: 300, top: 30, bottom: 80, xr: [0, last(t)], yr: [0, hi], xlabel: 'minutes from the talk time', ylabel: 'GPS satellites in view', xticks: niceTicks(0, last(t), 5), yticks: niceTicks(0, hi, 4), seed: 6401 });
+    const ax = axes(svg, { left: 100, right: 300, top: 30, bottom: 80, xr: [0, last(t)], yr: [0, hi], xlabel: 'minutes from the talk time', ylabel: `GPS satellites above ${fmt(L.el_mask_deg, 0)}° elevation`, xticks: niceTicks(0, last(t), 5), yticks: niceTicks(0, hi, 4), seed: 6401 });
     const series = [['Stanford', L.n_visible_ground, L.mean_ground, C.ink], [L.receiver.name.split(' ')[0], L.n_visible_leo, L.mean_leo, C.lagunita]];
     const ly = spreadLabels(series.map(([, , m]) => ax.y(m) + 8), 34);
     el.__groups = series.map(([name, n, mean, color], i) => {
@@ -1182,12 +1182,12 @@ figures.gravityCrossover = {
     const B = ax.box;
     el.__mark = svgEl('g', { 'data-step': 2 }, svg);
     const R = G.crossover_range_nmax;
+    const tx = ax.x(G.auto_threshold_nmax);
     if (R) {
       const [xa, xb] = [ax.x(R[0]), ax.x(R[1])];
       svgEl('rect', { x: xa, y: B.y1, width: Math.max(2, xb - xa), height: B.y0 - B.y1, fill: C.ink, opacity: 0.09 }, el.__mark);
-      haloText(el.__mark, xa - 10, B.y0 - 16, `measured crossover: degree ${R[0]} to ${R[1]}`, { size: 24, anchor: 'end', color: C.ink });
+      haloText(el.__mark, Math.min(xa, tx) - 12, B.y0 - 16, `measured crossover: degree ${R[0]} to ${R[1]}`, { size: 24, anchor: 'end', color: C.ink });
     }
-    const tx = ax.x(G.auto_threshold_nmax);
     exactPath(el.__mark, [[tx, B.y0], [tx, B.y1 - 20]], { color: C.ink, width: 3 });
     haloText(el.__mark, tx - 10, B.y1 - 2, `brahe switches to parallel at degree ${G.auto_threshold_nmax}`, { size: 24, anchor: 'end', color: C.ink, weight: 600 });
 
