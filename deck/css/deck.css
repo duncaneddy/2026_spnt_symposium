@@ -77,13 +77,6 @@ html, body {
 
 #footer .logo { height: 44px; display: flex; align-items: center; gap: 16px; }
 #footer .logo img { height: 44px; }
-#footer .logo .logo-placeholder {
-  font-family: var(--serif);
-  font-weight: 600;
-  color: var(--cardinal);
-  font-size: 26px;
-  letter-spacing: 0.02em;
-}
 #footer .right { display: flex; gap: 28px; align-items: center; }
 #footer .num { min-width: 48px; text-align: right; }
 
