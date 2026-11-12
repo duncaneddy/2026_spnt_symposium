@@ -121,7 +121,7 @@ def fetch_gp_records(sp3: bh.SP3) -> tuple[list[dict], dict]:
         )
         records, residual_km = operational(json.loads(client.query_raw(query)), sp3)
         GP_CACHE.write_text(json.dumps(records, indent=1))
-        provenance = {"source": "space-track", "match_max_residual_km": round(residual_km, 3)}
+        provenance = {"source": "spacetrack", "match_max_residual_km": round(residual_km, 3)}
     GP_SOURCE_CACHE.write_text(json.dumps(provenance))
     return json.loads(GP_CACHE.read_text()), provenance
 

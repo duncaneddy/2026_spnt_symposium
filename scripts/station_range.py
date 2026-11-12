@@ -19,7 +19,7 @@ visible pass containing that epoch at 30 s spacing in two ways:
     paths differ by a single token, the time system argument.
 
 The pass starts and ends at 0 deg elevation of the correctly timed satellite.
-t_h is hours since the calendar label 19:00:00. pos_err_km is the satellite
+t_h is hours since 19:00:00 GPS time. pos_err_km is the satellite
 displacement between the two cases at t_h = 0 and max_range_err_km is the
 largest |wrong - correct| range over the pass.
 

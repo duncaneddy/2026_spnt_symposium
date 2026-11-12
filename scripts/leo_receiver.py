@@ -24,7 +24,8 @@ Data sources:
   - GPS satellite positions: IGS combined ultra-rapid orbit (IGS0OPSULT, 15 min
     samples, 48 h span) from the BKG mirror of the IGS archive, which needs no
     login. The newest issue whose span covers both ends of the analysis window
-    is used.
+    is used. The window lies in the predicted half of the IGS ultra-rapid
+    product.
   - ISS orbit: NORAD 25544 general-perturbations (GP) elements from CelesTrak,
     falling back to Space-Track when CelesTrak does not answer within
     CELESTRAK_TIMEOUT_S. The source used is recorded as gp_source. Elements are

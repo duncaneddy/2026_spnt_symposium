@@ -32,8 +32,9 @@ Data sources:
   - MMS 1 (NORAD 40482) GP elements, from CelesTrak, or from Space-Track
     when CelesTrak does not answer (needs SPACETRACK_USER and SPACETRACK_PASS
     in the environment). Propagated with brahe's SGP4 (its deep-space branch
-    applies at this period). SGP4 is a mean-element model with kilometer-level
-    errors for this orbit, which is ample for a visibility geometry study.
+    applies at this period). SGP4 is a mean-element model with errors of tens of
+    kilometers for this orbit, immaterial for visibility geometry at these
+    distances.
     Apogee and perigee are taken from the elements.
   - GPS positions from consecutive IGS rapid daily orbit products
     (IGS0OPSRAP, 15 min samples) from the BKG mirror of the IGS archive,

@@ -2,7 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = ["brahe @ git+https://github.com/duncaneddy/brahe@3e2ed7c1739b3f372c35c708702246bbee831183", "numpy"]
 # ///
-"""Broadcast-class TLE accuracy: SGP4 from a catalog GP versus an IGS orbit for one GPS satellite.
+"""TLE (GP) accuracy: SGP4 from a catalog GP versus an IGS orbit for one GPS satellite.
 
 Takes the GPS satellite with the highest elevation at the talk epoch (from
 Stanford, computed from the SP3 orbit exactly as in skyplot.py), propagates its

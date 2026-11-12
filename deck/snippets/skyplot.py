@@ -20,7 +20,7 @@ visible = []
 for sat in sp3.satellites():
     r = sat.state_ecef(epoch)[:3]
     enz = bh.relative_position_ecef_to_enz(site, r, GEODETIC)
-    az, el, _ = bh.position_enz_to_azel(enz, DEG)
+    _, el, _ = bh.position_enz_to_azel(enz, DEG)
     if sat.get_name().startswith("G") and el >= 10.0:
         visible.append(sat.get_name())
 print(len(visible), "GPS satellites above 10 deg:", *visible)

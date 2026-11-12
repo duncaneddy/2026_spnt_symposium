@@ -11,7 +11,8 @@ orbital period, so a looped replay closes nearly seamlessly. The window starts
 at the talk epoch when the product's coverage extends a full span beyond it;
 otherwise it starts earlier, on a 300 s boundary, so that it ends at the end
 of coverage and still contains the talk epoch. Positions are never
-extrapolated beyond the product.
+extrapolated beyond the product. The window lies in the predicted half of
+the IGS ultra-rapid product.
 
 Frames and time:
   - SP3 epochs are GPS time and positions are Earth-fixed (IGS realization of
