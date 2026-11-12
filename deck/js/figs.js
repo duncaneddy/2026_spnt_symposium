@@ -1413,12 +1413,13 @@ figures.check = {
 };
 
 /* ---------- adopters ---------- */
-// One logo per organization from img/logos/, in a centered 3 x 3 grid.
+// One logo per organization from img/logos/, in a centered 5 x 2 grid.
 figures.adopters = {
   render(el) {
-    const logos = [['Northwood', 'northwood.svg'], ['Capella', 'capella.svg'], ['D-Orbit USA', 'd-orbit-usa.svg'], ['KSAT', 'ksat.svg'], ['HEO', 'heo.png'], ['Trusted Space', 'trusted-space.png'], ['K2 Space', 'k2-space.svg'], ['Vyoma', 'vyoma.svg'], ['Orbital Sidekick', 'orbital-sidekick.svg']];
-    const cols = 3, pitch = 500, cw = 440, x0 = (el.offsetWidth - ((cols - 1) * pitch + cw)) / 2;
-    el.innerHTML = logos.map(([n, file], i) => `<div class="logo-cell" data-rough="box" data-color="dim" data-rough-key="ad${i}" style="position:absolute; left:${x0 + (i % cols) * pitch}px; top:${Math.floor(i / cols) * 190}px; width:${cw}px; height:150px; display:flex; align-items:center; justify-content:center; padding:24px 16px;"><img src="img/logos/${file}" alt="${n}" style="width:100%; height:100%; object-fit:contain;"></div>`).join('');
+    const logos = [['Northwood', 'northwood.svg'], ['Capella', 'capella.svg'], ['D-Orbit USA', 'd-orbit-usa.svg'], ['KSAT', 'ksat.svg'], ['HEO', 'heo.png'], ['Trusted Space', 'trusted-space.png'], ['K2 Space', 'k2-space.svg'], ['Vyoma', 'vyoma.svg'], ['Orbital Sidekick', 'orbital-sidekick.svg'], ['Xona Space Systems', 'xona.svg']];
+    const cols = 5, pitch = 320, cw = 290, ch = 170, rowPitch = 220, rows = Math.ceil(logos.length / cols);
+    const x0 = (el.offsetWidth - ((cols - 1) * pitch + cw)) / 2, y0 = (el.offsetHeight - ((rows - 1) * rowPitch + ch)) / 2;
+    el.innerHTML = logos.map(([n, file], i) => `<div class="logo-cell" data-rough="box" data-color="dim" data-rough-key="ad${i}" style="position:absolute; left:${x0 + (i % cols) * pitch}px; top:${y0 + Math.floor(i / cols) * rowPitch}px; width:${cw}px; height:${ch}px; display:flex; align-items:center; justify-content:center; padding:28px 22px;"><img src="img/logos/${file}" alt="${n}" style="width:100%; height:100%; object-fit:contain;"></div>`).join('');
   },
   animate(el, d, s, A) { [...el.children].forEach((c, i) => A.push(c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 200 + i * 90, easing: EASE_IN, ...FILL }))); },
 };
@@ -1426,8 +1427,8 @@ figures.adopters = {
 /* ---------- links: brahe and the talk's scripts ---------- */
 figures.closeLinks = {
   render(el) {
-    const block = (img, alt, label, urls) => `<div style="display:flex; flex-direction:column; align-items:center; width:720px; text-align:center;"><img src="${img}" alt="${alt}" style="width:300px; height:300px;"><div class="sans" style="margin-top:22px; font-size:30px; color:var(--ink-50); line-height:1.4">${label}${urls.map(u => `<br><b style="color:var(--lagunita); font-size:38px;">${u}</b>`).join('')}</div></div>`;
-    el.innerHTML = `<div style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; gap:80px;">${
+    const block = (img, alt, label, urls) => `<div style="display:flex; flex-direction:column; align-items:center; width:760px; text-align:center;"><img src="${img}" alt="${alt}" style="width:440px; height:440px;"><div class="sans" style="margin-top:22px; font-size:30px; color:var(--ink-50); line-height:1.4">${label}${urls.map(u => `<br><b style="color:var(--lagunita); font-size:38px;">${u}</b>`).join('')}</div></div>`;
+    el.innerHTML = `<div style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; gap:60px;">${
       block('img/brahe-qr.webp', 'QR code for brahe.space', 'brahe documentation and source', ['brahe.space', 'github.com/duncaneddy/brahe'])}${
       block('img/repo-qr.webp', 'QR code for the talk repository', 'Scripts and slides for this talk', ['github.com/duncaneddy/2026_spnt_symposium'])}</div>`;
   },

@@ -188,7 +188,7 @@ em { font-style: italic; }
 }
 .panel h3 { margin: 0 0 18px; font-size: 40px; font-weight: 600; }
 .panel p, .panel li { font-size: 30px; line-height: 1.35; margin: 0 0 10px; }
-.panel ul { margin: 0; padding-left: 28px; }
+.panel ul, .panel ol { margin: 0; padding-left: 28px; }
 .panel.muted { color: var(--ink-50); }
 
 .card {
