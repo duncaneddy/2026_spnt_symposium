@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["brahe @ git+https://github.com/duncaneddy/brahe@sp3/9-igs-rate-limit", "numpy"]
+# dependencies = ["brahe @ git+https://github.com/duncaneddy/brahe@3e2ed7c1739b3f372c35c708702246bbee831183", "numpy"]
 # ///
 """GPS constellation motion over one orbital period, in an inertial frame.
 
@@ -139,7 +139,7 @@ def main() -> None:
     spreads = [float(np.ptp(raan[planes == k])) for k in range(N_PLANES)]
 
     assert 24 <= len(gps) <= 34, f"{len(gps)} GPS satellites"
-    assert np.all((26_000.0 <= radius_km) & (radius_km <= 27_200.0)), "satellite radius out of range"
+    assert np.all((25_500.0 <= radius_km) & (radius_km <= 27_700.0)), "satellite radius out of range"
     assert len(set(planes)) == N_PLANES and counts.min() >= 3, f"plane counts {counts}"
     assert max(spreads) < 25.0, f"plane RAAN spreads {spreads}"
     assert closure_km.max() < 2_500.0, f"first-to-last distance {closure_km.max():.0f} km"

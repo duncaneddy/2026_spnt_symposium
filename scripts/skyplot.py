@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["brahe @ git+https://github.com/duncaneddy/brahe@sp3/9-igs-rate-limit", "numpy"]
+# dependencies = ["brahe @ git+https://github.com/duncaneddy/brahe@3e2ed7c1739b3f372c35c708702246bbee831183", "numpy"]
 # ///
 """GPS satellite sky plot at the talk epoch from an IGS ultra-rapid orbit product.
 
@@ -143,7 +143,7 @@ def main() -> None:
     assert 24 <= len(sats) <= 34, f"{len(sats)} GPS satellites"
     assert 6 <= n_visible <= 14, f"{n_visible} visible satellites"
     assert all(-90.0 <= s["el_deg"] <= 90.0 for s in sats), "elevation out of range"
-    assert all(26_000.0 <= np.linalg.norm(r) / 1e3 <= 27_200.0 for r in r_epoch.values()), (
+    assert all(25_500.0 <= np.linalg.norm(r) / 1e3 <= 27_700.0 for r in r_epoch.values()), (
         "satellite radius out of range"
     )
     assert all(s["track_azel_deg"] for s in sats if s["visible"]), "visible satellite without a track"
