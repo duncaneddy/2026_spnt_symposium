@@ -224,15 +224,16 @@
 <section class="slide" data-label="MMS orbit">
   <h2 class="header" data-in="up">Can you use GPS from above the GPS constellation?</h2>
   <div class="fig" data-fig="mmsOrbit" style="left:120px; top:230px; width:1120px; height:700px;"></div>
-  <dl class="stats compact" data-step="1" style="left:1320px; top:270px; width:480px; margin:0;">
+  <dl class="stats compact" data-step="1" style="left:1320px; top:250px; width:480px; margin:0;">
     <dt>Distance from Earth's center</dt><dd><span data-readout="r">--</span><span class="unit">Earth radii</span></dd>
     <dt>GPS satellites in the main lobe</dt><dd><span data-readout="main">--</span></dd>
     <dt>In the main or side lobes</dt><dd><span data-readout="side">--</span></dd>
   </dl>
-  <p class="caption" data-step="1" style="position:absolute; left:1320px; top:630px; width:480px; margin:0;">Geometric visibility, no link budget</p>
-  <p class="caption" style="position:absolute; left:1320px; top:740px; width:480px; margin:0; text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap><span data-bind="mms.name">--</span> over one orbit, <span data-bind="mms.span">--</span>, to scale with the Earth and the GPS orbit radius</p>
+  <div data-mms-trace data-step="1" style="position:absolute; left:1320px; top:588px; width:480px; height:176px;"></div>
+  <p class="caption" data-step="1" style="position:absolute; left:1320px; top:778px; width:480px; margin:0;">Geometric visibility, no link budget</p>
+  <p class="caption" style="position:absolute; left:1320px; top:820px; width:480px; margin:0; line-height:1.25; text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap><span data-bind="mms.name">--</span> over one orbit, <span data-bind="mms.span">--</span>, to scale with the Earth and the GPS orbit radius</p>
   <p class="cite"><span data-bind="mms.name">--</span> GP elements from <span data-bind="mms.source">--</span> with SGP4; GPS from IGS rapid orbits; transmit pattern after Donaldson et al. (NAVIGATION, 2020; ION GNSS+ 2018) · scripts/mms_visibility.py</p>
-  <aside class="notes">MMS 1, one of NASA's four Magnetospheric Multiscale spacecraft, reaches almost 28 Earth radii at apogee, about seven times the radius of the GPS orbits. GPS antennas point at the Earth, so up there the only signals that reach you spill past the Earth's limb from satellites on the far side. The cones are the main and side lobes of one GPS satellite. Ask the question and wait. Click: the replay counts the GPS satellites in the main lobe, and in the main or side lobes, with the Earth blocking. This is geometry only, with no link budget.<br><br>If asked: main lobe to 23.5 degrees off boresight, side lobes to 70 degrees, Earth plus 100 km of atmosphere. brahe's access module takes ground locations, not a second satellite, so the script computes the off-boresight angle from brahe states with numpy. Pattern sources: <span data-bind="mms.patternSource">--</span></aside>
+  <aside class="notes">MMS 1, one of NASA's four Magnetospheric Multiscale spacecraft, reaches almost 28 Earth radii at apogee, about seven times the radius of the GPS orbits. GPS antennas point at the Earth, so up there the only signals that reach you spill past the Earth's limb from satellites on the far side. The cones are the main and side lobes of one GPS satellite. Ask the question and wait. Click: the replay counts the GPS satellites in the main lobe, and in the main or side lobes, with the Earth blocking, and the trace builds the main-lobe count over the orbit.<br><br>If asked: main lobe to 23.5 degrees off boresight, side lobes to 70 degrees, Earth plus 100 km of atmosphere. brahe's access module takes ground locations, not a second satellite, so the script computes the off-boresight angle from brahe states with numpy. Pattern sources: <span data-bind="mms.patternSource">--</span></aside>
 </section>
 
 <section class="slide" data-label="MMS counts">

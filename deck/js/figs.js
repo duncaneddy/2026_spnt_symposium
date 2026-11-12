@@ -1021,9 +1021,12 @@ figures.leoCounts = {
 // radius as an exact circle; one GPS satellite opposite the apogee with its main-lobe and side-lobe
 // half angles drawn exactly from the pattern, and the shadow of the Earth plus mask altitude.
 // Click 1 starts a replay of MMS along the orbit; the slide's [data-readout] fields show the
-// distance and the main-lobe and main-plus-side-lobe counts for the current sample. Stepping back
-// to step 0 stops the replay and returns MMS to the first sample.
-const MMS_LOOP_MS = 16000;
+// distance (whole Earth radii while moving) and the main-lobe and main-plus-side-lobe counts of the
+// current sample, refreshed at most every MMS_READOUT_MS, and the slide's [data-mms-trace] box draws
+// the main-lobe count against time along the orbit up to the current sample. Stepping back to
+// step 0 stops the replay and returns MMS to the first sample.
+const MMS_LOOP_MS = 50000;
+const MMS_READOUT_MS = 500;
 
 figures.mmsOrbit = {
   needs: ['mms_visibility'],
@@ -1073,6 +1076,25 @@ figures.mmsOrbit = {
     el.__mms = svgEl('circle', { r: 11, fill: C.lagunita, stroke: C.board, 'stroke-width': 3 }, svg);
     const sec = el.closest('section'), out = {};
     sec.querySelectorAll('[data-readout]').forEach(f => { out[f.dataset.readout] = f; });
+    // Main-lobe count against time along the orbit, revealed up to the current sample.
+    const box = sec.querySelector('[data-mms-trace]');
+    let trace = null;
+    if (box) {
+      box.innerHTML = '';
+      const ts = svgFor(box), tw = box.offsetWidth, th = box.offsetHeight;
+      const x0 = 34, x1 = tw - 8, y0 = th - 36, y1 = 54, top = Math.max(...M.n_main);
+      const X = scaleLin(M.t_h[0], last(M.t_h), x0, x1), Y = scaleLin(0, top, y0, y1);
+      text(ts, 0, 24, 'GPS satellites in the main lobe over the orbit', { size: 22, color: 'rgba(46,45,41,.6)' });
+      strokePath(ts, roughLine(x0 - 4, y0, x1 + 4, y0, { seed: 6511, rough: 0.6, passes: 1 }), { color: 'rgba(46,45,41,.55)', width: 2 });
+      [0, top].forEach(v => text(ts, x0 - 10, Y(v) + 8, String(v), { size: 22, anchor: 'end', color: 'rgba(46,45,41,.6)' }));
+      [['perigee', M.t_h[0], 'start'], ['apogee', M.apogee_t_h, 'middle'], ['perigee', last(M.t_h), 'end']].forEach(([l, t, a]) => text(ts, X(t), th - 6, l, { size: 22, anchor: a, color: 'rgba(46,45,41,.6)' }));
+      const cid = `clip-${Math.random().toString(36).slice(2)}`;
+      const clip = svgEl('rect', { x: 0, y: 0, width: 0, height: th }, svgEl('clipPath', { id: cid }, svgEl('defs', {}, ts)));
+      const g = svgEl('g', { 'clip-path': `url(#${cid})` }, ts);
+      svgEl('path', { d: linPath(stepPts(M.t_h, M.n_main, X, Y)), stroke: C.lagunita, 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round' }, g);
+      const dot = svgEl('circle', { r: 6, fill: C.lagunita, stroke: C.board, 'stroke-width': 2 }, ts);
+      trace = i => { const x = X(M.t_h[i]); clip.setAttribute('width', x.toFixed(1)); dot.setAttribute('cx', x.toFixed(1)); dot.setAttribute('cy', Y(M.n_main[i]).toFixed(1)); };
+    }
     let shown = -1;
     el.__set = i => {
       if (i === shown) return;
@@ -1080,13 +1102,17 @@ figures.mmsOrbit = {
       const [x, y] = to(uv[i]);
       el.__mms.setAttribute('cx', x.toFixed(1));
       el.__mms.setAttribute('cy', y.toFixed(1));
-      if (out.r) out.r.textContent = fmt(M.radius_re[i], 1);
+      trace?.(i);
+    };
+    el.__out = (i, digits) => {
+      if (out.r) out.r.textContent = fmt(M.radius_re[i], digits);
       if (out.main) out.main.textContent = String(M.n_main[i]);
       if (out.side) out.side.textContent = String(M.n_side[i]);
     };
     el.__n = n;
     el.__kApo = kApo;
     el.__set(kApo);
+    el.__out(kApo, 1);
   },
   animate(el, d, s, A) {
     const sec = el.closest('section');
@@ -1096,8 +1122,16 @@ figures.mmsOrbit = {
     drawOnAnim([el.__orbit], A, 500, 1500);
     fadeIn(el.__labels, A, 1400, 500);
     let stop = null;
-    const start = () => { stop?.(); stop = loop(t => el.__set(Math.floor((t / MMS_LOOP_MS % 1) * el.__n))); };
-    const reset = () => { stop?.(); stop = null; el.__set(0); };
+    const start = () => {
+      stop?.();
+      let shownAt = -Infinity;
+      stop = loop(t => {
+        const i = Math.floor((t / MMS_LOOP_MS % 1) * el.__n);
+        el.__set(i);
+        if (t - shownAt >= MMS_READOUT_MS) { shownAt = t; el.__out(i, 0); }
+      });
+    };
+    const reset = () => { stop?.(); stop = null; el.__set(0); el.__out(0, 1); };
     if ((sec.__step || 0) >= 1) start(); else reset();
     const off = onStep(el, 1, start);
     const back = e => { if (e.detail.step < 1) reset(); };
