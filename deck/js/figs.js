@@ -2,7 +2,7 @@
 // Hand-drawn strokes (sketch.js) for frames, axes and diagrams; exact paths for orbits and data.
 import { roughLine, roughRect, roughEllipse, roughArrow, roughPolyline, svgEl, strokePath, hashSeed, mulberry32 } from './sketch.js';
 
-export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt'];
+export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt', 'gravity_crossover', 'benchmarks'];
 
 const EASE_IN = 'cubic-bezier(.2,.7,.2,1)';
 const EASE_MOVE = 'cubic-bezier(.65,0,.25,1)';
@@ -225,6 +225,15 @@ const dateSpan = (a, b) => {
 const listAnd = a => (a.length < 3 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${last(a)}`);
 // Minimum satellites for a position fix: the threshold behind the frac_time_4plus_* keys of mms_visibility.json.
 const MIN_SATS = 4;
+// Gravity timing quoted at the low end: the first swept degree of at least 10 (degree 2 is the overhead estimate).
+const gravLow = G => Math.max(0, G.degrees.findIndex(n => n >= 10));
+const signed = (v, d) => `${v < 0 ? '−' : '+'}${fmt(Math.abs(v), d)}`;
+// Benchmark library names as written on the slide.
+const LIB_NAMES = { brahe: 'brahe', orekit: 'Orekit', gmat: 'GMAT', nyx: 'Nyx', basilisk: 'Basilisk' };
+const LANG_NAMES = { rust: 'Rust', python: 'Python' };
+const libName = r => (r.library === 'brahe' ? `brahe ${LANG_NAMES[r.language] ?? r.language}` : LIB_NAMES[r.library] ?? r.library);
+const isBraheRust = r => r.library === 'brahe' && r.language === 'rust';
+const ratioFmt = v => (v < 1 ? fmt(v, 2) : v < 10 ? fmt(v, 1) : fmtInt(v));
 
 export const binds = {
   'brahe.since': () => String(BRAHE.since),
@@ -296,6 +305,37 @@ export const binds = {
   'walker.topLat': d => fmt(last(d.walker_pnt.in_view.lat_deg), 0),
   'walker.topW': d => fmt(last(d.walker_pnt.in_view.walker_mean), 1),
   'walker.topG': d => fmt(last(d.walker_pnt.in_view.gps_mean), 1),
+  'grav.model': d => d.gravity_crossover.model,
+  'grav.maxDeg': d => String(last(d.gravity_crossover.degrees)),
+  'grav.kernel': d => d.gravity_crossover.kernel,
+  'grav.integrator': d => d.gravity_crossover.integrator,
+  'grav.passes': d => String(d.gravity_crossover.passes),
+  'grav.repeats': d => String(d.gravity_crossover.repeats_per_pass),
+  'grav.cpu': d => d.gravity_crossover.machine.cpu,
+  'grav.threads': d => String(d.gravity_crossover.machine.threads),
+  'grav.load': d => fmt((d.gravity_crossover.machine.load_avg_1min_start + d.gravity_crossover.machine.load_avg_1min_end) / 2, 1),
+  'grav.threshold': d => String(d.gravity_crossover.auto_threshold_nmax),
+  'grav.range': d => { const r = d.gravity_crossover.crossover_range_nmax; return r ? `${r[0]} to ${r[1]}` : undefined; },
+  'grav.lowN': d => String(d.gravity_crossover.degrees[gravLow(d.gravity_crossover)]),
+  'grav.lowSerial': d => fmt(d.gravity_crossover.serial_us[gravLow(d.gravity_crossover)], 1),
+  'grav.lowParallel': d => fmt(d.gravity_crossover.parallel_us[gravLow(d.gravity_crossover)], 1),
+  'grav.topN': d => String(last(d.gravity_crossover.degrees)),
+  'grav.topSerial': d => fmt(last(d.gravity_crossover.serial_us), 1),
+  'grav.topParallel': d => fmt(last(d.gravity_crossover.parallel_us), 1),
+  'bench.version': d => d.benchmarks.brahe_version,
+  'bench.date': d => PT_DATE.format(new Date(d.benchmarks.benchmark_run_utc)),
+  'bench.statistic': d => d.benchmarks.statistic,
+  'bench.libs': d => listAnd([...new Set(d.benchmarks.tasks.flatMap(t => t.results.filter(r => r.library !== 'brahe').map(libName)))]),
+  'pr.prn': d => prn(d.station_range.prn),
+  'pr.geo': d => fmt(d.station_range.terms_m.geometric, 2),
+  'pr.light': d => signed(d.station_range.terms_m.light_time, 2),
+  'pr.earth': d => signed(d.station_range.terms_m.earth_rotation, 2),
+  'pr.clock': d => signed(d.station_range.terms_m.sat_clock, 2),
+  'dop.skipW': d => fmtInt(d.walker_pnt.dop.skipped.walker),
+  'dop.skipG': d => fmtInt(d.walker_pnt.dop.skipped.gps),
+  'dop.total': d => fmtInt(d.walker_pnt.dop.samples_per_lat * d.walker_pnt.dop.lat_deg.length),
+  'dop.perLat': d => fmtInt(d.walker_pnt.dop.samples_per_lat),
+  'dop.mask': d => fmt(d.walker_pnt.in_view.el_mask_deg, 0),
 };
 
 /* ======================= figures ======================= */
@@ -546,6 +586,96 @@ const CODE = {
       '    prop.propagate_to(t_end)',
       '',
       'bh.par_propagate_to(props, t_end)',
+    ],
+  },
+  // Excerpts of brahe's own examples (brahe repository, examples/...), cited on their slides.
+  valueEvent: {
+    needs: [],
+    lines: [
+      'def z_position(epoch, state):',
+      '    """Return z-component of position (meters)."""',
+      '    return state[2]',
+      '',
+      'ascending_node = bh.ValueEvent(',
+      '    "Ascending Node",',
+      '    z_position,',
+      '    0.0,  # target value',
+      '    bh.EventDirection.INCREASING,',
+      ')',
+      '',
+      'prop.add_event_detector(ascending_node)',
+      'prop.propagate_to(epoch + 3 * orbital_period)',
+      'events = prop.event_log()',
+    ],
+    opts: { size: 24 },
+  },
+  additionalDynamics: {
+    needs: [],
+    lines: [
+      'initial_state = np.concatenate(',
+      '    [orbital_state, [initial_charge]])',
+      'def additional_dynamics(t, state, params):',
+      '    dx = np.zeros(len(state))',
+      '    r_eci = state[:3]',
+      '    current_epoch = epoch + t',
+      '    r_sun = bh.sun_position(current_epoch)',
+      '    illumination = bh.eclipse_conical(r_eci, r_sun)',
+      '    power_in = illumination * solar_panel_power  # W',
+      '    power_out = load_power  # W',
+      '    charge_rate = (power_in - power_out) / 3600.0  # Wh/s',
+      '    dx[6] = charge_rate',
+      '    return dx',
+      'prop = bh.NumericalOrbitPropagator(',
+      '    epoch, initial_state, prop_config, force_config,',
+      '    params=params,',
+      '    additional_dynamics=additional_dynamics,',
+      ')',
+    ],
+  },
+  sensitivity: {
+    needs: [],
+    lines: [
+      'prop_config = (',
+      '    bh.NumericalPropagationConfig.default()',
+      '    .with_sensitivity()',
+      '    .with_sensitivity_history()',
+      ')',
+      '',
+      'params = np.array([500.0, 2.0, 2.2, 2.0, 1.3])',
+      '',
+      'prop = bh.NumericalOrbitPropagator(',
+      '    epoch, state, prop_config,',
+      '    bh.ForceModelConfig.default(),',
+      '    params=params,',
+      ')',
+      'prop.propagate_to(epoch + orbital_period)',
+      '',
+      'sens = prop.sensitivity()',
+    ],
+  },
+  propertyComputer: {
+    needs: [],
+    lines: [
+      'class MinRangeComputer(bh.AccessPropertyComputer):',
+      '    def sampling_config(self):',
+      '        return bh.SamplingConfig.midpoint()',
+      '',
+      '    def compute(',
+      '        self, window, sample_epochs, sample_states_ecef,',
+      '        location_ecef, location_geodetic,',
+      '    ):',
+      '        satellite_state = sample_states_ecef[0]',
+      '        range_vec = satellite_state[:3] - location_ecef',
+      '        range_km = np.linalg.norm(range_vec) / 1000.0',
+      '        return {"min_range_km": float(range_km)}',
+      '',
+      '    def property_names(self):',
+      '        return ["min_range_km"]',
+      '',
+      'windows = bh.location_accesses(',
+      '    [location], [propagator], epoch_start, epoch_end,',
+      '    constraint, property_computers=property_computers,',
+      ')',
     ],
   },
 };
@@ -1195,6 +1325,150 @@ figures.inViewByLat = {
   },
 };
 
+/* ---------- Act 4: serial and parallel spherical-harmonic gravity ---------- */
+// Log ticks at 1, 2 and 5 per decade inside [a, b], plus b itself, dropping ticks too close to b.
+function logTicks([a, b]) {
+  const out = [];
+  for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++) [1, 2, 5].forEach(m => { const v = m * 10 ** e; if (v >= a - 1e-9 && v <= b + 1e-9) out.push(v); });
+  return [...out.filter(v => Math.log10(b / v) > 0.12), b];
+}
+
+// Time per gravity evaluation against degree and order, log-log. Serial (ink) on entry with its
+// interquartile band; parallel (Lagunita) on click 1; on click 2 brahe's automatic threshold as an
+// exact vertical line and the measured crossover range as a shaded band.
+figures.gravityCrossover = {
+  needs: ['gravity_crossover'],
+  render(el, d) {
+    const G = d.gravity_crossover, n = G.degrees, svg = svgFor(el);
+    const all = [...G.serial_us, ...G.parallel_us, ...G.serial_us_q25, ...G.serial_us_q75, ...G.parallel_us_q25, ...G.parallel_us_q75].filter(v => v > 0);
+    const yr = [10 ** Math.floor(Math.log10(Math.min(...all))), 10 ** Math.ceil(Math.log10(Math.max(...all)))];
+    const xr = [n[0], last(n)];
+    const ax = axes(svg, { left: 100, right: 150, top: 60, bottom: 80, xr, yr, xlog: true, ylog: true, xlabel: 'spherical-harmonic degree and order (log scale)', ylabel: 'time per gravity evaluation (µs, log scale)', xticks: logTicks(xr), yfmt: v => (v < 1 ? fmt(v, 1) : fmtInt(v)), seed: 7101 });
+    el.__axes = ax.g;
+    const pts = vals => n.map((x, i) => [ax.x(x), ax.y(vals[i])]);
+    const band = (lo, hi, color, op, g) => svgEl('path', { d: `${linPath([...pts(lo), ...pts(hi).reverse()])}Z`, fill: color, opacity: op, stroke: 'none' }, g);
+    const ly = spreadLabels([ax.y(last(G.serial_us)), ax.y(last(G.parallel_us))].map(y => y + 8), 32);
+
+    const B = ax.box;
+    el.__mark = svgEl('g', { 'data-step': 2 }, svg);
+    const R = G.crossover_range_nmax;
+    if (R) {
+      const [xa, xb] = [ax.x(R[0]), ax.x(R[1])];
+      svgEl('rect', { x: xa, y: B.y1, width: Math.max(2, xb - xa), height: B.y0 - B.y1, fill: C.ink, opacity: 0.09 }, el.__mark);
+      haloText(el.__mark, xa - 10, B.y0 - 16, `measured crossover: degree ${R[0]} to ${R[1]}`, { size: 24, anchor: 'end', color: C.ink });
+    }
+    const tx = ax.x(G.auto_threshold_nmax);
+    exactPath(el.__mark, [[tx, B.y0], [tx, B.y1 - 20]], { color: C.cardinal, width: 3 });
+    haloText(el.__mark, tx - 10, B.y1 - 2, `brahe switches to parallel at degree ${G.auto_threshold_nmax}`, { size: 24, anchor: 'end', color: C.cardinal, weight: 600 });
+
+    el.__serial = svgEl('g', {}, svg);
+    band(G.serial_us_q25, G.serial_us_q75, C.ink, 0.14, el.__serial);
+    el.__serialPath = exactPath(el.__serial, pts(G.serial_us), { color: C.ink, width: 3.5 });
+    text(el.__serial, B.x1 + 16, ly[0], 'serial', { size: 26, color: C.ink, weight: 600 });
+
+    el.__par = svgEl('g', { 'data-step': 1 }, svg);
+    band(G.parallel_us_q25, G.parallel_us_q75, C.sky, 0.22, el.__par);
+    el.__parPath = exactPath(el.__par, pts(G.parallel_us), { color: C.lagunita, width: 4.5 });
+    text(el.__par, B.x1 + 16, ly[1], 'parallel', { size: 26, color: C.lagunita, weight: 600 });
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__axes, A, 0, 500);
+    drawOnAnim([el.__serialPath], A, 200, 1300);
+    return onStep(el, 1, () => drawOnAnim([el.__parPath], A, 100, 1300));
+  },
+};
+
+/* ---------- Act 4: benchmarks against other open-source libraries ---------- */
+// One panel per task: a bar per library from the brahe (Rust) 1x line to its median-time ratio on a
+// shared log axis (left of the line is faster than brahe, right is slower), brahe Python in
+// Lagunita, the other libraries in ink, in the order of the results file. The last row holds the key.
+figures.benchmarkRatios = {
+  needs: ['benchmarks'],
+  render(el, d) {
+    const B = d.benchmarks, svg = svgFor(el), W = el.offsetWidth;
+    const cols = 3, gapX = 56, gapY = 24, pw = (W - gapX * (cols - 1)) / cols;
+    const rows = B.tasks.map(t => t.results.filter(r => !isBraheRust(r)));
+    const pitch = 28, barH = 18, titleH = 38, axisH = 34, nameW = 132, valW = 66;
+    const ph = titleH + Math.max(...rows.map(r => r.length)) * pitch + axisH;
+    const ratios = B.tasks.flatMap(t => t.results.map(r => r.ratio_to_brahe));
+    const lo = 10 ** Math.floor(Math.log10(Math.min(...ratios))), hi = 10 ** Math.ceil(Math.log10(Math.max(...ratios)));
+    const X = scaleLog(lo, hi, nameW, pw - valW), x1 = X(1);
+    el.__panels = B.tasks.map((t, k) => {
+      const g = svgEl('g', { transform: `translate(${(k % cols) * (pw + gapX)} ${Math.floor(k / cols) * (ph + gapY)})` }, svg);
+      text(g, 0, 26, t.label, { size: 24, weight: 600 });
+      const yAxis = titleH + rows[k].length * pitch + 6;
+      strokePath(g, roughLine(nameW - 4, yAxis, pw - valW + 6, yAxis, { seed: 7200 + k, rough: 0.6, passes: 1 }), { color: 'rgba(46,45,41,.5)', width: 2 });
+      decades([lo, hi]).forEach(v => {
+        svgEl('line', { x1: X(v), x2: X(v), y1: yAxis, y2: yAxis + 7, stroke: 'rgba(46,45,41,.45)', 'stroke-width': 2 }, g);
+        text(g, X(v), yAxis + 30, v < 1 ? fmt(v, 1) : fmtInt(v), { size: 22, anchor: 'middle', color: 'rgba(46,45,41,.6)' });
+      });
+      rows[k].forEach((r, i) => {
+        const y = titleH + i * pitch, v = r.ratio_to_brahe, xv = X(v), py = r.library === 'brahe';
+        text(g, nameW - 12, y + barH - 1, libName(r), { size: 22, anchor: 'end', color: py ? C.lagunita : C.ink, weight: py ? 600 : 400 });
+        svgEl('rect', { x: Math.min(x1, xv), y: y + 2, width: Math.max(2, Math.abs(xv - x1)), height: barH, fill: py ? C.lagunita : C.ink, opacity: py ? 0.85 : 0.7 }, g);
+        text(g, v < 1 ? xv - 8 : xv + 8, y + barH - 1, `${ratioFmt(v)}×`, { size: 22, anchor: v < 1 ? 'end' : 'start', color: py ? C.lagunita : C.ink });
+      });
+      exactPath(g, [[x1, titleH - 6], [x1, yAxis]], { color: C.lagunita, width: 3 });
+      return g;
+    });
+    // Key in the cells after the last panel.
+    const k = B.tasks.length, kx = (k % cols) * (pw + gapX), ky = Math.floor(k / cols) * (ph + gapY);
+    el.__key = svgEl('g', { transform: `translate(${kx} ${ky})` }, svg);
+    exactPath(el.__key, [[8, 6], [8, 34]], { color: C.lagunita, width: 3 });
+    text(el.__key, 30, 28, 'brahe (Rust), the 1× line', { size: 24, color: C.lagunita, weight: 600 });
+    svgEl('rect', { x: 0, y: 50, width: 18, height: barH, fill: C.lagunita, opacity: 0.85 }, el.__key);
+    text(el.__key, 30, 50 + barH - 1, 'brahe (Python)', { size: 24, color: C.lagunita, weight: 600 });
+    svgEl('rect', { x: 0, y: 86, width: 18, height: barH, fill: C.ink, opacity: 0.7 }, el.__key);
+    text(el.__key, 30, 86 + barH - 1, 'other open-source libraries', { size: 24, color: C.ink });
+    el.insertAdjacentHTML('beforeend', `<p class="caption bench-key" style="position:absolute; left:${kx + 420}px; top:${ky - 6}px; width:${W - kx - 420}px; margin:0; text-wrap:balance;">Median time of each library divided by the median time of brahe (Rust) on the same task, log scale. Bars left of the line are faster than brahe, bars to the right are slower.</p>`);
+  },
+  animate(el, d, s, A) {
+    el.__panels.forEach((g, i) => fadeIn(g, A, 150 + i * 120, 600));
+    fadeIn(el.__key, A, 150 + el.__panels.length * 120, 600);
+    fadeIn(el.querySelector('.bench-key'), A, 150 + el.__panels.length * 120, 600);
+  },
+};
+
+/* ---------- backup: PDOP by latitude ---------- */
+// Median PDOP against latitude, log scale: GPS first, the Walker shell on click 1 (GPS dims). A null
+// median (no sample with enough satellites in view) leaves a gap in the line and is labeled.
+figures.pdopByLat = {
+  needs: ['walker_pnt'],
+  render(el, d) {
+    const D = d.walker_pnt.dop, svg = svgFor(el);
+    const vals = [...D.walker_pdop_median, ...D.gps_pdop_median].filter(v => v != null);
+    const yr = [10 ** Math.floor(Math.log10(Math.min(...vals))), 10 ** Math.ceil(Math.log10(Math.max(...vals)))];
+    const xr = [D.lat_deg[0], last(D.lat_deg)];
+    const ax = axes(svg, { left: 100, right: 40, top: 30, bottom: 80, xr, yr, ylog: true, xlabel: 'latitude (degrees)', ylabel: 'median PDOP (log scale)', xticks: D.lat_deg, xfmt: v => `${v}°`, yfmt: v => fmtInt(v), seed: 7301 });
+    el.__axes = ax.g;
+    const series = (v, color, width, g) => {
+      const runs = [[]];
+      v.forEach((y, i) => { if (y == null) runs.push([]); else last(runs).push([ax.x(D.lat_deg[i]), ax.y(y)]); });
+      const paths = runs.filter(r => r.length > 1).map(r => exactPath(g, r, { color, width }));
+      runs.flat().forEach(([x, y]) => svgEl('circle', { cx: x, cy: y, r: 6, fill: color }, g));
+      return paths;
+    };
+    el.__gps = svgEl('g', {}, svg);
+    el.__gpsPaths = series(D.gps_pdop_median, C.ink, 3, el.__gps);
+    haloText(el.__gps, ax.x(D.lat_deg[0]) + 4, ax.y(D.gps_pdop_median[0]) + 36, 'GPS', { size: 26, weight: 600 });
+    el.__walker = svgEl('g', { 'data-step': 1 }, svg);
+    el.__walkerPaths = series(D.walker_pdop_median, C.lagunita, 4.5, el.__walker);
+    haloText(el.__walker, ax.x(D.lat_deg[0]) + 4, ax.y(D.walker_pdop_median[0]) - 18, 'Walker shell', { size: 26, color: C.lagunita, weight: 600 });
+    D.walker_pdop_median.forEach((v, i) => {
+      if (v != null) return;
+      const x = ax.x(D.lat_deg[i]);
+      svgEl('line', { x1: x, x2: x, y1: ax.box.y0, y2: ax.box.y1, stroke: 'rgba(0,108,184,.45)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, el.__walker);
+      haloText(el.__walker, x - 10, ax.box.y1 + 24, `no sample with ${MIN_SATS} in view`, { size: 22, anchor: 'end', color: C.lagunita });
+    });
+    dimFromStep(el, el.__gps, 1, 0.45);
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__axes, A, 0, 500);
+    drawOnAnim(el.__gpsPaths, A, 200, 1200);
+    return onStep(el, 1, () => drawOnAnim(el.__walkerPaths, A, 100, 1300));
+  },
+};
+
 /* ---------- check mark (brahe slide) ---------- */
 // A hand-drawn check in Palo Verde that draws itself after data-delay ms.
 figures.check = {
@@ -1206,23 +1480,24 @@ figures.check = {
 };
 
 /* ---------- adopters ---------- */
+// Organizations without a logo file in img/logos/ are shown by name in the same cell.
 figures.adopters = {
   render(el) {
-    const logos = [['Northwood', 'northwood.svg'], ['Capella', 'capella.svg'], ['D-Orbit USA', 'd-orbit-usa.svg'], ['KSAT', 'ksat.svg'], ['HEO', 'heo.png'], ['Trusted Space', 'trusted-space.png'], ['K2 Space', 'k2-space.svg'], ['Vyoma', 'vyoma.svg'], ['Orbital Sidekick', 'orbital-sidekick.svg']];
+    const logos = [['Northwood', 'northwood.svg'], ['Xona Space Systems', null], ['Capella', 'capella.svg'], ['AWS', null], ['D-Orbit USA', 'd-orbit-usa.svg'], ['KSAT', 'ksat.svg'], ['HEO', 'heo.png'], ['Trusted Space', 'trusted-space.png'], ['K2 Space', 'k2-space.svg'], ['Vyoma', 'vyoma.svg'], ['Orbital Sidekick', 'orbital-sidekick.svg']];
     const cols = 4, pitch = 405, cw = 370, W = (cols - 1) * pitch + cw;
     const left = i => { const row = Math.floor(i / cols), inRow = Math.min(cols, logos.length - row * cols); return (W - ((inRow - 1) * pitch + cw)) / 2 + (i % cols) * pitch; };
-    el.innerHTML = logos.map(([n, file], i) => `<div class="logo-cell" data-rough="box" data-color="dim" data-rough-key="ad${i}" style="position:absolute; left:${left(i)}px; top:${Math.floor(i / cols) * 190}px; width:370px; height:150px; display:flex; align-items:center; justify-content:center; padding:24px 16px;"><img src="img/logos/${file}" alt="${n}" style="width:100%; height:100%; object-fit:contain;"></div>`).join('');
+    el.innerHTML = logos.map(([n, file], i) => `<div class="logo-cell" data-rough="box" data-color="dim" data-rough-key="ad${i}" style="position:absolute; left:${left(i)}px; top:${Math.floor(i / cols) * 190}px; width:370px; height:150px; display:flex; align-items:center; justify-content:center; padding:24px 16px;">${file ? `<img src="img/logos/${file}" alt="${n}" style="width:100%; height:100%; object-fit:contain;">` : `<span class="logo-name">${n}</span>`}</div>`).join('');
   },
   animate(el, d, s, A) { [...el.children].forEach((c, i) => A.push(c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 200 + i * 90, easing: EASE_IN, ...FILL }))); },
 };
 
-/* ---------- repo link ---------- */
+/* ---------- links: brahe and the talk's scripts ---------- */
 figures.closeLinks = {
   render(el) {
-    const link = (img, alt, label, url) => `<div style="display:flex; align-items:center; gap:32px; height:100%;">${img ? `<img src="${img}" alt="${alt}" style="height:100%;">` : ''}<div class="sans" style="font-size:30px; color:var(--ink-50); line-height:1.4">${label}<br><b style="color:var(--lagunita)">${url}</b></div></div>`;
-    el.innerHTML = `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:90px;">${
-      link(null, '', 'Scripts and slides', 'github.com/duncaneddy/<br>2026_spnt_symposium')}${
-      link('img/brahe-qr.webp', 'QR code for brahe.space', 'brahe', 'brahe.space')}</div>`;
+    const url = u => `<br><b style="color:var(--lagunita); font-size:44px;">${u}</b>`;
+    el.innerHTML = `<div style="position:absolute; inset:0;">
+      <div style="position:absolute; left:0; right:0; top:0; height:300px; display:flex; align-items:center; justify-content:center; gap:48px;"><img src="img/brahe-qr.webp" alt="QR code for brahe.space" style="height:100%;"><div class="sans" style="font-size:30px; color:var(--ink-50); line-height:1.45">brahe documentation and source${url('brahe.space')}${url('github.com/duncaneddy/brahe')}</div></div>
+      <div class="sans" style="position:absolute; left:0; right:0; top:360px; text-align:center; font-size:30px; color:var(--ink-50); line-height:1.45">Scripts and slides for this talk${url('github.com/duncaneddy/2026_spnt_symposium')}</div></div>`;
   },
   animate(el, d, s, A) { fadeIn(el.firstElementChild, A); },
 };
