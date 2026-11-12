@@ -46,6 +46,22 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 | `gravity_crossover.py` | Time per spherical-harmonic gravity evaluation against degree, with brahe's parallel mode forced off and on, measured through the numerical propagator |
 | `benchmarks.py` | Median run time of common tasks in brahe and other open-source libraries, relative to brahe, from brahe's comparative benchmark suite |
 
+## Code on the slides
+
+Every code card in the deck is a complete program in `deck/snippets/`, shown on its slide exactly as the
+file reads below its PEP 723 header (the deck loads the files directly). Each prints the number its slide
+shows and runs on its own:
+
+```bash
+uv run deck/snippets/<name>.py
+just snippets        # run them all
+```
+
+They are short versions of the analysis scripts in `scripts/` and of examples in the brahe repository,
+formatted with `uvx ruff format --line-length 68 deck/snippets`. The snippets that read GP elements
+(`ground_tracks.py`, `tle_vs_sp3.py`, `leo_receiver.py`) download them from CelesTrak, so their results
+follow the current element sets.
+
 ## Viewing the slides
 
 ```bash

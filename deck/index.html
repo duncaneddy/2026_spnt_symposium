@@ -38,11 +38,11 @@
 
 <section class="slide" data-label="Sky plot">
   <h2 class="header" data-flip="q-sky">Which GPS satellites are above this building right now?</h2>
-  <div class="fig" data-fig="skyplot" style="left:130px; top:220px; width:680px; height:680px;"></div>
-  <div class="fig" data-fig="code-skyplot" style="left:900px; top:250px; width:900px; height:560px;" data-in="up" data-delay="500"></div>
-  <p class="caption" style="position:absolute; left:900px; top:680px; width:900px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
-  <p class="cite">IGS ultra-rapid orbit <span data-bind="sky.product">--</span> at <span data-bind="sky.timeUTC">--</span> · scripts/skyplot.py</p>
-  <aside class="notes">This is the sky over campus at 11:00 Pacific today, from the IGS ultra-rapid orbit product (predicted half of the file, issued before the talk). Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: satellites above the horizon but below the mask. The code on the right is the real code from scripts/skyplot.py, trimmed: download the SP3 file, read it, and turn each position into azimuth and elevation from the station. That is most of it. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions." The rest of the talk is about what is behind those few lines.</aside>
+  <div class="fig" data-fig="skyplot" style="left:120px; top:230px; width:680px; height:680px;"></div>
+  <div class="fig" data-fig="code-skyplot" style="left:900px; top:236px; width:880px; height:580px;" data-in="up" data-delay="500"></div>
+  <p class="caption" style="position:absolute; left:900px; top:836px; width:880px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
+  <p class="cite">IGS ultra-rapid orbit <span data-bind="sky.product">--</span> at <span data-bind="sky.timeUTC">--</span> · snippets/skyplot.py · full analysis in scripts/skyplot.py</p>
+  <aside class="notes">This is the sky over campus at 11:00 Pacific today, from the IGS ultra-rapid orbit product (predicted half of the file, issued before the talk). Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: satellites above the horizon but below the mask. The code on the right is a complete program (snippets/skyplot.py) that prints these same nine satellites: download the SP3 file, read it, and turn each position into azimuth and elevation from the station. That is all of it; the tracks on the plot come from the full analysis in scripts/skyplot.py. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions." The rest of the talk is about what is behind those few lines.</aside>
 </section>
 
 <section class="slide" data-label="Errors">
@@ -145,28 +145,28 @@
 
 <section class="slide" data-label="Quick TLE">
   <h2 class="header" data-in="up">Download public GPS orbit elements and plot ground tracks</h2>
-  <div class="fig" data-fig="code-tle" style="left:120px; top:250px; width:880px; height:620px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="groundTracks" style="left:1050px; top:290px; width:760px; height:380px;"></div>
-  <p class="caption" style="position:absolute; left:1050px; top:700px; width:760px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1400">Ground tracks of <span data-bind="qh.nTracks">--</span> of the <span data-bind="qh.nGps">--</span> GPS satellites in the public GP catalog, one per orbital plane, starting at the talk time</p>
-  <p class="cite">Public GP element sets, propagated with SGP4 · scripts/quick_hits.py</p>
-  <aside class="notes">First quick hit: query the GP element sets for the operational GPS satellites, build an SGP4 propagator from each, and convert to longitude and latitude. Six satellites, one per orbital plane. In this run CelesTrak was unreachable from the build machine, so the script fell back to the same GP data from Space-Track; the code shown is the CelesTrak path, and the script records which source it used.</aside>
+  <div class="fig" data-fig="code-tle" style="left:120px; top:250px; width:920px; height:500px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="groundTracks" style="left:1080px; top:290px; width:720px; height:360px;"></div>
+  <p class="caption" style="position:absolute; left:1080px; top:680px; width:720px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1400">Ground tracks of <span data-bind="qh.nTracks">--</span> of the <span data-bind="qh.nGps">--</span> GPS satellites in the public GP catalog, one per orbital plane, starting at the talk time</p>
+  <p class="cite">Public GP element sets, propagated with SGP4 · snippets/ground_tracks.py · full analysis in scripts/quick_hits.py</p>
+  <aside class="notes">First quick hit: query the GP element sets for the operational GPS satellites, build an SGP4 propagator from each, and convert to longitude and latitude. The code computes the track of every satellite in the group; the map shows six, one per orbital plane, chosen in scripts/quick_hits.py. In this run CelesTrak was unreachable from the build machine, so the script fell back to the same GP data from Space-Track; the code shown is the CelesTrak path, and the script records which source it used.</aside>
 </section>
 
 <section class="slide" data-label="Quick force model">
   <h2 class="header" data-in="up">Propagate an orbit with two-body and full force-model dynamics</h2>
-  <div class="fig" data-fig="code-propagate" style="left:120px; top:250px; width:880px; height:620px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="forceModelEffect" style="left:1050px; top:250px; width:760px; height:560px;"></div>
-  <p class="caption" style="position:absolute; left:1050px; top:830px; width:760px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1800" data-bind-wrap><span data-bind="qh.object">--</span>: the two predictions are <span data-bind="qh.drEnd">--</span> km apart after <span data-bind="qh.days">--</span> days, and drag alone moves it <span data-bind="qh.drDragEnd">--</span> km</p>
-  <p class="cite">brahe default force model · scripts/quick_hits.py</p>
+  <div class="fig" data-fig="code-propagate" style="left:120px; top:220px; width:950px; height:700px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="forceModelEffect" style="left:1110px; top:250px; width:690px; height:540px;"></div>
+  <p class="caption" style="position:absolute; left:1110px; top:810px; width:690px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1800" data-bind-wrap><span data-bind="qh.object">--</span>: the two predictions are <span data-bind="qh.drEnd">--</span> km apart after <span data-bind="qh.days">--</span> days, and drag alone moves it <span data-bind="qh.drDragEnd">--</span> km</p>
+  <p class="cite">brahe default force model · snippets/force_model.py · full analysis in scripts/quick_hits.py</p>
   <aside class="notes">Second quick hit: one initial state, propagated twice, once with two-body gravity and once with brahe's default force model (20 by 20 EGM2008 gravity, NRLMSISE-00 drag, solar radiation pressure, Sun and Moon). The blue curve is the distance between the two predictions; most of it is Earth's oblateness (J2). The ink curve is the effect of drag alone: the same full model with and without drag. Changing the force model is one argument.</aside>
 </section>
 
 <section class="slide" data-label="Quick frames">
   <h2 class="header" data-in="up">The same GPS orbit in an inertial frame and an Earth-fixed frame</h2>
-  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:880px; height:620px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="eciVsEcef" style="left:1050px; top:250px; width:760px; height:560px;"></div>
-  <p class="caption" style="position:absolute; left:1050px; top:830px; width:760px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="2400" data-bind-wrap><span data-bind="qh.prn">--</span> over <span data-bind="qh.frameH">--</span> hours: ITRF as published in the IGS orbit file, GCRF computed by brahe</p>
-  <p class="cite">IGS ultra-rapid orbit · scripts/quick_hits.py</p>
+  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:910px; height:480px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="eciVsEcef" style="left:1070px; top:250px; width:730px; height:560px;"></div>
+  <p class="caption" style="position:absolute; left:1070px; top:830px; width:730px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="2400" data-bind-wrap><span data-bind="qh.prn">--</span> over <span data-bind="qh.frameH">--</span> hours: ITRF as published in the IGS orbit file, GCRF computed by brahe</p>
+  <p class="cite">IGS ultra-rapid orbit · snippets/frames.py · full analysis in scripts/quick_hits.py</p>
   <aside class="notes">Third quick hit: one GPS satellite from the IGS orbit file, in the Earth-fixed frame the file uses and in the inertial frame. Inertial: a closed orbit, twice per sidereal day. Earth-fixed: the familiar repeating pattern. The transformation includes precession, nutation, Earth rotation and polar motion, with Earth orientation data that brahe downloads and caches. It is one method call.</aside>
 </section>
 
@@ -178,14 +178,14 @@
 
 <section class="slide" data-label="TLE vs IGS">
   <h2 class="header" data-in="up">How far is the public TLE from the precise orbit for the same GPS satellite?</h2>
-  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:290px; width:880px; height:520px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="tleVsSp3" data-step="1" style="left:1050px; top:290px; width:760px; height:400px;"></div>
-  <dl class="stats compact" data-step="1" style="left:1150px; top:716px; width:640px; margin:0;">
+  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:290px; width:910px; height:600px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="tleVsSp3" data-step="1" style="left:1070px; top:290px; width:730px; height:340px;"></div>
+  <dl class="stats compact" data-step="1" style="left:1140px; top:652px; width:640px; margin:0;">
     <dt>RMS difference over <span data-bind="tle.span">--</span> hours</dt><dd><span data-bind="tle.rms">--</span><span class="unit">km</span></dd>
     <dt>Largest difference</dt><dd><span data-bind="tle.max">--</span><span class="unit">km</span></dd>
   </dl>
-  <p class="cite"><span data-bind="tle.prn">--</span> (NORAD <span data-bind="tle.norad">--</span>): GP elements from <span data-bind="tle.source">--</span> (epoch <span data-bind="tle.epoch">--</span>) with SGP4, against the IGS ultra-rapid orbit <span data-bind="tle.product">--</span> · scripts/tle_vs_sp3.py</p>
-  <aside class="notes">Two data clients in a few lines. The IGS client lists the orbit products that cover an epoch and downloads one from the BKG mirror, which needs no login. The GP element sets come from CelesTrak or Space-Track; CelesTrak was unreachable from the build machine, so this run used Space-Track, and the card shows that query. The satellite is G09 (NAVSTAR 71), the highest GPS satellite over Stanford at the talk time. Both orbits are moved to the inertial frame (the TLE from TEME, the IGS file from ITRF) and differenced in the radial, along-track and cross-track frame of the IGS orbit. Ask the question and wait. Expected guesses run from meters to hundreds of kilometers. Click: about 3 km, almost all along-track. The TLE puts the satellite in the right orbit slightly ahead of where it is, a little under a second of orbital motion. Radial and cross-track stay well under a kilometer. Caveats: the window is 9.3 hours, not a day, because the newest IGS file only reaches about 4.7 hours past the talk time. And the talk time lies in the predicted half of the ultra-rapid file, so the reference here is the IGS prediction, which the IGS quotes at centimeter level, still far below the kilometers on the plot. Planned remark: "The TLE knows exactly where the satellite is going. It just gets there a little early."</aside>
+  <p class="cite" style="left:120px; right:120px;"><span data-bind="tle.prn">--</span> (NORAD <span data-bind="tle.norad">--</span>): GP elements from <span data-bind="tle.source">--</span> (epoch <span data-bind="tle.epoch">--</span>) with SGP4, against the IGS ultra-rapid orbit <span data-bind="tle.product">--</span> · snippets/tle_vs_sp3.py · full analysis in scripts/tle_vs_sp3.py</p>
+  <aside class="notes">Two data clients in a few lines. The IGS client lists the orbit products for the week and downloads the named ultra-rapid file from the BKG mirror, which needs no login. The GP element set comes from CelesTrak, no login either; CelesTrak was unreachable from the build machine, so this run took the same element set from Space-Track, and the card shows the CelesTrak call. The satellite is G09 (NAVSTAR 71, catalog number 40105), the highest GPS satellite over Stanford at the talk time; the full analysis finds it and matches it to the catalog by position. Both orbits are moved to the inertial frame (the TLE from TEME, the IGS file from ITRF) and differenced in the radial, along-track and cross-track frame of the IGS orbit. Ask the question and wait. Expected guesses run from meters to hundreds of kilometers. Click: about 3 km, almost all along-track. The TLE puts the satellite in the right orbit slightly ahead of where it is, a little under a second of orbital motion. Radial and cross-track stay well under a kilometer. Caveats: the window is 9.3 hours, not a day, because the newest IGS file only reaches about 4.7 hours past the talk time. And the talk time lies in the predicted half of the ultra-rapid file, so the reference here is the IGS prediction, which the IGS quotes at centimeter level, still far below the kilometers on the plot. Planned remark: "The TLE knows exactly where the satellite is going. It just gets there a little early."</aside>
 </section>
 
 <section class="slide" data-label="Section Time" data-clone="Modules" data-lc-current="time,frames">
@@ -194,14 +194,14 @@
 
 <section class="slide" data-label="Range mistake">
   <h2 class="header" data-in="up">Range from Stanford to <span data-bind="range.prn">--</span>, with the same epoch labeled GPS time and UTC</h2>
-  <div class="fig" data-fig="code-rangeEpochs" style="left:140px; top:250px; width:1180px; height:300px;" data-in="up" data-delay="300"></div>
-  <p style="position:absolute; left:1390px; top:300px; width:410px; margin:0; font-size:52px; line-height:1.2; text-wrap:balance;" data-in="fade" data-delay="900">How big is the error?</p>
-  <dl class="stats compact" data-step="1" style="left:140px; top:610px; width:500px; margin:0;">
+  <div class="fig" data-fig="code-rangeEpochs" style="left:120px; top:220px; width:940px; height:700px;" data-in="up" data-delay="300"></div>
+  <p style="position:absolute; left:1110px; top:250px; width:690px; margin:0; font-size:52px; line-height:1.2; text-wrap:balance;" data-in="fade" data-delay="900">How big is the error?</p>
+  <dl class="stats compact" data-step="1" style="left:1110px; top:350px; width:500px; margin:0;">
     <dt>Satellite position error</dt><dd class="accent"><span data-bind="range.pos">--</span><span class="unit">km</span></dd>
     <dt>GPS time minus UTC</dt><dd><span data-bind="range.dt">--</span><span class="unit">s</span></dd>
   </dl>
-  <div class="fig" data-fig="rangeMistake" data-step="2" style="left:680px; top:570px; width:1120px; height:335px;"></div>
-  <p class="cite"><span data-bind="range.prn">--</span> over its pass above Stanford · IGS ultra-rapid orbit <span data-bind="range.product">--</span> · scripts/station_range.py</p>
+  <div class="fig" data-fig="rangeMistake" data-step="2" style="left:1110px; top:600px; width:690px; height:335px;"></div>
+  <p class="cite"><span data-bind="range.prn">--</span> over its pass above Stanford · IGS ultra-rapid orbit <span data-bind="range.product">--</span> · snippets/gps_time_as_utc.py · full analysis in scripts/station_range.py</p>
   <aside class="notes">The range from the campus station to G09 over its whole pass. The two epochs differ in one argument: the IGS file's timestamps are GPS time, so the correct epoch says time_system=bh.GPS. The mistake, very common in practice, is building the same calendar time as UTC. brahe does exactly what it is told: a UTC label means the instant 18 seconds later, because GPS time has not taken the leap seconds since 1980. Ask: how big is the error? Wait. Click: the satellite is about 52 km from where it should be, 18 seconds of motion at roughly 2.9 km/s in the Earth-fixed frame. Click: the range error over the pass, up to about 13 km. It is smaller than the position error because only the motion along the line of sight changes the range, and it changes sign as the satellite crosses overhead. Nothing crashes and the ranges still look plausible, which is what makes this bug expensive. Planned remark: "18 seconds. GPS never took the leap seconds, which makes it the only clock in this room that has not aged since 1980."</aside>
 </section>
 
@@ -211,11 +211,11 @@
 
 <section class="slide" data-label="LEO receiver">
   <h2 class="header" data-in="up">Move the receiver from Stanford to the ISS by changing one argument</h2>
-  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:270px; width:880px; height:300px;" data-in="up" data-delay="300"></div>
-  <p class="caption" style="position:absolute; left:120px; top:620px; width:880px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap>The <span data-bind="leo.rx">--</span> at the talk time, about <span data-bind="leo.alt">--</span> km up, with lines of sight to the <span data-bind="leo.nLinks">--</span> GPS satellites it sees above a <span data-bind="leo.mask">--</span>° mask</p>
-  <div class="fig" data-fig="leoLinks" style="left:1060px; top:230px; width:740px; height:680px;"></div>
-  <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4 · IGS ultra-rapid orbit <span data-bind="leo.product">--</span> · drawn to scale · scripts/leo_receiver.py</p>
-  <aside class="notes">The same visibility function, called twice. Its first argument is any function that returns the receiver's Earth-fixed position at an epoch. For Stanford it returns a constant. For the ISS it returns the SGP4 state converted to the Earth-fixed frame, from the public element set. That argument, in red, is the only change. The rule is the same for both: at least 5 degrees above the receiver's local horizontal, and a line of sight that does not pass through the Earth. The picture is to scale: the ISS orbit hugs the Earth, the GPS shell is four Earth radii out, and the blue lines are the satellites the ISS sees right now. This is what composable means in practice: propagation, frames and geometry are separate pieces, so moving the receiver is one line.</aside>
+  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:206px; width:966px; height:720px;" data-in="up" data-delay="300"></div>
+  <p class="caption" style="position:absolute; left:1130px; top:790px; width:670px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap>The <span data-bind="leo.rx">--</span> at the talk time, about <span data-bind="leo.alt">--</span> km up, with lines of sight to the <span data-bind="leo.nLinks">--</span> GPS satellites it sees above a <span data-bind="leo.mask">--</span>° mask</p>
+  <div class="fig" data-fig="leoLinks" style="left:1130px; top:220px; width:670px; height:550px;"></div>
+  <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4 · IGS ultra-rapid orbit <span data-bind="leo.product">--</span> · drawn to scale · snippets/leo_receiver.py · full analysis in scripts/leo_receiver.py</p>
+  <aside class="notes">The same visibility function, called twice. Its argument is the receiver's Earth-fixed position at the talk time. For Stanford it is the station converted from latitude, longitude and height. For the ISS it is the SGP4 state from the public element set, converted to the Earth-fixed frame. That argument, in red, is the only change. The rule is the same for both: at least 5 degrees above the receiver's local horizontal, which for a receiver above the ground also keeps the line of sight clear of the Earth. The picture is to scale: the ISS orbit hugs the Earth, the GPS shell is four Earth radii out, and the blue lines are the satellites the ISS sees right now. This is what composable means in practice: propagation, frames and geometry are separate pieces, so moving the receiver is one line.</aside>
 </section>
 
 <section class="slide" data-label="LEO counts">
@@ -262,17 +262,17 @@
 
 <section class="slide" data-label="Walker build">
   <h2 class="header" data-in="up">Generate a Walker constellation and propagate every satellite in parallel</h2>
-  <div class="fig" data-fig="code-walker" style="left:120px; top:250px; width:880px; height:480px;" data-in="up" data-delay="300"></div>
-  <p class="caption" style="position:absolute; left:120px; top:795px; width:880px; margin:0; font-size:26px; text-wrap:balance;" data-in="fade" data-delay="1400" data-bind-wrap><span data-bind="walker.t">--</span> satellites in <span data-bind="walker.p">--</span> planes at <span data-bind="walker.alt">--</span> km and <span data-bind="walker.inc">--</span>°, propagated for one orbit (<span data-bind="walker.minutes">--</span> minutes) with <span data-bind="walker.force">--</span></p>
-  <div class="fig" data-fig="walkerGlobe" style="left:1010px; top:250px; width:560px; height:560px;"></div>
+  <div class="fig" data-fig="code-walker" style="left:120px; top:212px; width:860px; height:710px;" data-in="up" data-delay="300"></div>
+  <p class="caption" style="position:absolute; left:1020px; top:820px; width:780px; margin:0; font-size:26px; text-wrap:balance;" data-in="fade" data-delay="1400" data-bind-wrap><span data-bind="walker.t">--</span> satellites in <span data-bind="walker.p">--</span> planes at <span data-bind="walker.alt">--</span> km and <span data-bind="walker.inc">--</span>°, propagated for one orbit (<span data-bind="walker.minutes">--</span> minutes) with <span data-bind="walker.force">--</span></p>
+  <div class="fig" data-fig="walkerGlobe" style="left:1020px; top:250px; width:540px; height:540px;"></div>
   <dl class="stats compact" data-step="1" style="left:1600px; top:260px; width:240px; margin:0;">
     <dt>Serial loop</dt><dd><span data-bind="walker.serial">--</span><span class="unit">s</span></dd>
     <dt>Parallel</dt><dd><span data-bind="walker.parallel">--</span><span class="unit">s</span></dd>
     <dt>Threads</dt><dd><span data-bind="walker.threads">--</span></dd>
     <dt>Speedup</dt><dd class="resolved"><span data-bind="walker.speedup">--</span><span class="unit">×</span></dd>
   </dl>
-  <p class="cite">Integrator <span data-bind="walker.integrator">--</span> · wall-clock times on the build machine · scripts/walker_pnt.py</p>
-  <aside class="notes">Design your own constellation. The Walker generator builds the shell from the usual parameters: total satellites, planes, phasing, altitude and inclination. One call turns it into numerical propagators with a full force model: 20 by 20 gravity, drag, solar radiation pressure, Sun and Moon. The shell here is the 53 degree shell of Xona Space Systems' published Pulsar design, a proposed LEO PNT system; the phasing and the satellite properties are my assumptions (details on the next slide). The globe shows the planes building one by one, then the satellites moving. The motion is kinematic: each satellite rotates along its own plane at the orbital rate, sped up. The timings are from the full numerical propagation in the script. Click: a plain Python loop over all 192 satellites against one parallel call on the build laptop's threads. It is one function call. Planned remark: "The parallel version was also faster to write."</aside>
+  <p class="cite">Integrator <span data-bind="walker.integrator">--</span> · wall-clock times on the build machine · snippets/walker.py · full analysis in scripts/walker_pnt.py</p>
+  <aside class="notes">Design your own constellation. The Walker generator builds the shell from the usual parameters: total satellites, planes, phasing, altitude and inclination. One call turns it into numerical propagators with a full force model: 20 by 20 gravity, drag, solar radiation pressure, Sun and Moon. The shell here is the 53 degree shell of Xona Space Systems' published Pulsar design, a proposed LEO PNT system; the phasing and the satellite properties are my assumptions (details on the next slide). The globe shows the planes building one by one, then the satellites moving. The motion is kinematic: each satellite rotates along its own plane at the orbital rate, sped up. The timings are from the full numerical propagation in the script. Click: a plain Python loop over all 192 satellites against one parallel call on the build laptop's threads. It is one function call. The times on the slide are from scripts/walker_pnt.py, which uses low-precision Sun and Moon positions; the card uses brahe's default ephemerides, which time the same within a few percent. Planned remark: "The parallel version was also faster to write."</aside>
 </section>
 
 <section class="slide" data-label="Walker in view">
@@ -373,27 +373,33 @@
 
 <section class="slide" data-label="Events">
   <h2 class="header" data-in="up">Detect an event defined by any function of the state</h2>
-  <div class="fig" data-fig="code-valueEvent" style="left:360px; top:250px; width:1200px; height:660px;" data-in="up" data-delay="300"></div>
-  <p class="cite">brahe example examples/numerical_propagation/custom_value_event.py</p>
+  <div class="fig" data-fig="code-valueEvent" style="left:487px; top:250px; width:946px; height:600px;" data-in="up" data-delay="300"></div>
+  <p class="cite">snippets/value_event.py · after brahe examples/numerical_propagation/custom_value_event.py</p>
   <aside class="notes">A ValueEvent watches any function of the epoch and state and records when it crosses a target value in a chosen direction. Here it is the z component of position crossing zero going up: the ascending node. The propagator refines the crossing time and keeps going. The same mechanism covers altitude thresholds, eclipse entry and exit, element values, and events with callbacks that change the state, such as maneuvers.</aside>
 </section>
 
 <section class="slide" data-label="Extensible dynamics">
   <h2 class="header" data-in="up">Additional state dynamics and consider-parameter sensitivity</h2>
   <p class="sans" style="position:absolute; left:120px; top:214px; margin:0; font-size:28px; color:var(--ink-50);" data-in="fade" data-delay="200">Battery charge as an extra state</p>
-  <div class="fig" data-fig="code-additionalDynamics" style="left:120px; top:256px; width:960px; height:670px;" data-in="up" data-delay="300"></div>
-  <p class="sans" style="position:absolute; left:1110px; top:214px; margin:0; font-size:28px; color:var(--ink-50);" data-in="fade" data-delay="200">Sensitivity of the state to spacecraft parameters</p>
-  <div class="fig" data-fig="code-sensitivity" style="left:1110px; top:256px; width:690px; height:560px;" data-in="up" data-delay="450"></div>
-  <p class="cite">brahe examples/numerical_propagation/battery_tracking.py and sensitivity_analysis.py</p>
-  <aside class="notes">Two ways to extend the numerical propagator. Left: append your own states to the orbit state and give their derivatives; here a battery that charges in sunlight and drains in eclipse, integrated alongside the orbit with the same integrator (the example also clamps the charge to the battery limits, omitted here). Right: turn on sensitivity and the propagator integrates the partial derivatives of the state with respect to the spacecraft parameters (mass, drag area, drag coefficient, SRP area, reflectivity), which is what consider covariance analysis in estimation needs.</aside>
+  <div class="fig" data-fig="code-additionalDynamics" style="left:120px; top:256px; width:946px; height:650px;" data-in="up" data-delay="300"></div>
+  <p class="cite">snippets/battery.py · after brahe examples/numerical_propagation/battery_tracking.py</p>
+  <aside class="notes">Two ways to extend the numerical propagator, one per slide. Here: append your own states to the orbit state and give their derivatives; a battery that charges in sunlight and drains in eclipse, integrated alongside the orbit with the same integrator (the brahe example also clamps the charge to the battery limits, omitted here). Next slide: parameter sensitivity.</aside>
+</section>
+
+<section class="slide" data-label="Sensitivity">
+  <h2 class="header">Additional state dynamics and consider-parameter sensitivity</h2>
+  <p class="sans" style="position:absolute; left:120px; top:214px; margin:0; font-size:28px; color:var(--ink-50);" data-in="fade" data-delay="200">Sensitivity of the state to spacecraft parameters</p>
+  <div class="fig" data-fig="code-sensitivity" style="left:120px; top:256px; width:966px; height:500px;" data-in="up" data-delay="300"></div>
+  <p class="cite">snippets/sensitivity.py · after brahe examples/numerical_propagation/sensitivity_analysis.py</p>
+  <aside class="notes">Turn on sensitivity and the propagator integrates the partial derivatives of the state with respect to the spacecraft parameters (mass, drag area, drag coefficient, SRP area, reflectivity), which is what consider covariance analysis in estimation needs. The program prints how far the position moves after one orbit for a 1 percent change in each parameter.</aside>
 </section>
 
 <section class="slide" data-label="Property computer">
   <h2 class="header" data-in="up">Custom access window properties with a property computer</h2>
-  <div class="fig" data-fig="code-propertyComputer" style="left:120px; top:240px; width:900px; height:680px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="code-propertyAccess" style="left:1060px; top:240px; width:740px; height:360px;" data-in="up" data-delay="500"></div>
-  <p style="position:absolute; left:1060px; top:640px; width:740px; margin:0; font-size:32px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="900">brahe's access computation currently takes ground locations, so the satellite-to-satellite geometry in the MMS example is computed from propagated states directly.</p>
-  <p class="cite">brahe example examples/access/properties/custom_property_computer.py</p>
+  <div class="fig" data-fig="code-propertyComputer" style="left:108px; top:240px; width:814px; height:480px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-propertyAccess" style="left:946px; top:240px; width:866px; height:430px;" data-in="up" data-delay="500"></div>
+  <p style="position:absolute; left:946px; top:700px; width:854px; margin:0; font-size:32px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="900">brahe's access computation currently takes ground locations, so the satellite-to-satellite geometry in the MMS example is computed from propagated states directly.</p>
+  <p class="cite">snippets/property_computer.py · after brahe examples/access/properties/custom_property_computer.py</p>
   <aside class="notes">An access property computer is a small class with three methods: where to sample each window, what to compute from the sampled satellite states and the location, and the names of the properties it returns. brahe calls it for every access window it finds, so any custom quantity (range, Doppler, an antenna angle) arrives attached to the windows. Today the access search takes ground locations; satellite-to-satellite access, which the MMS example needed, is on the list.</aside>
 </section>
 

@@ -165,10 +165,11 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | B | Backup | none | divider |
 | B1 | Pseudorange | none / station_range.json (`terms_m`) | fresh; equation and geometric range; clicks 1 to 3: light time, Earth rotation (the three rows that sum to rho), satellite clock |
 | B2 | PDOP | `pdopByLat` / walker_pnt.json (`dop`) | fresh; GPS median PDOP by latitude (log); click 1: Walker shell with a gap and label where the median is null, GPS dims, skipped-sample counts |
-| B3 | Events | `code-valueEvent` | fresh; brahe example custom_value_event.py |
-| B4 | Extensible dynamics | `code-additionalDynamics`, `code-sensitivity` | fresh; brahe examples battery_tracking.py and sensitivity_analysis.py |
-| B5 | Property computer | `code-propertyComputer`, `code-propertyAccess` | fresh; brahe example custom_property_computer.py (class, and the access call), note that access takes ground locations |
-| B6 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
+| B3 | Events | `code-valueEvent` (snippets/value_event.py) | fresh; after brahe example custom_value_event.py |
+| B4 | Extensible dynamics | `code-additionalDynamics` (snippets/battery.py) | fresh; after brahe example battery_tracking.py |
+| B5 | Sensitivity | `code-sensitivity` (snippets/sensitivity.py) | fresh, same header as B4 without entry motion; after brahe example sensitivity_analysis.py |
+| B6 | Property computer | `code-propertyComputer`, `code-propertyAccess` (one program, snippets/property_computer.py, split before `t0 = bh.Epoch(`) | fresh; after brahe example custom_property_computer.py, note that access takes ground locations |
+| B7 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
 
 ## Deck implementation
 
@@ -186,13 +187,27 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 - Math: `\( ... \)` in slide text is typeset by the bundled KaTeX.
 - Keys: arrows or space, `n` notes, `b` backup, `r` replay, `f` full screen.
 - Dev server: `just serve` (`scripts/serve.py`, no-cache headers) on port 8280.
-- Code cards: `codeCard(el, lines, {highlight, steps, size, key})` in figs.js draws monospace Python in a
-  hand-drawn box as wide as `el`; brahe calls (`bh.*`) in Lagunita. `highlight: [n]` draws line n in
-  Cardinal; `highlight: [[n, k]]` turns line n Cardinal on click k; `steps: {n: k}` hides line n until
-  click k. Slide code lives in the `CODE` table (`key: {needs, lines, opts}`); each entry is registered as
-  figure `code-<key>` and shows the data-pending note while its JSON is missing. Lines are real script
-  lines, trimmed and wrapped at Python continuation points, at most 63 characters for a 900 px card at
-  22 px.
+- Code cards: every card shows a complete, runnable program from `deck/snippets/<name>.py`. The deck
+  fetches the files at load (figs.js, top-level `await`, next to the data fetch) and shows each file
+  below its PEP 723 header and the blank line after it, verbatim; there is no second copy of the code.
+  The files live under `deck/` because the dev server serves only that directory. A file that fails to
+  load shows "snippet pending: deck/snippets/<name>.py" instead of the card.
+- Snippet convention for a new card: one file per card, PEP 723 header (`requires-python = ">=3.12"`,
+  the same brahe pin as `scripts/`, `numpy` only when used), then imports, every constant as a literal
+  (station as `[lon, lat, alt]`, epoch as `bh.Epoch(...)`, product names as strings), the computation
+  with the same brahe calls and physics as the matching analysis script, and one closing `print` of the
+  number the slide shows. No helpers or names from elsewhere, no argparse, JSON or caching code, no
+  asserts. Format with `uvx ruff format --line-length 68 deck/snippets` (never re-wrap by hand) and keep
+  `uvx ruff check --select F821,F401,F841 deck/snippets` clean. Fit: at 22 px a card holds about 25
+  lines below a one-line header (blank lines count half), and is 13.2 px per character plus 56 px of
+  padding wide (68 characters: 954 px). Run every snippet with `just snippets`.
+- `codeCard(el, lines, {highlight, steps, marks, size, key})` in figs.js draws monospace Python in a
+  hand-drawn box as wide as `el`; brahe calls (`bh.*`) in Lagunita; line height 1.25, blank lines at half
+  height. Lines are selected by a substring match (the first line that contains it), never by editing
+  the code text: `highlight: ['match']` draws that line in Cardinal; `highlight: [['match', k]]` turns
+  it Cardinal on click k; `steps: {'match': k}` hides it until click k. `CODE` entries are
+  `key: {file, from, to, opts}`; `from`/`to` (line matches) split one program across two cards
+  (property computer). Each entry is registered as figure `code-<key>`.
 - Module map: `figures.moduleMap` renders one card per entry of `MODULES` (keys `time`, `frames`,
   `orbits`, `propagation`, `access`, `data`, `estimation`). Divider slide:
   `<section class="slide" data-label="Section X" data-clone="Modules" data-lc-current="data">` (several
@@ -200,8 +215,9 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
   divider turn gray, the rest stay ink; moving between adjacent dividers animates the colors.
 - Magic moves of hand-drawn boxes: put the outline on an inner element and `data-flip` on a positioned
   wrapper (see `.prop-slot`), so the outline moves with the card.
-- Code card token colors: `marks: [[line, 'text', 'cardinal' | 'green']]` in a `CODE` entry's `opts`
-  colors that text on that line (one mark per line).
+- Code card token colors: `marks: [['line match', 'text', 'cardinal' | 'green']]` in a `CODE` entry's
+  `opts` colors that text on the first line containing the match (one mark per line), e.g. `bh.UTC` on
+  the `mistaken = bh.Epoch(` line and the ISS argument on the `n_iss = gps_in_view(` line.
 - Figures revealed on a click: put `data-step="n"` on the `.fig` div and start draw-ons with
   `whenShown(el, fn)`, which runs fn now or on the click that reveals el. `dimFromStep(el, g, n, op)`
   dims a group from step n onward in both directions. Comparison charts (`leoCounts`, `mmsCounts`,
