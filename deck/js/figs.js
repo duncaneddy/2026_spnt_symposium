@@ -267,7 +267,6 @@ export const binds = {
   'gpu.threads': () => String(SGP4_RATES.threads),
   'gpu.vsRust': () => fmt(SGP4_RATES.astrojaxGpu / SGP4_RATES.rustRayon, 0),
   'gpu.vsAstroz': () => fmt(SGP4_RATES.astrojaxGpu / SGP4_RATES.astrozSimd, 0),
-  'gps.n': d => String(d.gps_constellation.prns.length),
   'gps.date': d => PT_DATE.format(new Date(d.gps_constellation.talk_epoch_utc ?? d.gps_constellation.epoch_utc)),
   'gps.product': d => d.gps_constellation.product.replace(/\.SP3(\.gz)?$/i, ''),
   'sky.nVisible': d => String(d.skyplot.n_visible),
