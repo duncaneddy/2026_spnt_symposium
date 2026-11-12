@@ -35,7 +35,7 @@ Data sources:
     applies at this period). SGP4 is a mean-element model with errors of tens of
     kilometers for this orbit, immaterial for visibility geometry at these
     distances.
-    Apogee and perigee are taken from the elements.
+    Apogee and perigee follow from the elements' mean motion and eccentricity.
   - GPS positions from consecutive IGS rapid daily orbit products
     (IGS0OPSRAP, 15 min samples) from the BKG mirror of the IGS archive,
     chained into continuous trajectories. One MMS orbit lasts about 3.5 days,
@@ -50,7 +50,7 @@ Frames and time:
     geometry is computed with both satellites in ITRF. Angles and distances
     do not depend on the frame.
   - Positions written for plotting (orbit_xyz_km, gps_xyz_at_apogee_km) are
-    GCRF. Epochs are written in UTC.
+    GCRF. Epochs are written in UTC with microsecond resolution.
 
 Receive antenna: MMS spacecraft spin, and each carries several GPS antennas
 around its body, so the receiver is treated as having omnidirectional
@@ -120,8 +120,9 @@ RECEIVER_NOTE = (
 
 
 def utc_iso(epoch: bh.Epoch) -> str:
-    y, mo, d, h, mi, s, _ = epoch.to_datetime()
-    return f"{y:04d}-{mo:02d}-{d:02d}T{h:02d}:{mi:02d}:{int(s):02d}Z"
+    """ISO 8601 UTC timestamp with microseconds."""
+    y, mo, d, h, mi, s, ns = epoch.to_datetime()
+    return f"{y:04d}-{mo:02d}-{d:02d}T{h:02d}:{mi:02d}:{int(s):02d}.{int(ns) // 1000:06d}Z"
 
 
 def celestrak_gp() -> list[dict] | None:
@@ -221,10 +222,10 @@ def main() -> None:
     gp, gp_source = fetch_gp()
     sgp = gp.to_sgp_propagator(STEP_S)
 
-    a_km = gp.semimajor_axis
+    period_s = 86400.0 / gp.mean_motion
+    a_km = bh.semimajor_axis_from_orbital_period(period_s) / 1e3
     perigee_alt_km = a_km * (1.0 - gp.eccentricity) - bh.R_EARTH / 1e3
     apogee_re = a_km * (1.0 + gp.eccentricity) / (bh.R_EARTH / 1e3)
-    period_s = 86400.0 / gp.mean_motion
 
     gp_epoch = sgp.epoch
     y, mo, d, *_ = gp_epoch.to_datetime()
