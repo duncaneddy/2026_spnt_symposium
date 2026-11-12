@@ -75,11 +75,12 @@ pocs/         gitignored scratch
    transforms. [S:quick_hits]
 
 ### Act 3: Use it (about 7 min)
-10. Data clients. IGS SP3 download. [Q] "How far is the public TLE from the SP3 orbit?" [S:tle_vs_sp3]
+10. Data clients. IGS SP3 download. [Q] "How far is the public TLE from the precise orbit for the same GPS
+    satellite?" [S:tle_vs_sp3]
 11. Time and frames. Station to GPS range, then GPS time read as UTC. [Q] "How big is the error?" [S:station_range]
 12. Composable. Receiver moves to LEO: one line changes. [S:leo_receiver]
 13. MMS. [Q] "Can you use GPS from above the GPS constellation?" Transmit antenna pattern, Earth blockage,
-    custom access property computer. [S:mms_visibility]
+    off-boresight angle computed from brahe states (geometric visibility, no link budget). [S:mms_visibility]
 14. Design your own. Walker constellation, parallel numerical propagation, wall-clock time, satellites in view
     against GPS. [S:walker_pnt]
 
@@ -116,6 +117,11 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | `quick_hits.json` | `{generated_utc, tle:{group, source, n, match_max_residual_km, inc_range_deg, epoch_utc, tracks:[{name, norad, inc_deg, lonlat_deg}]}, propagate:{object, inc_deg, t_h, alt_twobody_km, alt_full_km, dr_km, dr_drag_km, force_model}, frames:{prn, product, start_utc, t_h, eci_xyz_km, ecef_xyz_km}}` |
 | `gps_constellation.json` | `{generated_utc, epoch_utc, talk_epoch_utc, talk_index, product, frame, step_s, period_s, prns, xyz_km:[time][satellite][x, y, z], planes}` |
 | `land.json` | `{source, rings:[[[lon, lat]]]}` (Natural Earth 1:110m land, `scripts/basemap.py`) |
+| `tle_vs_sp3.json` | `{generated_utc, prn, norad, object_name, gp_source, tle_epoch_utc, product, span_h, t_h, diff_rtn_km:{R, T, N}, diff_norm_km, rms_km, max_km}` |
+| `station_range.json` | `{generated_utc, product, prn, station, gps_minus_utc_s, t_h, range_km, range_wrong_km, range_err_km, pos_err_km, max_range_err_km, terms_m:{geometric, light_time, earth_rotation, sat_clock}}` |
+| `leo_receiver.json` | `{generated_utc, epoch_utc, product, gp_source, gp_epoch_utc, el_mask_deg, receiver:{name, norad, alt_km}, ground_station, t_min, n_visible_leo, n_visible_ground, mean_leo, mean_ground, orbit_xyz_km, links_at_epoch:{rx_xyz_km, gps_xyz_km, visible}}` |
+| `mms_visibility.json` | `{generated_utc, gp_source, gps_source, span_utc, gps_products, object:{name, norad, gp_epoch_utc, perigee_alt_km, apogee_re}, gps_radius_km, pattern:{main_half_angle_deg, side_lobe_max_deg, earth_mask_alt_km, model, source}, receiver_note, t_h, radius_re, n_main, n_side, orbit_xyz_km, apogee_t_h, gps_xyz_at_apogee_km, gps_lobe_at_apogee, frac_time_4plus_main, frac_time_4plus_with_side}` |
+| `walker_pnt.json` | `{generated_utc, config:{pattern, t, p, f, alt_km, inc_deg, source, force_model, integrator, mass_kg, drag_area_m2, cd, srp_area_m2, cr}, span_h, threads, wall_s_serial, wall_s_parallel, speedup, snapshot_xyz_km, planes, one_orbit_xyz_km, in_view:{lat_deg, walker_mean, gps_mean, el_mask_deg}, dop:{...}}` |
 
 ## Slide registry
 
@@ -134,6 +140,19 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | 9 | Quick TLE | `code-tle`, `groundTracks` / quick_hits.json, land.json, skyplot.json | fresh; code card rises, tracks draw on |
 | 9 | Quick force model | `code-propagate`, `forceModelEffect` / quick_hits.json | fresh; curves draw on, labels fade |
 | 9 | Quick frames | `code-frames`, `eciVsEcef` / quick_hits.json | fresh; both frames draw on together |
+| 10 | Section Data | `moduleMap` (clone of Modules) | divider: data clients lit |
+| 11 | TLE vs IGS | `code-tleSp3`, `tleVsSp3` / tle_vs_sp3.json | fresh; question as header, code card rises; click 1: R, T, N curves draw on (along-track in Cardinal) with RMS and largest difference |
+| 12 | Section Time | `moduleMap` | divider: time and frames lit |
+| 13 | Range mistake | `code-rangeEpochs`, `rangeMistake` / station_range.json | fresh; code card with `bh.GPS` (Palo Verde) and `bh.UTC` (Cardinal), question "How big is the error?"; click 1: satellite position error and GPS minus UTC; click 2: range error curve over the pass with its largest value |
+| 14 | Section Orbits | `moduleMap` | divider: orbits and propagation lit |
+| 15 | LEO receiver | `code-leoReceiver`, `leoLinks` / leo_receiver.json | fresh; code card with the ISS argument in Cardinal; Earth, ISS orbit and lines of sight to visible GPS satellites draw on, to scale |
+| 15 | LEO counts | `leoCounts` / leo_receiver.json | fresh; ground series with mean; click 1: ISS series with mean, ground dims, comparison caption |
+| 16 | Section Access | `moduleMap` | divider: access lit |
+| 17 | MMS orbit | `mmsOrbit` / mms_visibility.json | fresh; question as header, orbit face-on to scale with GPS radius circle, main and side lobe half angles for one GPS satellite, Earth shadow; click 1: replay of MMS along the orbit with distance and counts in the readout (`data-readout`), "Geometric visibility, no link budget" |
+| 17 | MMS counts | `mmsCounts` / mms_visibility.json | fresh; main-lobe counts against radius and its 4+ fraction; click 1: main or side lobes, main dims, second fraction and no-link-budget label |
+| 18 | Section Walker | `moduleMap` | divider: orbits and propagation lit again |
+| 19 | Walker build | `code-walker`, `walkerGlobe` / walker_pnt.json | fresh; planes draw on one by one, then satellites move (kinematic, one period per 20 s); click 1: serial, parallel, threads, speedup |
+| 19 | Walker in view | `inViewByLat` / walker_pnt.json | fresh; GPS by latitude; click 1: Walker shell with inclination line, GPS dims, comparison sentence; cite is `config.source` |
 
 ## Deck implementation
 
@@ -165,6 +184,17 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
   divider turn gray, the rest stay ink; moving between adjacent dividers animates the colors.
 - Magic moves of hand-drawn boxes: put the outline on an inner element and `data-flip` on a positioned
   wrapper (see `.prop-slot`), so the outline moves with the card.
+- Code card token colors: `marks: [[line, 'text', 'cardinal' | 'green']]` in a `CODE` entry's `opts`
+  colors that text on that line (one mark per line).
+- Figures revealed on a click: put `data-step="n"` on the `.fig` div and start draw-ons with
+  `whenShown(el, fn)`, which runs fn now or on the click that reveals el. `dimFromStep(el, g, n, op)`
+  dims a group from step n onward in both directions. Comparison charts (`leoCounts`, `mmsCounts`,
+  `inViewByLat`) show the familiar series first and add the new one on click 1 with the first dimmed.
+- Replays: `mmsOrbit` (replay starts on click 1, or on arrival when the slide is entered fully built)
+  and `walkerGlobe` (kinematic: each satellite rotates along its own plane at the shell's orbital rate,
+  one period per 20 s) return cancel functions. With reduced motion, `mmsOrbit` stays at the apogee
+  sample and `walkerGlobe` at the start epoch. `mmsOrbit` writes its readout into the slide's
+  `[data-readout="r|main|side"]` fields.
 
 ## Needed from Duncan
 

@@ -170,6 +170,119 @@
   <aside class="notes">Third quick hit: one GPS satellite from the IGS orbit file, in the Earth-fixed frame the file uses and in the inertial frame. Inertial: a closed orbit, twice per sidereal day. Earth-fixed: the familiar repeating pattern. The transformation includes precession, nutation, Earth rotation and polar motion, with Earth orientation data that brahe downloads and caches. It is one method call.</aside>
 </section>
 
+<!-- ======================= ACT 3: USE IT ======================= -->
+
+<section class="slide" data-label="Section Data" data-clone="Modules" data-lc-current="data">
+  <aside class="notes">Act 3: using it, one module at a time, with the running GNSS example. First: data clients.</aside>
+</section>
+
+<section class="slide" data-label="TLE vs IGS">
+  <h2 class="header" data-in="up">How far is the public TLE from the precise orbit for the same GPS satellite?</h2>
+  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:290px; width:880px; height:520px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="tleVsSp3" data-step="1" style="left:1050px; top:290px; width:760px; height:400px;"></div>
+  <dl class="stats compact" data-step="1" style="left:1150px; top:716px; width:640px; margin:0;">
+    <dt>RMS difference over <span data-bind="tle.span">--</span> hours</dt><dd><span data-bind="tle.rms">--</span><span class="unit">km</span></dd>
+    <dt>Largest difference</dt><dd><span data-bind="tle.max">--</span><span class="unit">km</span></dd>
+  </dl>
+  <p class="cite"><span data-bind="tle.prn">--</span> (NORAD <span data-bind="tle.norad">--</span>): GP elements from <span data-bind="tle.source">--</span> (epoch <span data-bind="tle.epoch">--</span>) with SGP4, against the IGS ultra-rapid orbit <span data-bind="tle.product">--</span> · scripts/tle_vs_sp3.py</p>
+  <aside class="notes">Two data clients in a few lines. The IGS client lists the orbit products that cover an epoch and downloads one from the BKG mirror, which needs no login. The GP element sets come from CelesTrak or Space-Track; CelesTrak was unreachable from the build machine, so this run used Space-Track, and the card shows that query. The satellite is G09 (NAVSTAR 71), the highest GPS satellite over Stanford at the talk time. Both orbits are moved to the inertial frame (the TLE from TEME, the IGS file from ITRF) and differenced in the radial, along-track and cross-track frame of the IGS orbit. Ask the question and wait. Expected guesses run from meters to hundreds of kilometers. Click: about 3 km, almost all along-track. The TLE puts the satellite in the right orbit at slightly the wrong time, a little under a second of orbital motion. Radial and cross-track stay well under a kilometer. Caveats: the window is 9.3 hours, not a day, because the newest IGS file only reaches about 4.7 hours past the talk time. And the talk time lies in the predicted half of the ultra-rapid file, so the reference here is the IGS prediction, which the IGS quotes at centimeter level, still far below the kilometers on the plot. Planned remark: "The TLE knows exactly where the satellite is going. It is just a little late."</aside>
+</section>
+
+<section class="slide" data-label="Section Time" data-clone="Modules" data-lc-current="time,frames">
+  <aside class="notes">Next: time and frames, the part most of us assume someone else got right.</aside>
+</section>
+
+<section class="slide" data-label="Range mistake">
+  <h2 class="header" data-in="up">Range from Stanford to <span data-bind="range.prn">--</span>, with the same epoch labeled GPS time and UTC</h2>
+  <div class="fig" data-fig="code-rangeEpochs" style="left:140px; top:250px; width:1180px; height:300px;" data-in="up" data-delay="300"></div>
+  <p style="position:absolute; left:1390px; top:300px; width:410px; margin:0; font-size:52px; line-height:1.2; text-wrap:balance;" data-in="fade" data-delay="900">How big is the error?</p>
+  <dl class="stats compact" data-step="1" style="left:140px; top:610px; width:500px; margin:0;">
+    <dt>Satellite position error</dt><dd class="accent"><span data-bind="range.pos">--</span><span class="unit">km</span></dd>
+    <dt>GPS time minus UTC</dt><dd><span data-bind="range.dt">--</span><span class="unit">s</span></dd>
+  </dl>
+  <div class="fig" data-fig="rangeMistake" data-step="2" style="left:680px; top:570px; width:1120px; height:335px;"></div>
+  <p class="cite"><span data-bind="range.prn">--</span> over its pass above Stanford · IGS ultra-rapid orbit <span data-bind="range.product">--</span> · scripts/station_range.py</p>
+  <aside class="notes">The range from the campus station to G09 over its whole pass. The two epochs differ in one argument: the IGS file's timestamps are GPS time, so the correct epoch says time_system=bh.GPS. The mistake, very common in practice, is building the same calendar time as UTC. brahe does exactly what it is told: a UTC label means the instant 18 seconds later, because GPS time has not taken the leap seconds since 1980. Ask: how big is the error? Wait. Click: the satellite is about 52 km from where it should be, 18 seconds of motion at roughly 2.9 km/s in the Earth-fixed frame. Click: the range error over the pass, up to about 13 km. It is smaller than the position error because only the motion along the line of sight changes the range, and it changes sign as the satellite crosses overhead. Nothing crashes and the ranges still look plausible, which is what makes this bug expensive. Planned remark: "18 seconds. GPS never took the leap seconds, which makes it the only clock in this room that has not aged since 1980."</aside>
+</section>
+
+<section class="slide" data-label="Section Orbits" data-clone="Modules" data-lc-current="orbits,propagation">
+  <aside class="notes">Next: orbits and propagation, with the receiver moving off the ground.</aside>
+</section>
+
+<section class="slide" data-label="LEO receiver">
+  <h2 class="header" data-in="up">Move the receiver from Stanford to the ISS by changing one argument</h2>
+  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:270px; width:880px; height:300px;" data-in="up" data-delay="300"></div>
+  <p class="caption" style="position:absolute; left:120px; top:620px; width:880px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap>The <span data-bind="leo.rx">--</span> at the talk time, about <span data-bind="leo.alt">--</span> km up, with lines of sight to the <span data-bind="leo.nLinks">--</span> GPS satellites it sees above a <span data-bind="leo.mask">--</span>° mask</p>
+  <div class="fig" data-fig="leoLinks" style="left:1060px; top:230px; width:740px; height:680px;"></div>
+  <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4 · IGS ultra-rapid orbit <span data-bind="leo.product">--</span> · drawn to scale · scripts/leo_receiver.py</p>
+  <aside class="notes">The same visibility function, called twice. Its first argument is any function that returns the receiver's Earth-fixed position at an epoch. For Stanford it returns a constant. For the ISS it returns the SGP4 state converted to the Earth-fixed frame, from the public element set. That argument, in red, is the only change. The rule is the same for both: at least 5 degrees above the receiver's local horizontal, and a line of sight that does not pass through the Earth. The picture is to scale: the ISS orbit hugs the Earth, the GPS shell is four Earth radii out, and the blue lines are the satellites the ISS sees right now. This is what composable means in practice: propagation, frames and geometry are separate pieces, so moving the receiver is one line.</aside>
+</section>
+
+<section class="slide" data-label="LEO counts">
+  <h2 class="header" data-in="up">GPS satellites in view of the ground station and the ISS over the next <span data-bind="leo.minutes">--</span> minutes</h2>
+  <div class="fig" data-fig="leoCounts" style="left:160px; top:270px; width:1600px; height:520px;"></div>
+  <p class="caption" data-step="1" style="position:absolute; left:160px; top:820px; width:1600px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;">With the same <span data-bind="leo.mask">--</span>° mask and a zenith antenna, the ISS sees slightly fewer GPS satellites than the ground station: <span data-bind="leo.meanLeo">--</span> against <span data-bind="leo.meanGround">--</span> on average.</p>
+  <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4, station on the Stanford campus, one sample every <span data-bind="leo.stepS">--</span> s · scripts/leo_receiver.py</p>
+  <aside class="notes">First the familiar case: the station on campus sees about ten or eleven GPS satellites, and the count changes slowly. Click: the ISS, same rule, same mask. It sees slightly fewer on average, which surprises people. With a zenith antenna and a mask measured from the local horizontal, a receiver 400 km up sees almost the same piece of the GPS shell as one on the ground. What changes in orbit is how fast the geometry changes: the count moves every few minutes, satellites rise and set across a whole hemisphere in under an hour, and the Doppler is large. That is what an orbital receiver has to handle, and it is the same code. Planned remark: "Going to space to see more satellites turns out to be a poor return on a very large investment."</aside>
+</section>
+
+<section class="slide" data-label="Section Access" data-clone="Modules" data-lc-current="access">
+  <aside class="notes">Next: access, the geometry of who can see whom, pushed past where GPS was designed to work.</aside>
+</section>
+
+<section class="slide" data-label="MMS orbit">
+  <h2 class="header" data-in="up">Can you use GPS from above the GPS constellation?</h2>
+  <div class="fig" data-fig="mmsOrbit" style="left:120px; top:230px; width:1120px; height:700px;"></div>
+  <dl class="stats compact" data-step="1" style="left:1320px; top:270px; width:480px; margin:0;">
+    <dt>Distance from Earth's center</dt><dd><span data-readout="r">--</span><span class="unit">Earth radii</span></dd>
+    <dt>GPS satellites in the main lobe</dt><dd><span data-readout="main">--</span></dd>
+    <dt>In the main or side lobes</dt><dd><span data-readout="side">--</span></dd>
+  </dl>
+  <p class="caption" data-step="1" style="position:absolute; left:1320px; top:630px; width:480px; margin:0;">Geometric visibility, no link budget</p>
+  <p class="caption" style="position:absolute; left:1320px; top:740px; width:480px; margin:0; text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap><span data-bind="mms.name">--</span> over one orbit, <span data-bind="mms.span">--</span>, to scale with the Earth and the GPS orbit radius</p>
+  <p class="cite"><span data-bind="mms.name">--</span> GP elements from <span data-bind="mms.source">--</span> with SGP4; GPS from IGS rapid orbits; transmit pattern after Donaldson et al. (NAVIGATION, 2020; ION GNSS+ 2018) · scripts/mms_visibility.py</p>
+  <aside class="notes">NASA's Magnetospheric Multiscale mission flies four spacecraft in a very eccentric orbit; at apogee MMS 1 is almost 28 Earth radii out, about seven times the radius of the GPS orbits. GPS antennas point at the Earth. Up there, the only signals that reach you are the ones that spill past the Earth's limb from satellites on the far side. Drawn exactly: for one GPS satellite, the main lobe to 23.5 degrees off boresight, side lobes out to 70 degrees, and the shadow of the Earth plus 100 km of atmosphere. Ask the question and wait. Click: the replay moves MMS around the orbit and counts the GPS satellites whose line to MMS falls inside the main lobe, and inside the main or side lobes, with the Earth blocking. This is geometry only: no transmit power, gain pattern shape, path loss or receiver sensitivity. brahe's access module takes ground locations, not a second satellite, so the script computes the off-boresight angle directly from brahe states with numpy. Pattern sources: <span data-bind="mms.patternSource">--</span></aside>
+</section>
+
+<section class="slide" data-label="MMS counts">
+  <h2 class="header" data-in="up">GPS satellites usable by <span data-bind="mms.name">--</span> against distance from Earth's center</h2>
+  <div class="fig" data-fig="mmsCounts" style="left:140px; top:260px; width:1100px; height:620px;"></div>
+  <dl class="stats" style="left:1320px; top:290px; width:480px; margin:0;">
+    <dt data-in="fade" data-delay="600">Orbit with <span data-bind="mms.minSats">--</span> or more in the main lobe</dt><dd data-in="fade" data-delay="600"><span data-bind="mms.fracMain">--</span><span class="unit">%</span></dd>
+    <dt data-step="1">With the side lobes</dt><dd data-step="1"><span data-bind="mms.fracSide">--</span><span class="unit">%</span></dd>
+  </dl>
+  <p class="caption" data-step="1" style="position:absolute; left:1320px; top:610px; width:480px; margin:0;">Geometric visibility, no link budget</p>
+  <p class="cite"><span data-bind="mms.name">--</span> over one orbit, <span data-bind="mms.span">--</span>, one sample every <span data-bind="mms.stepMin">--</span> minutes · scripts/mms_visibility.py</p>
+  <aside class="notes">Every sample of the orbit, plotted against distance from the Earth's center. Main lobe only: above the GPS orbits the count drops to zero or one, and four or more satellites are available only a few percent of the orbit, near perigee. Click: add the side lobes. Geometrically, four or more are always in view. That is an upper bound. The real MMS receivers did navigate this way, but the published flight results (Winternitz et al.) report that the side-lobe signals fall below the receiver's sensitivity at the highest altitudes, above roughly 17 Earth radii, so tracking there is much sparser than this plot. The 70 degree side-lobe limit is from a conference presentation (Donaldson et al., ION GNSS+ 2018), and the 23.5 degree main lobe from the GPS III space service volume specification as discussed in Donaldson et al., NAVIGATION 2020. So the answer is yes, with a careful receiver and a link budget that this plot does not include.</aside>
+</section>
+
+<section class="slide" data-label="Section Walker" data-clone="Modules" data-lc-current="orbits,propagation">
+  <aside class="notes">Last example: orbits and propagation again, this time for a constellation you design yourself.</aside>
+</section>
+
+<section class="slide" data-label="Walker build">
+  <h2 class="header" data-in="up">Generate a Walker constellation and propagate every satellite in parallel</h2>
+  <div class="fig" data-fig="code-walker" style="left:120px; top:250px; width:880px; height:480px;" data-in="up" data-delay="300"></div>
+  <p class="caption" style="position:absolute; left:120px; top:770px; width:880px; margin:0; font-size:26px; text-wrap:balance;" data-in="fade" data-delay="1400" data-bind-wrap><span data-bind="walker.t">--</span> satellites in <span data-bind="walker.p">--</span> planes at <span data-bind="walker.alt">--</span> km and <span data-bind="walker.inc">--</span>°, propagated for one orbit (<span data-bind="walker.minutes">--</span> minutes) with <span data-bind="walker.force">--</span></p>
+  <div class="fig" data-fig="walkerGlobe" style="left:1010px; top:250px; width:560px; height:560px;"></div>
+  <dl class="stats compact" data-step="1" style="left:1600px; top:260px; width:240px; margin:0;">
+    <dt>Serial loop</dt><dd><span data-bind="walker.serial">--</span><span class="unit">s</span></dd>
+    <dt>Parallel</dt><dd class="accent"><span data-bind="walker.parallel">--</span><span class="unit">s</span></dd>
+    <dt>Threads</dt><dd><span data-bind="walker.threads">--</span></dd>
+    <dt>Speedup</dt><dd><span data-bind="walker.speedup">--</span><span class="unit">×</span></dd>
+  </dl>
+  <p class="cite">Integrator <span data-bind="walker.integrator">--</span> · wall-clock times on the build machine · scripts/walker_pnt.py</p>
+  <aside class="notes">Design your own constellation. The Walker generator builds the shell from the usual parameters: total satellites, planes, phasing, altitude and inclination. One call turns it into numerical propagators with a full force model: 20 by 20 gravity, drag, solar radiation pressure, Sun and Moon. The shell here is the 53 degree shell of Xona Space Systems' published Pulsar design, a proposed LEO PNT system; the phasing and the satellite properties are my assumptions (details on the next slide). The globe shows the planes building one by one, then the satellites moving. The motion is kinematic: each satellite rotates along its own plane at the orbital rate, sped up. The timings are from the full numerical propagation in the script. Click: a plain Python loop over all 192 satellites against one parallel call on the build laptop's threads. It is one function call. Planned remark: "The parallel version was also faster to write."</aside>
+</section>
+
+<section class="slide" data-label="Walker in view">
+  <h2 class="header" data-in="up">Mean satellites in view by latitude, one Walker shell against GPS</h2>
+  <div class="fig" data-fig="inViewByLat" style="left:140px; top:250px; width:1100px; height:590px;"></div>
+  <p data-step="1" style="position:absolute; left:1320px; top:320px; width:480px; margin:0; font-size:36px; line-height:1.3; text-wrap:balance;">The <span data-bind="walker.inc">--</span>° shell has more satellites in view than GPS at <span data-bind="walker.moreLats">--</span> latitude, and fewer at the equator (<span data-bind="walker.eqW">--</span> against <span data-bind="walker.eqG">--</span>) and at <span data-bind="walker.topLat">--</span>° (<span data-bind="walker.topW">--</span> against <span data-bind="walker.topG">--</span>).</p>
+  <p class="cite" style="left:140px; right:140px;"><span data-bind="walker.source">--</span></p>
+  <aside class="notes">Satellites in view above a 10 degree mask, averaged over longitudes and one orbit of the shell, and over the IGS file's two days for GPS. GPS first: flat, about 9 to 10 everywhere, because it is 31 satellites in six planes at 55 degrees and 20,000 km. Click: the Walker shell. Its 192 satellites are much closer to the ground, so each one covers a small patch, and a 53 degree shell puts its coverage where its satellites turn around: the most satellites in view at 40 and 50 degrees, fewer at the equator, and none above the mask at 80 degrees. That is the design trade of a single shell, and it is why the published Pulsar design adds a second, near-polar shell of 66 satellites at 97 degrees, which is not modeled here. This is one shell of one proposed system, not a verdict on LEO PNT. Dilution of precision for the same comparison is in the backup.</aside>
+</section>
+
 <!-- ======================= BACKUP ======================= -->
 
 <section class="slide" data-label="Backup">
