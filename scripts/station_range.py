@@ -46,7 +46,8 @@ earth_rotation. sat_clock is separate.
 Data source:
   - IGS combined ultra-rapid orbit and clock product (IGS0OPSULT, 15 min
     samples) from the BKG mirror of the IGS archive, which needs no login. The
-    newest issue whose span covers the epoch is selected.
+    newest issue whose samples cover 6 h either side of the epoch (both
+    labels) is selected, a bound on the pass of the highest satellite.
 
 Frames and time:
   - SP3 positions are Earth-fixed (IGS realization of ITRF), epochs are GPS
@@ -79,22 +80,31 @@ RAW_DIR = ROOT / "deck/data/raw/station_range"
 
 STANFORD = {"name": "STANFORD", "lat_deg": 37.4275, "lon_deg": -122.1697, "alt_m": 30.0}
 STEP_S = 30.0
+PASS_BOUND_S = 6 * 3600.0
+SP3_STEP_S = 900.0
 
 
-def newest_product_covering(client: bh.IGSProductsClient, epoch: bh.Epoch) -> bh.IGSProduct:
-    """Latest-starting IGS ultra-rapid SP3 product whose span contains the epoch."""
+def newest_product_covering(client: bh.IGSProductsClient, start: bh.Epoch, end: bh.Epoch) -> bh.IGSProduct:
+    """Latest-starting IGS ultra-rapid SP3 product whose samples contain [start, end].
+
+    The last sample of a product is one SP3 step before the end of its span.
+    """
     products = client.list_products_between(
-        epoch,
-        epoch,
+        start,
+        end,
         center=bh.IGSAnalysisCenter.IGS,
         solution=bh.IGSSolutionType.ULTRA_RAPID,
         content=bh.IGSContentType.ORBIT,
         format=bh.IGSFileFormat.SP3,
     )
-    covering = [p for p in products if 0.0 <= epoch - p.file_name.start_epoch <= p.file_name.span]
+    covering = [
+        p
+        for p in products
+        if p.file_name.start_epoch <= start and end <= p.file_name.start_epoch + p.file_name.span - SP3_STEP_S
+    ]
     if not covering:
-        raise RuntimeError(f"no IGS ultra-rapid product covers {epoch}")
-    return min(covering, key=lambda p: epoch - p.file_name.start_epoch)
+        raise RuntimeError(f"no IGS ultra-rapid product covers {start} to {end}")
+    return max(covering, key=lambda p: p.file_name.start_epoch)
 
 
 def fetch_sp3(product: bh.IGSProduct, client: bh.IGSProductsClient) -> Path:
@@ -130,7 +140,7 @@ def main() -> None:
     mistaken = bh.Epoch(2026, 11, 12, 19, 0, 0.0, 0.0, time_system=bh.UTC)
 
     client = bh.IGSProductsClient(bh.IGSProductSource.BKG)
-    product = newest_product_covering(client, correct)
+    product = newest_product_covering(client, correct - PASS_BOUND_S, mistaken + PASS_BOUND_S)
     sp3 = bh.SP3.from_file(str(fetch_sp3(product, client)))
 
     site = np.array([STANFORD["lon_deg"], STANFORD["lat_deg"], STANFORD["alt_m"]])
