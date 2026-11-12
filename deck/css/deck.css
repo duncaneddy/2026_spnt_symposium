@@ -75,8 +75,8 @@ html, body {
   color: var(--ink-50);
 }
 
-#footer .logo { height: 44px; display: flex; align-items: center; gap: 16px; }
-#footer .logo img { height: 44px; }
+#footer .logo { height: 48px; display: flex; align-items: center; gap: 16px; }
+#footer .logo img { height: 79px; margin: 0 -16px; }
 #footer .right { display: flex; gap: 28px; align-items: center; }
 #footer .num { min-width: 48px; text-align: right; }
 

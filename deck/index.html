@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Practical Astrodynamics</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <link rel="stylesheet" href="css/deck.css">
@@ -67,21 +68,23 @@
 
 <section class="slide" data-label="Errors">
   <h2 class="header center" data-in="up">Navigation is largely removing error</h2>
-  <div class="panel meas" data-rough="box" data-rough-key="err-meas" style="left:180px; top:290px; width:720px; height:240px;" data-in="up" data-delay="300">
+  <div class="panel meas" data-rough="box" data-rough-key="err-meas" style="left:180px; top:290px; width:720px; height:310px;" data-in="up" data-delay="300">
     <h3>Measurement error</h3>
     <p>Clocks, ionosphere, troposphere, multipath, receiver noise</p>
+    <p style="margin-top:18px;">System design changes can also reduce measurement error</p>
   </div>
-  <div class="panel dyn-small" data-rough="box" data-rough-key="err-dyn" style="left:1020px; top:290px; width:720px; height:240px;" data-in="up" data-delay="550">
+  <div class="panel dyn-small" data-rough="box" data-rough-key="err-dyn" style="left:1020px; top:290px; width:720px; height:310px;" data-in="up" data-delay="550">
     <h3 data-flip="dyn-title" style="width:640px;">Dynamics model error</h3>
-    <p>Where the satellite actually is between measurements</p>
+    <p data-flip="dyn-desc" style="width:640px;">Uncertainty in location from unmodeled forces, and from uncertainty and errors in capturing the true physics</p>
   </div>
   <aside class="notes">Two sources of error in any navigation solution. The left box is this room's field: you model, estimate and correct measurement errors every day. The right box is the other half: how well you know where the transmitter (or the receiver) is and how it moves. Click to open up the right box.</aside>
 </section>
 
 <section class="slide" data-label="Errors 2" data-clone="Errors" data-drop=".dyn-small" data-dim=".meas:0.45">
-  <div data-rough="box" data-rough-key="err-dyn-big" style="position:absolute; left:1020px; top:290px; width:720px; height:540px;" data-in="draw"></div>
+  <div data-rough="box" data-rough-key="err-dyn-big" style="position:absolute; left:1020px; top:290px; width:720px; height:610px;" data-in="draw"></div>
   <h3 data-flip="dyn-title" style="position:absolute; left:1060px; top:326px; width:640px; margin:0; font-size:40px; font-weight:600;">Dynamics model error</h3>
-  <ul class="force-list" style="left:1060px; top:404px; width:640px;">
+  <p data-flip="dyn-desc" style="position:absolute; left:1060px; top:384px; width:640px; margin:0; font-size:30px; line-height:1.35;">Uncertainty in location from unmodeled forces, and from uncertainty and errors in capturing the true physics</p>
+  <ul class="force-list" style="left:1060px; top:530px; width:640px;">
     <li data-in="up" data-delay="500">Earth's gravity field beyond a point mass</li>
     <li data-in="up" data-delay="650">Atmospheric drag</li>
     <li data-in="up" data-delay="800">Solar radiation pressure</li>
@@ -114,10 +117,9 @@
   <div class="statement">
     <p class="quote" data-in="up" data-delay="150">“It has always been too much astrodynamics for software engineers, and too much software engineering for astrodynamicists.”</p>
     <p class="quote-by" data-in="fade" data-delay="700">Juan Luis Cano Rodríguez, “Juan Luis steps down as maintainer of the project”, poliastro blog, December 21, 2022</p>
-    <p class="turn" style="color:var(--ink);" data-in="fade" data-step="1">I enjoy both, a lot.</p>
   </div>
   <p class="cite"><a href="https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/" target="_blank" rel="noopener">https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/</a></p>
-  <aside class="notes">Why the tradeoff exists. poliastro was an open-source Python astrodynamics library; this line is from its creator, Juan Luis Cano Rodríguez, in "Juan Luis steps down as maintainer of the project" on the poliastro blog, December 21, 2022 (https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/), explaining why such projects are hard to keep alive. Pause after reading it. Click: "I enjoy both, a lot." Deliver it flat; it is the light remark that sets up brahe.</aside>
+  <aside class="notes">Why the tradeoff exists. poliastro was an open-source Python astrodynamics library; this line is from its creator, Juan Luis Cano Rodríguez, in "Juan Luis steps down as maintainer of the project" on the poliastro blog, December 21, 2022 (https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/), explaining why such projects are hard to keep alive. Pause after reading it; it sets up brahe.</aside>
 </section>
 
 <section class="slide" data-label="brahe">
