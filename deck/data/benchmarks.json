@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-12T14:50:46Z",
+  "generated_utc": "2026-11-12T14:59:02Z",
   "brahe_version": "1.6.1",
   "brahe_build": "development build of main (1.6.1-dev) with SPK ephemeris-query caching, pending release",
   "benchmark_run_utc": "2026-06-16T02:31:06.664579+00:00",
@@ -9,15 +9,16 @@
   "hardware": "AMD EPYC 9554, 64 cores, Ubuntu Linux",
   "library_versions": {
     "basilisk": "2.10.2",
+    "freeflyer": "7.10.1",
     "nyx": "2.4.0",
     "orekit": "13.1.5",
     "ostk": "17.9.0"
   },
-  "excluded": {
+  "launch_per_call": {
     "freeflyer": {
-      "reason": "one subprocess per invocation; medians measure process startup",
       "version": "7.10.1",
-      "min_median_s": 0.17666536360047758
+      "launch_s": 0.17666536360047758,
+      "min_ratio": 1.5
     }
   },
   "tasks_in_run": 32,
@@ -230,6 +231,13 @@
           "ratio_to_brahe": 51.30235135677663
         },
         {
+          "library": "freeflyer",
+          "language": "freeflyer",
+          "median_s": 21.153565374203026,
+          "ratio_to_brahe": 134.48786342066174,
+          "launch_per_call": true
+        },
+        {
           "library": "ostk",
           "language": "ostk",
           "median_s": 36.8562480090186,
@@ -326,6 +334,13 @@
           "language": "gmat",
           "median_s": 0.2528013065457344,
           "ratio_to_brahe": 7.138564469092539
+        },
+        {
+          "library": "freeflyer",
+          "language": "freeflyer",
+          "median_s": 0.2856635148636997,
+          "ratio_to_brahe": 8.066522460607525,
+          "launch_per_call": true
         }
       ]
     }

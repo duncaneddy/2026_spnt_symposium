@@ -30,14 +30,18 @@ Ratios:
 Kept tasks:
   time.utc_to_gps, coordinates.geodetic_to_ecef, frames.state_eci_to_ecef,
   propagation.sgp4_trajectory, access.sgp4_access,
-  propagation.numerical_rk4_grav20x20_sun_moon.
+  propagation.numerical_rk4_grav20x20_sun_moon,
+  propagation.numerical_rk4_grav80x80_full.
   `faster_elsewhere` lists every task in the run, kept or not, where another
   library's median is below brahe (Rust)'s.
 
-Excluded libraries:
-  FreeFlyer runs one subprocess per invocation, so its medians measure process
-  startup rather than the task. It is left out of the tasks and reported under
-  `excluded` with its smallest median.
+Libraries that start a process per call:
+  FreeFlyer runs one subprocess per invocation, so every median includes a
+  process launch. Its smallest median over the run is taken as that launch
+  time. It is kept in a task's results, flagged `launch_per_call`, only where
+  its median is at least LAUNCH_MIN_RATIO times the launch time, and it is
+  left out of `faster_elsewhere`. `launch_per_call` reports the launch time,
+  the ratio and the library version.
 
 Run:
   uv run scripts/benchmarks.py [--results path/to/run_latest.json] [--out path.json]
@@ -45,8 +49,10 @@ Run:
 
 Output (deck/data/benchmarks.json):
   {generated_utc, brahe_version, brahe_build, benchmark_run_utc, statistic,
-   iterations, source, hardware, library_versions, excluded, tasks_in_run,
-   tasks:[{name, label, batch, results:[{library, language, median_s, ratio_to_brahe}]}],
+   iterations, source, hardware, library_versions,
+   launch_per_call:{<library>:{version, launch_s, min_ratio}}, tasks_in_run,
+   tasks:[{name, label, batch, results:[{library, language, median_s, ratio_to_brahe,
+                                         launch_per_call?}]}],
    faster_elsewhere:[{task, library, ratio_to_brahe}]}
   Results within a task are sorted fastest first.
 """
@@ -62,7 +68,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "deck/data/benchmarks.json"
 DEFAULT_RESULTS = Path("~/repos/brahe/benchmarks/comparative/results/run_latest.json").expanduser()
 SOURCE = "brahe: benchmarks/comparative/results/run_latest.json"
-EXCLUDED = {"freeflyer": "one subprocess per invocation; medians measure process startup"}
+LAUNCH_PER_CALL = ("freeflyer",)
+LAUNCH_MIN_RATIO = 1.5
 
 # Task name -> (slide label, inputs per timed invocation, from the task definitions).
 TASKS = {
@@ -92,8 +99,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_task(name: str, medians: dict[tuple[str, str], float]) -> dict:
-    """One task entry: median per library/language with ratio to brahe (Rust)."""
+def build_task(name: str, medians: dict[tuple[str, str], float], launch_s: dict[str, float]) -> dict:
+    """One task entry: median per library/language with ratio to brahe (Rust). A library that
+    starts a process per call is kept only where its median clears its launch time."""
     reference = medians[("brahe", "rust")]
     results = [
         {
@@ -102,7 +110,9 @@ def build_task(name: str, medians: dict[tuple[str, str], float]) -> dict:
             "median_s": median,
             "ratio_to_brahe": median / reference,
         }
+        | ({"launch_per_call": True} if library in launch_s else {})
         for (library, language), median in sorted(medians.items(), key=lambda kv: kv[1])
+        if library not in launch_s or median >= LAUNCH_MIN_RATIO * launch_s[library]
     ]
     label, batch = TASKS[name]
     return {"name": name, "label": label, "batch": batch, "results": results}
@@ -117,17 +127,22 @@ def main() -> None:
 
     by_task: dict[str, dict[tuple[str, str], float]] = {}
     for r in run["task_results"]:
-        if r["library"] not in EXCLUDED:
-            by_task.setdefault(r["task_name"], {})[(r["library"], r["language"])] = statistics.median(r["times_seconds"])
+        by_task.setdefault(r["task_name"], {})[(r["library"], r["language"])] = statistics.median(r["times_seconds"])
 
-    tasks = [build_task(name, by_task[name]) for name in TASKS]
+    launch_s = {}
+    for lib in LAUNCH_PER_CALL:
+        lib_medians = [median for meds in by_task.values() for (name, _), median in meds.items() if name == lib]
+        if lib_medians:
+            launch_s[lib] = min(lib_medians)
+
+    tasks = [build_task(name, by_task[name], launch_s) for name in TASKS]
 
     faster = [
         {"task": name, "library": lib, "ratio_to_brahe": median / meds[("brahe", "rust")]}
         for name, meds in sorted(by_task.items())
         if meds.get(("brahe", "rust"), 0) > 0
         for (lib, _), median in sorted(meds.items(), key=lambda kv: kv[1])
-        if lib != "brahe" and median < meds[("brahe", "rust")]
+        if lib != "brahe" and lib not in launch_s and median < meds[("brahe", "rust")]
     ]
 
     versions = {}
@@ -136,11 +151,10 @@ def main() -> None:
         if r["library"] != "brahe" and version and version.lower() != r["library"]:
             versions[r["library"]] = version
 
-    excluded = {}
-    for lib, reason in EXCLUDED.items():
-        lib_medians = [statistics.median(r["times_seconds"]) for r in run["task_results"] if r["library"] == lib]
-        if lib_medians:
-            excluded[lib] = {"reason": reason, "version": versions.get(lib), "min_median_s": min(lib_medians)}
+    launch_per_call = {
+        lib: {"version": versions.get(lib), "launch_s": seconds, "min_ratio": LAUNCH_MIN_RATIO}
+        for lib, seconds in launch_s.items()
+    }
 
     iterations = {r["iterations"] for r in run["task_results"] if r["task_name"] in TASKS}
 
@@ -152,7 +166,9 @@ def main() -> None:
         assert ("brahe", "rust") in libs, f"{task['name']}: no brahe (Rust) result"
         assert any(lib != "brahe" for lib, _ in libs), f"{task['name']}: no other library"
         assert all(r["ratio_to_brahe"] > 0 for r in task["results"]), f"{task['name']}: bad ratio"
-        assert not any(r["library"] in EXCLUDED for r in task["results"]), f"{task['name']}: excluded library"
+        for r in task["results"]:
+            if r["library"] in launch_s:
+                assert r["median_s"] >= LAUNCH_MIN_RATIO * launch_s[r["library"]], f"{task['name']}: launch-bound result"
 
     out = {
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -163,8 +179,8 @@ def main() -> None:
         "iterations": iterations.pop(),
         "source": args.source,
         "hardware": args.hardware or f"{info['platform']}, {info['cpu_count']} CPUs",
-        "library_versions": {k: versions[k] for k in sorted(versions) if k not in EXCLUDED},
-        "excluded": excluded,
+        "library_versions": {k: versions[k] for k in sorted(versions)},
+        "launch_per_call": launch_per_call,
         "tasks_in_run": len(by_task),
         "tasks": tasks,
         "faster_elsewhere": faster,

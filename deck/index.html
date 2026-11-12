@@ -152,33 +152,39 @@
 
 <section class="slide" data-label="Design choices">
   <h2 class="header" data-in="up">Design choices in brahe</h2>
-  <div class="panel design-panel" data-rough="box" data-rough-key="dc-si" style="left:180px; top:280px; width:740px; height:230px;" data-in="up" data-delay="300">
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-si" style="left:180px; top:250px; width:740px; height:200px;" data-in="up" data-delay="300">
     <h3>SI units everywhere</h3>
-    <p>Meters, seconds and kilograms in and out of every function. Angles take an explicit degrees or radians argument.</p>
+    <p>Meters, seconds and kilograms in and out of every function. Angles state degrees or radians.</p>
   </div>
-  <div class="panel design-panel" data-rough="box" data-rough-key="dc-compose" style="left:1000px; top:280px; width:740px; height:230px;" data-step="1">
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-compose" style="left:1000px; top:250px; width:740px; height:200px;" data-step="1">
     <h3>Composable pieces</h3>
-    <p>Propagators, force models, access constraints and event detectors are separate objects that you combine.</p>
+    <p>Propagators, force models, access constraints and event detectors are separate objects you combine.</p>
   </div>
-  <div class="panel design-panel" data-rough="box" data-rough-key="dc-core" style="left:180px; top:570px; width:740px; height:230px;" data-step="2">
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-magic" style="left:180px; top:480px; width:740px; height:200px;" data-step="2">
+    <h3>Make users explicitly invoke magic</h3>
+    <p>You state each model choice precisely. Once invoked, brahe handles the complexity of using it.</p>
+  </div>
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-core" style="left:1000px; top:480px; width:740px; height:200px;" data-step="3">
     <h3>Performance optimization abstracted</h3>
     <p>Compiled Rust, threading and whole-array calls sit behind ordinary Python functions.</p>
   </div>
-  <div class="panel design-panel" data-rough="box" data-rough-key="dc-docs" style="left:1000px; top:570px; width:740px; height:230px;" data-step="3">
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-docs" data-flip="docs-zoom" style="left:590px; top:710px; width:740px; height:200px;" data-step="4">
     <h3>Every documentation example runs</h3>
     <p>Each example in the documentation is compiled and run on every commit, so the docs match the code.</p>
   </div>
-  <aside class="notes">Four choices that make the library usable as a dependency. SI units everywhere: no guessing whether a function wants kilometers. Planned remark: "SI everywhere. I promised myself I would not tell the Mars Climate Orbiter story at a navigation conference, so I will just say: meters." Click: composable pieces; the same propagator feeds access, events and estimation, which we will see when the receiver moves from the ground to orbit with one line changed. Click: the complexity of performance optimization is abstracted away; the expensive loops are compiled Rust, threaded where it pays off, and you call them as ordinary Python functions. Click: every documentation example is compiled and run in continuous integration on each commit, so a copied example works.</aside>
+  <aside class="notes">Five choices that make the library usable as a dependency. SI units everywhere: no guessing whether a function wants kilometers. Planned remark: "SI everywhere. I promised myself I would not tell the Mars Climate Orbiter story at a navigation conference, so I will just say: meters." Click: composable pieces; the same propagator feeds access, events and estimation, which we will see when the receiver moves from the ground to orbit with one line changed. Click: make users explicitly invoke magic. The library should force you to understand your model selections and be precise about them: which frame, which time system, which gravity model, which Earth orientation data. Nothing is chosen silently. But once you have invoked it, the library handles the complexity of implementing and using it. Click: the complexity of performance optimization is abstracted away; the expensive loops are compiled Rust, threaded where it pays off, and you call them as ordinary Python functions. Click: every documentation example is compiled and run in continuous integration on each commit, so a copied example works. The next slide zooms into that documentation.</aside>
 </section>
 
 <section class="slide" data-label="Docs">
-  <h2 class="header" data-in="up">The documentation has worked examples and a full API reference</h2>
-  <div class="doc-shot" data-rough="box" data-rough-key="doc-example" style="left:140px; top:240px; width:800px; height:644px;" data-in="up" data-delay="300"><img src="img/docs-example.jpg" alt="brahe documentation example page: Visualizing GPS Satellite Orbits"></div>
-  <p class="doc-cap" style="left:140px; top:896px; width:800px;" data-in="fade" data-delay="500">Examples: worked problems, start to finish</p>
-  <div class="doc-shot" data-rough="box" data-rough-key="doc-api" style="left:980px; top:240px; width:800px; height:644px;" data-step="1"><img src="img/docs-api.jpg" alt="brahe Python API reference page: Epoch class"></div>
-  <p class="doc-cap" style="left:980px; top:896px; width:800px;" data-step="1">API reference: every class and function, with examples</p>
+  <h2 class="header" data-in="fade" data-delay="500">The documentation has worked examples and a full API reference</h2>
+  <div class="doc-zoom" data-flip="docs-zoom" style="left:120px; top:212px; width:1680px; height:716px;">
+    <div class="doc-shot" style="left:36px; top:30px; width:784px; height:590px;"><img src="img/docs-example.jpg" alt="brahe documentation example page: Visualizing GPS Satellite Orbits"></div>
+    <p class="doc-cap" style="left:36px; top:640px; width:784px;">Examples: worked problems, start to finish</p>
+    <div class="doc-shot" style="left:860px; top:30px; width:784px; height:590px;" data-step="1"><img src="img/docs-api.jpg" alt="brahe Python API reference page: Epoch class"></div>
+    <p class="doc-cap" style="left:860px; top:640px; width:784px;" data-step="1">API reference: every class and function, with examples</p>
+  </div>
   <p class="cite"><a href="https://docs.brahe.space/latest/" target="_blank" rel="noopener">docs.brahe.space</a> · brahe 1.8.1 documentation</p>
-  <aside class="notes">Since every example runs, the documentation is worth showing. On the left, one of the worked examples: visualizing the GPS constellation, from downloading elements to an interactive plot, with every code block tested. There are examples for ground contacts, Doppler compensation, imaging opportunities, lunar and Mars orbits, and tracking with an EKF, UKF and batch least squares. Click: the API reference, here the Epoch class, documents every class and function for both Python and Rust, with a short runnable example on most entries. There is also a user guide that explains the concepts behind each module.</aside>
+  <aside class="notes">The documentation box opens up. On the left, one of the worked examples: visualizing the GPS constellation, from downloading elements to an interactive plot, with every code block tested. There are examples for ground contacts, Doppler compensation, imaging opportunities, lunar and Mars orbits, and tracking with an EKF, UKF and batch least squares. Click: the API reference, here the Epoch class, documents every class and function for both Python and Rust, with a short runnable example on most entries. There is also a user guide that explains the concepts behind each module.</aside>
 </section>
 
 <section class="slide" data-label="Modules zoom" data-clone="Modules">
@@ -438,8 +444,8 @@
   <h2 class="header" data-in="up">Median run time of common tasks in other libraries, relative to brahe</h2>
   <div class="fig" data-fig="benchmarkRatios" style="left:120px; top:212px; width:1680px; height:590px;"></div>
   <p class="caption" style="position:absolute; left:120px; right:120px; top:818px; margin:0; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1000" data-bind-wrap>brahe from Python takes <span data-bind="benchmark.pyHeavy">--</span> times its Rust time on the <span data-bind="benchmark.nHeavy">--</span> tasks above <span data-bind="benchmark.heavyUs">--</span> µs and <span data-bind="benchmark.pyLight">--</span> times on the <span data-bind="benchmark.nLight">--</span> microsecond-scale tasks. Another library is faster than brahe (Rust) on <span data-bind="benchmark.nFaster">--</span> of the <span data-bind="benchmark.nRun">--</span> tasks in the run, listed in the backup.</p>
-  <p class="cite" style="left:120px; right:120px;" data-bind-wrap>brahe comparative benchmark suite, run <span data-bind="benchmark.run">--</span> · <span data-bind="benchmark.brahe">--</span> · <span data-bind="benchmark.hardware">--</span> · median of <span data-bind="benchmark.iterations">--</span> iterations · <span data-bind="benchmark.libs">--</span> · <span data-bind="benchmark.excluded">--</span> not shown: one subprocess per call, at least <span data-bind="benchmark.excludedMin">--</span> s each · scripts/benchmarks.py</p>
-  <aside class="notes">The same task with the same inputs in each library, timed 200 times; each dot is that library's median divided by brahe's, one color per library, and the orange line is brahe. Almost everything sits to the right: slower than brahe. Not everywhere. On numerical propagation with 20 by 20 gravity, Sun and Moon, Orekit is about 8 percent faster. Raise the fidelity to 80 by 80 gravity with drag and solar radiation pressure, and brahe pulls ahead: Orekit takes about 10 percent longer, Basilisk and Nyx about 1.7 and 1.8 times as long, GMAT about 7 times. Across the full suite Nyx wins five tasks, including UTC to UT1, Orekit two, OSTk two; the backup lists them. Python adds per-call overhead, large on tiny tasks, negligible on heavy ones.<br><br>If asked: this brahe was a development build with ephemeris caching that has not been released, on a 64-core server. Each timed call is a batch, for example 50 epochs, so divide by 50 for one conversion.</aside>
+  <p class="cite" style="left:120px; right:120px;" data-bind-wrap>brahe comparative benchmark suite, run <span data-bind="benchmark.run">--</span> · <span data-bind="benchmark.brahe">--</span> · <span data-bind="benchmark.hardware">--</span> · median of <span data-bind="benchmark.iterations">--</span> iterations · <span data-bind="benchmark.libs">--</span> · <span data-bind="benchmark.launchLib">--</span> (open circle) starts one process per call, about <span data-bind="benchmark.launchS">--</span> s, and is shown where its time is at least <span data-bind="benchmark.launchMin">--</span> times that · scripts/benchmarks.py</p>
+  <aside class="notes">The same task with the same inputs in each library, timed 200 times; each dot is that library's median divided by brahe's, one color per library, and the orange line is brahe. Almost everything sits to the right: slower than brahe. Not everywhere. On numerical propagation with 20 by 20 gravity, Sun and Moon, Orekit is about 8 percent faster. Raise the fidelity to 80 by 80 gravity with drag and solar radiation pressure, and brahe pulls ahead: Orekit takes about 10 percent longer, Basilisk and Nyx about 1.7 and 1.8 times as long, GMAT about 7 times. FreeFlyer is the open circle: the harness starts one FreeFlyer process per call, about 0.18 seconds, so it only appears where its time is well above that, and its numbers include the launch. Across the full suite Nyx wins five tasks, including UTC to UT1, Orekit two, OSTk two; the backup lists them. Python adds per-call overhead, large on tiny tasks, negligible on heavy ones.<br><br>If asked: this brahe was a development build with ephemeris caching that has not been released, on a 64-core server. Each timed call is a batch, for example 50 epochs, so divide by 50 for one conversion.</aside>
 </section>
 
 <!-- ======================= CLOSE ======================= -->

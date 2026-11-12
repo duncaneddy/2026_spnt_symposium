@@ -32,6 +32,7 @@ const ratioFmt = v => (v < 0.1 ? fmt(v, 3) : v < 1 ? fmt(v, 2) : v < 10 ? fmt(v,
 const range = (vals, d) => { const lo = Math.min(...vals), hi = Math.max(...vals); return `${fmt(lo, d)} to ${fmt(hi, d)}`; };
 const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 const countWord = n => COUNT_WORDS[n] ?? String(n);
+const launch = d => B(d).launch_per_call || {};
 const otherLibs = d => [...new Set(B(d).tasks.flatMap(t => t.results.filter(r => r.library !== 'brahe').map(r => r.library)))];
 const libWithVersion = (d, lib) => { const v = B(d).library_versions?.[lib]; return v ? `${libName({ library: lib })} ${v}` : libName({ library: lib }); };
 const fasterTasks = d => [...new Set(B(d).faster_elsewhere.map(f => f.task))];
@@ -42,9 +43,10 @@ export const moduleBinds = {
   'benchmark.brahe': d => `brahe ${B(d).brahe_version}${B(d).brahe_build ? ' development build' : ''}`,
   'benchmark.hardware': d => B(d).hardware,
   'benchmark.iterations': d => String(B(d).iterations),
-  'benchmark.libs': d => listAnd(otherLibs(d).sort((a, b) => libName({ library: a }).localeCompare(libName({ library: b }))).map(lib => libWithVersion(d, lib))),
-  'benchmark.excluded': d => Object.entries(B(d).excluded || {}).map(([lib, e]) => `${libName({ library: lib })}${e.version ? ` ${e.version}` : ''}`).join(', ') || undefined,
-  'benchmark.excludedMin': d => { const m = Object.values(B(d).excluded || {}).map(e => e.min_median_s); return m.length ? fmt(Math.min(...m), 2) : undefined; },
+  'benchmark.libs': d => listAnd(otherLibs(d).filter(lib => !launch(d)[lib]).sort((a, b) => libName({ library: a }).localeCompare(libName({ library: b }))).map(lib => libWithVersion(d, lib))),
+  'benchmark.launchLib': d => Object.keys(launch(d)).map(lib => libWithVersion(d, lib)).join(', ') || undefined,
+  'benchmark.launchS': d => { const m = Object.values(launch(d)).map(e => e.launch_s); return m.length ? fmt(Math.min(...m), 2) : undefined; },
+  'benchmark.launchMin': d => { const m = Object.values(launch(d)).map(e => e.min_ratio); return m.length ? fmt(Math.min(...m), 1) : undefined; },
   'benchmark.heavyUs': () => fmtInt(HEAVY_S * 1e6),
   'benchmark.nHeavy': d => countWord(heavy(d).length),
   'benchmark.nLight': d => countWord(light(d).length),
@@ -57,7 +59,8 @@ export const moduleBinds = {
 // One row per task on a shared log axis of time relative to brahe (Rust): brahe is the 1x line in
 // Poppy, every other library a dot in its own color (one color per library) with its name centered
 // above or below its own dot (a label that has to move sideways gets a leader line to its dot).
-// Dots left of the line (faster than brahe) and dots within 20% of it carry their ratio as well. A
+// A library that starts a process per call is an open circle. Dots left of the line (faster than
+// brahe) and dots within 20% of it carry their ratio as well. A
 // task label wider than the label column wraps at its last comma that fits, and its second line
 // carries the batch size. brahe's Python bindings are not plotted (the slide states their overhead
 // in a caption line).
@@ -101,7 +104,7 @@ function benchmarkRender(el, d) {
     svgEl('line', { x1: labelW + 20, x2: W - right, y1: y, y2: y, stroke: 'rgba(46,45,41,.12)', 'stroke-width': 1.5 }, g);
     [...marks[k]].sort((a, b) => a.ratio_to_brahe - b.ratio_to_brahe).forEach(r => {
       const v = r.ratio_to_brahe, x = X(v), faster = v < 1, close = v < CLOSE;
-      svgEl('circle', { cx: x, cy: y, r: 9, fill: libColor[r.library] }, g);
+      svgEl('circle', r.launch_per_call ? { cx: x, cy: y, r: 7.5, fill: C.board, stroke: libColor[r.library], 'stroke-width': 3.5 } : { cx: x, cy: y, r: 9, fill: libColor[r.library] }, g);
       const lbl = close ? `${libName(r)} ${ratioFmt(v)}×` : libName(r);
       const t0 = haloText(g, 0, 0, lbl, { size: 22, color: libColor[r.library], weight: 600 });
       const w = t0.getComputedTextLength();

@@ -675,22 +675,22 @@ figures.tradeoff = {
 
 /* ---------- project timeline ---------- */
 // One row per version of the project, evenly spaced down a hand-drawn time arrow that ends at
-// today: the year left of the arrow, a circle on it filled in the language's color (two halves
+// today: the year left of the arrow, a borderless disc on it in the language's color (two halves
 // for a version in two languages), and what happened to its right. The first row shows on
 // entry; each later row is one click.
 const LANG_COLOR = { MATLAB: C.poppy, 'C++': C.lagunita, Python: C.illuminating, Julia: C.plum, Rust: C.spirited };
 const VERSIONS = [
-  { year: '2014', langs: ['MATLAB'], text: 'Start astrodynamics research at Stanford and find no good open-source software to work in. Start writing it in <b>MATLAB</b>.' },
-  { year: '2015 to 2016', langs: ['C++', 'MATLAB'], text: 'Find out MATLAB is too slow. Rewrite in <b>C++ with MEX bindings</b>.' },
+  { year: '2014', langs: ['MATLAB'], text: 'Start GNC research at Stanford and find no good open-source software to use. Start building my own in <b>MATLAB</b>.' },
+  { year: '2015 to 2016', langs: ['C++', 'MATLAB'], text: 'Find MATLAB is too slow for my use cases. Rewrite in <b>C++ with MEX bindings</b>.' },
   { year: '2017', langs: ['C++'], text: 'Join Capella Space. Rewrite in <b>pure C++</b>.' },
-  { year: '2018', langs: ['Python'], text: 'Find C++ is a pain to write quickly. Rewrite in <b>pure Python</b>.' },
+  { year: '2018', langs: ['Python'], text: 'C++ becomes too much of a pain to write quickly and correctly. Rewrite in <b>pure Python</b>.' },
   { year: '2019', langs: ['Julia'], text: 'Return to Stanford. Rewrite in <b>Julia</b>.' },
   { year: '2021', langs: ['Rust', 'Python'], text: 'Join Amazon Kuiper. Start rewriting in <b>Rust with Python bindings</b>, which is what it has been since.' },
 ];
 
 figures.timeline = {
   render(el) {
-    const W = el.offsetWidth, H = el.offsetHeight, n = VERSIONS.length, x = 300, r = 32, top = 44, rowH = (H - 110 - top) / (n - 1);
+    const W = el.offsetWidth, H = el.offsetHeight, n = VERSIONS.length, x = 300, r = 20, top = 44, rowH = (H - 110 - top) / (n - 1);
     strokePath(svgFor(el), roughArrow(x, 0, x, H - 44, { seed: 2014, head: 18, rough: 0.5 }), { color: C.ink, width: 3 });
     el.insertAdjacentHTML('beforeend', `<div class="tl-today" style="left:${x - 120}px; top:${H - 36}px; width:240px;">today</div>`);
     VERSIONS.forEach((v, i) => {
@@ -700,11 +700,10 @@ figures.timeline = {
       row.style.cssText = `left:0; top:${top + i * rowH - r - 6}px; width:${W}px; height:${2 * r + 12}px;`;
       row.innerHTML = `<div class="tl-year" style="width:${x - r - 26}px;">${v.year}</div><div class="tl-text" style="left:${x + r + 30}px;">${v.text}</div>`;
       el.appendChild(row);
-      const svg = svgFor(row), cy = r + 6, seed = hashSeed(v.year);
+      const svg = svgFor(row), cy = r + 6;
       const [a, b = a] = v.langs.map(l => LANG_COLOR[l]);
       svgEl('path', { d: `M${x} ${cy - r}A${r} ${r} 0 0 0 ${x} ${cy + r}Z`, fill: a }, svg);
       svgEl('path', { d: `M${x} ${cy - r}A${r} ${r} 0 0 1 ${x} ${cy + r}Z`, fill: b }, svg);
-      strokePath(svg, roughEllipse(x, cy, r, r, { seed, rough: 0.5 }), { color: C.ink, width: 2.6 });
     });
   },
 };
