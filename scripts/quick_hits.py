@@ -238,9 +238,9 @@ def newest_product_covering(client: bh.IGSProductsClient, epoch: bh.Epoch) -> bh
 
 
 def fetch_sp3() -> tuple[bh.SP3, str]:
-    """SP3 file covering the frames window: a cached one when it covers it, else downloaded."""
+    """SP3 file covering the frames window: the newest cached one that covers it, else downloaded."""
     t0 = EPOCH - FRAMES_SPAN_S
-    for path in sorted(RAW_DIR.glob("IGS0OPSULT_*.SP3.gz")):
+    for path in sorted(RAW_DIR.glob("IGS0OPSULT_*.SP3.gz"), reverse=True):
         sp3 = bh.SP3.from_file(str(path))
         if sp3.start_epoch <= t0 and sp3.end_epoch >= EPOCH:
             return sp3, path.name

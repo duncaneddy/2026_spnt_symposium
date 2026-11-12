@@ -81,7 +81,7 @@ def orbit_file(epoch: bh.Epoch) -> Path:
         cached = [p for p in RAW_DIR.glob("IGS0OPSULT_*.SP3*") if covers(bh.IGSProductFileName.parse(p.name), epoch)]
         if not cached:
             raise
-        return max(cached, key=lambda p: epoch - bh.IGSProductFileName.parse(p.name).start_epoch)
+        return min(cached, key=lambda p: epoch - bh.IGSProductFileName.parse(p.name).start_epoch)
 
 
 def window_offset_s(coverage_end_s: float, span_s: int) -> int:

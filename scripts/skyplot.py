@@ -96,7 +96,7 @@ def orbit_file(epoch: bh.Epoch) -> Path:
         ]
         if not cached:
             raise
-        return max(cached, key=lambda p: epoch - bh.IGSProductFileName.parse(p.name).start_epoch)
+        return min(cached, key=lambda p: epoch - bh.IGSProductFileName.parse(p.name).start_epoch)
 
 
 def azel(site_ecef: np.ndarray, sat_ecef: np.ndarray) -> tuple[float, float]:
