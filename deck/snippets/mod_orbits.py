@@ -7,9 +7,13 @@ import brahe as bh
 
 epc = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.UTC)
 a = bh.R_EARTH + 20_200e3
+
 # 24 satellites, 6 planes, phasing 2, inclination 55 degrees
 gen = bh.WalkerConstellationGenerator.builder(
     24, 6, 2, a, 55.0, epc
 )
+
+# One propagator per satellite, 60 s step
 sats = gen.build().as_keplerian_propagators(60.0)
+
 print(len(sats), "satellites")

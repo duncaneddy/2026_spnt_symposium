@@ -38,6 +38,13 @@ precise: IGS orbit product, as in scripts/skyplot.py.
     positions are Earth-fixed (IGS realization of ITRF), so no inertial frame is involved.
   - The station is geodetic on WGS84; azimuth and elevation in the geodetic local frame.
 
+Prediction check (precise):
+  - The epoch is in the predicted half of the ultra-rapid product, and no later orbit
+    product exists for it yet. The same comparison is made CHECK_DAYS days earlier: the
+    ultra-rapid product issued at the same time of day, evaluated the same number of hours
+    after its start, against the IGS combined rapid orbit (IGS0OPSRAP) for that day. The
+    Earth-fixed position difference per GPS satellite is reported as check.pos_err_m.
+
 Comparison (basic and tle against precise, per satellite, matched by PRN):
   - sky_err_deg: angle between the lines of sight to the level's and the precise satellite
     positions, both seen from the precise (geodetic) station position.
@@ -69,6 +76,8 @@ Output (deck/data/three_levels.json):
             el_err_deg:{median, max_abs}, pos_err_km:{median, max}, n_mask_flips,
             flipped_prns},
            {key:"precise", n_visible, visible_prns}],
+   check:{epoch_utc, days_before, ultra_rapid_product, rapid_product, n_sats,
+          pos_err_m:{median, max}},
    sats:[{prn, az_el_deg:{basic:[az, el], tle:[az, el], precise:[az, el]}}]}
   visible means elevation >= el_mask_deg.
 """
@@ -96,6 +105,7 @@ STATION = {"name": "STANFORD", "lon_deg": -122.1697, "lat_deg": 37.4275, "alt_m"
 STATION_LLA = np.array([STATION["lon_deg"], STATION["lat_deg"], STATION["alt_m"]])
 EL_MASK_DEG = 10.0
 MATCH_KM = 50.0
+CHECK_DAYS = 7
 LEVELS = ("basic", "tle", "precise")
 
 
@@ -130,6 +140,51 @@ def orbit_file(epoch: bh.Epoch) -> Path:
         if not cached:
             raise
         return min(cached, key=lambda p: epoch - bh.IGSProductFileName.parse(p.name).start_epoch)
+
+
+def check_file(solution: bh.IGSSolutionType, wanted) -> Path:
+    """The IGS combined orbit of the given solution type whose file name satisfies `wanted`,
+    from RAW_DIR when cached, else downloaded from the BKG mirror."""
+    cached = [p for p in RAW_DIR.glob(f"IGS0OPS{solution.code}_*.SP3*") if wanted(bh.IGSProductFileName.parse(p.name))]
+    if cached:
+        return cached[0]
+    client = bh.IGSProductsClient(bh.IGSProductSource.BKG)
+    epoch = EPOCH - CHECK_DAYS * 86400.0
+    products = client.list_products_between(
+        epoch,
+        epoch,
+        center=bh.IGSAnalysisCenter.IGS,
+        solution=solution,
+        content=bh.IGSContentType.ORBIT,
+        format=bh.IGSFileFormat.SP3,
+    )
+    product = next(p for p in products if wanted(p.file_name))
+    client.save(product, str(RAW_DIR))
+    return RAW_DIR / product.name
+
+
+def prediction_check(product: bh.IGSProductFileName) -> dict:
+    """Ultra-rapid against rapid GPS positions CHECK_DAYS before EPOCH, the same time into the
+    ultra-rapid product as EPOCH is into `product`."""
+    shift = CHECK_DAYS * 86400.0
+    epoch = EPOCH - shift
+    ult = check_file(bh.IGSSolutionType.ULTRA_RAPID, lambda n: abs(n.start_epoch - (product.start_epoch - shift)) < 1.0)
+    rap = check_file(bh.IGSSolutionType.RAPID, lambda n: covers(n, epoch))
+
+    def gps_positions(path: Path) -> dict[str, np.ndarray]:
+        sats = bh.SP3.from_file(str(path)).satellites()
+        return {s.get_name(): np.array(s.state_ecef(epoch)[:3]) for s in sats if s.get_name().startswith("G")}
+
+    r_ult, r_rap = gps_positions(ult), gps_positions(rap)
+    err_m = [float(np.linalg.norm(r_ult[k] - r_rap[k])) for k in sorted(set(r_ult) & set(r_rap))]
+    return {
+        "epoch_utc": epoch.isostring(),
+        "days_before": CHECK_DAYS,
+        "ultra_rapid_product": ult.name,
+        "rapid_product": rap.name,
+        "n_sats": len(err_m),
+        "pos_err_m": {"median": round(float(np.median(err_m)), 3), "max": round(max(err_m), 3)},
+    }
 
 
 def gp_records() -> tuple[list[dict], str]:
@@ -261,6 +316,7 @@ def main() -> None:
     azel["basic"] = {p: basic_site_and_azel(r)[1] for p, r in pos["basic"].items()}
 
     levels = [level_summary(k, azel, pos, site_ecef) for k in LEVELS]
+    check = prediction_check(bh.IGSProductFileName.parse(path.name))
     gp_epochs = sorted(prop.epoch.isostring() for prop in sgp.values())
     prns = sorted(pos["precise"])
     skyplot_visible = [s["prn"] for s in json.loads(SKYPLOT_JSON.read_text())["sats"] if s["visible"]]
@@ -274,6 +330,8 @@ def main() -> None:
     assert by_key["basic"]["pos_err_km"]["median"] > by_key["tle"]["pos_err_km"]["median"], "basic pos <= tle"
     assert by_key["basic"]["sky_err_deg"]["median"] > by_key["tle"]["sky_err_deg"]["median"], "basic sky <= tle"
     assert all(-90.0 <= azel[k][p][1] <= 90.0 for k in LEVELS for p in prns), "elevation out of range"
+    assert check["n_sats"] >= 24, f"prediction check on {check['n_sats']} satellites"
+    assert 0.001 <= check["pos_err_m"]["median"] <= 1.0, f"prediction check median {check['pos_err_m']}"
 
     result = {
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -285,6 +343,7 @@ def main() -> None:
         "gp_epoch_range_utc": [gp_epochs[0], gp_epochs[-1]],
         "n_sats": len(prns),
         "levels": levels,
+        "check": check,
         "sats": [
             {"prn": p, "az_el_deg": {k: [round(float(v), 3) for v in azel[k][p]] for k in LEVELS}} for p in prns
         ],
@@ -304,6 +363,10 @@ def main() -> None:
                 f" mask flips {lv['n_mask_flips']} {lv['flipped_prns']}"
             )
         print(line)
+    print(
+        f"check {check['ultra_rapid_product']} vs {check['rapid_product']} at {check['epoch_utc']}:"
+        f" {check['n_sats']} satellites, median {check['pos_err_m']['median']} max {check['pos_err_m']['max']} m"
+    )
     print(f"wrote {out}")
 
 

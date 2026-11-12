@@ -3,12 +3,12 @@
 import { roughLine, roughRect, roughEllipse, roughArrow, roughPolyline, svgEl, strokePath, hashSeed, mulberry32 } from './sketch.js';
 import { moduleCode, moduleFigures, moduleBinds } from './modules.js';
 
-export const DATA_FILES = ['skyplot', 'three_levels', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt', 'gravity_crossover', 'benchmarks'];
+export const DATA_FILES = ['skyplot', 'three_levels', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt', 'gravity_crossover', 'benchmarks', 'snippet_outputs'];
 
 const EASE_IN = 'cubic-bezier(.2,.7,.2,1)';
 const EASE_MOVE = 'cubic-bezier(.65,0,.25,1)';
 const FILL = { fill: 'both' };
-const C = { ink: '#2E2D29', cardinal: '#8C1515', lagunita: '#006CB8', sky: '#0098DB', green: '#279989', gray: '#9A9A9A', board: '#FAF8F3' };
+const C = { ink: '#2E2D29', cardinal: '#8C1515', lagunita: '#006CB8', sky: '#0098DB', green: '#279989', poppy: '#E98300', gray: '#9A9A9A', board: '#FAF8F3' };
 const R_EARTH = 6378.137;
 
 /* ======================= helpers ======================= */
@@ -266,6 +266,7 @@ export const binds = {
   'sky.timeUTC': d => `${d.skyplot.epoch_utc.slice(0, 10)} ${d.skyplot.epoch_utc.slice(11, 16)} UTC`,
   'sky.product': d => d.skyplot.product.replace(/\.SP3(\.gz)?$/i, ''),
   'lv.product': d => d.three_levels.product.replace(/\.SP3(\.gz)?$/i, ''),
+  'lv.checkDate': d => d.three_levels.check && new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'long', day: 'numeric' }).format(new Date(d.three_levels.check.epoch_utc)),
   'lv.gpSource': d => GP_SOURCE[d.three_levels.gp_source] ?? d.three_levels.gp_source,
   'qh.nGps': d => String(d.quick_hits.tle.n),
   'qh.nTracks': d => String(d.quick_hits.tle.tracks.length),
@@ -475,6 +476,8 @@ function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22
 // `from`/`to` (line matches) show part of a file on one card when a program spans two cards.
 // Each entry becomes the figure `code-<key>` (use <div class="fig" data-fig="code-<key>">); a
 // snippet file that fails to load shows a pending note.
+// An entry with `output: true` also shows, in a box under the card, what the program printed and
+// its run time, both from snippet_outputs.json.
 const CODE = {
   skyplot: { file: 'skyplot', hide: ['print('] },
   tle: { file: 'ground_tracks', hide: ['print('], opts: { size: 23 } },
@@ -513,6 +516,8 @@ const SNIPPETS = Object.fromEntries(await Promise.all([...new Set(Object.values(
   } catch { return [file, null]; }
 })));
 
+const runTime = s => (s < 1e-3 ? `${fmt(s * 1e6, 0)} µs` : s < 1 ? `${fmt(s * 1e3, s < 0.01 ? 1 : 0)} ms` : `${fmt(s, 2)} s`);
+
 function snippetLines({ file, from, to, hide = [] }) {
   let lines = SNIPPETS[file];
   if (!lines) return null;
@@ -527,11 +532,23 @@ function snippetLines({ file, from, to, hide = [] }) {
 
 Object.entries(CODE).forEach(([key, c]) => {
   figures[`code-${key}`] = {
-    needs: [],
-    render(el) {
+    needs: c.output ? ['snippet_outputs'] : [],
+    render(el, d) {
       const lines = snippetLines(c);
       if (!lines) { el.insertAdjacentHTML('beforeend', `<div class="pending">snippet pending: deck/snippets/${c.file}.py</div>`); return; }
-      codeCard(el, lines, { ...c.opts, key });
+      const run = c.output && d.snippet_outputs.snippets[c.file];
+      if (!run) { codeCard(el, lines, { ...c.opts, key }); return; }
+      const stack = document.createElement('div');
+      stack.className = 'code-stack';
+      el.appendChild(stack);
+      codeCard(stack, lines, { ...c.opts, key });
+      const out = document.createElement('div');
+      out.className = 'code-out';
+      out.dataset.rough = 'box';
+      out.dataset.roughKey = `out-${key}`;
+      out.innerHTML = `<span class="out-label">Output</span><pre></pre><span class="out-time">${runTime(run.seconds)}</span>`;
+      out.querySelector('pre').textContent = run.stdout.join('\n');
+      stack.appendChild(out);
     },
   };
 });
@@ -589,15 +606,16 @@ figures.skyplot = {
 };
 
 /* ---------- three levels of the sky-plot answer ---------- */
-// Under each .level-card on the slide, revealed with its card: satellites counted above the mask,
-// and for the two simpler levels the median satellite position error against the precise level
-// with the median error in sky direction beneath.
+// Under each .level-card on the slide, revealed with its card and centered on it: the median
+// satellite position error. The two simpler levels are measured against the precise level; the
+// precise level's ultra-rapid orbit is measured against the IGS rapid orbit on an earlier day.
 const LEVEL_KEYS = ['basic', 'tle', 'precise'];
 
 figures.threeLevels = {
   needs: ['three_levels'],
   render(el, d) {
-    const L = d.three_levels, mask = fmt(L.el_mask_deg, 0);
+    const L = d.three_levels, check = L.check;
+    const cls = { basic: 'accent', tle: 'caution', precise: 'resolved' };
     const cards = [...el.closest('section').querySelectorAll('.level-card')];
     const cell = (label, value, cls = '') => `<div><dt>${label}</dt><dd class="${cls}">${value}</dd></div>`;
     LEVEL_KEYS.forEach((key, i) => {
@@ -607,10 +625,10 @@ figures.threeLevels = {
       dl.className = 'stats compact level-stats';
       dl.dataset.step = card.dataset.step;
       dl.style.cssText = `left:${card.offsetLeft - el.offsetLeft}px; top:0; width:${card.offsetWidth}px; margin:0;`;
-      const above = `Above the ${mask}° mask`;
+      if (key === 'precise' && !check) return;
       dl.innerHTML = key === 'precise'
-        ? `${cell(above, lv.n_visible, 'resolved')}<p class="note">IGS ultra-rapid orbit, centimeter to decimeter level</p>`
-        : `${cell(above, lv.n_visible)}${cell('Median position error', `${fmt(lv.pos_err_km.median, 1)}<span class="unit">km</span>`, 'accent')}<p class="note">Median error in sky direction ${fmt(lv.sky_err_deg.median, 3)}°</p>`;
+        ? `${cell('Median position error', `${fmt(check.pos_err_m.median * 100, 1)}<span class="unit">cm</span>`, cls[key])}<p class="note">Ultra-rapid prediction against the IGS rapid orbit, ${check.days_before} days earlier</p>`
+        : cell('Median position error', `${fmt(lv.pos_err_km.median, 1)}<span class="unit">km</span>`, cls[key]);
       el.appendChild(dl);
     });
   },
@@ -618,12 +636,12 @@ figures.threeLevels = {
 
 /* ---------- tool families and the four properties ---------- */
 // Each family is a row under the property cards (.prop-slot on the same slide), one hand-drawn
-// symbol per property at the same size: a check in Palo Verde (yes), a tilde in ink (sometimes),
-// an x in ink at 45% (no).
+// symbol per property at the same size and stroke width: a check in Palo Verde (yes), a tilde in
+// Poppy (somewhat), an x in Cardinal (no).
 const TOOL_FAMILIES = [
   { name: 'Commercial tools', eg: 'STK, FreeFlyer', has: ['yes', 'sometimes', 'no', 'no'] },
-  { name: 'Research scripts and small packages', eg: 'university and personal projects', has: ['yes', 'no', 'no', 'yes'] },
-  { name: 'Established open-source toolkits', eg: 'Orekit, GMAT', has: ['no', 'no', 'sometimes', 'yes'] },
+  { name: 'Research scripts and small packages', eg: 'university and personal projects', has: ['sometimes', 'no', 'no', 'yes'] },
+  { name: 'Established open-source toolkits', eg: 'Orekit, GMAT', has: ['yes', 'no', 'no', 'yes'] },
 ];
 
 function tildePath(cx, cy, seed) {
@@ -645,11 +663,11 @@ figures.tradeoff = {
       const svg = svgFor(row), cy = 46, seed = hashSeed(f.name);
       f.has.forEach((h, i) => {
         const cx = cols[i];
-        if (h === 'yes') strokePath(svg, roughPolyline([[cx - 18, cy], [cx - 5, cy + 14], [cx + 20, cy - 16]], { seed: seed + i, rough: 0.6 }), { color: C.green, width: 4 });
+        if (h === 'yes') strokePath(svg, roughPolyline([[cx - 18, cy], [cx - 5, cy + 14], [cx + 20, cy - 16]], { seed: seed + i, rough: 0.6 }), { color: C.green, width: 4.5 });
         else if (h === 'no') {
-          strokePath(svg, roughLine(cx - 15, cy - 15, cx + 15, cy + 15, { seed: seed + i, rough: 0.5, passes: 1 }), { color: 'rgba(46,45,41,.45)', width: 4 });
-          strokePath(svg, roughLine(cx + 15, cy - 15, cx - 15, cy + 15, { seed: seed + i + 50, rough: 0.5, passes: 1 }), { color: 'rgba(46,45,41,.45)', width: 4 });
-        } else strokePath(svg, tildePath(cx, cy, seed + i), { color: C.ink, width: 4 });
+          strokePath(svg, roughLine(cx - 15, cy - 15, cx + 15, cy + 15, { seed: seed + i, rough: 0.5, passes: 1 }), { color: C.cardinal, width: 4.5 });
+          strokePath(svg, roughLine(cx + 15, cy - 15, cx - 15, cy + 15, { seed: seed + i + 50, rough: 0.5, passes: 1 }), { color: C.cardinal, width: 4.5 });
+        } else strokePath(svg, tildePath(cx, cy, seed + i), { color: C.poppy, width: 4.5 });
       });
     });
   },
@@ -1359,14 +1377,6 @@ figures.pdopByLat = {
 
 /* ---------- check mark (brahe slide) ---------- */
 // A hand-drawn check in Palo Verde that draws itself after data-delay ms.
-figures.check = {
-  render(el) {
-    const svg = svgFor(el), w = el.offsetWidth, h = el.offsetHeight;
-    el.__path = strokePath(svg, roughPolyline([[w * 0.2, h * 0.55], [w * 0.42, h * 0.85], [w * 0.82, h * 0.15]], { seed: hashSeed(el.dataset.state || 'check'), rough: 0.6 }), { color: C.green, width: 5 });
-  },
-  animate(el, d, s, A) { drawOnAnim([el.__path], A, +(el.dataset.delay || 0), 700); },
-};
-
 /* ---------- adopters ---------- */
 // One logo per organization from img/logos/, in a centered 5 x 2 grid.
 figures.adopters = {

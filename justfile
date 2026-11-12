@@ -1,4 +1,4 @@
-scripts := "basemap skyplot three_levels gps_constellation quick_hits tle_vs_sp3 station_range leo_receiver mms_visibility walker_pnt gravity_crossover"
+scripts := "basemap skyplot three_levels gps_constellation quick_hits tle_vs_sp3 station_range leo_receiver mms_visibility walker_pnt gravity_crossover snippet_outputs"
 
 # Regenerate every data file except benchmarks.json
 data:

@@ -31,6 +31,7 @@ Follows the AA 279B `design-guidelines.md`.
 | Lagunita | `#006CB8` | orbits, brahe results |
 | Sky | `#0098DB` | lighter orbit fills (at 15-25% opacity) |
 | Palo Verde | `#279989` | the correct or resolved result |
+| Poppy | `#E98300` | the in-between result: a partial yes, an error between the worst and the best |
 | Stanford Plum | `#620059` | Python keywords on code cards only |
 | Gray | `#9A9A9A` / ink at 35-50% | context, dimmed prior beats |
 
@@ -61,7 +62,7 @@ pocs/         gitignored scratch
 ### Act 1: The problem (about 4 min)
 1. Title.
 2. Cold open. [Q] "Which GPS satellites are above this building right now?" Three levels of answering it (basic,
-   TLE, full), each naming the same satellites with a different position error [S:three_levels]; then the sky
+   TLE, full), each with its median satellite position error [S:three_levels]; then the sky
    plot over Stanford at the talk hour from an IGS SP3 file, with the code that made it. [S:skyplot]
 3. Navigation is largely removing error: measurement error and dynamics model error. Dynamics are modelable
    but hard to get right and fast.
@@ -73,9 +74,10 @@ pocs/         gitignored scratch
 ### Act 2: What is in it (about 4 min)
 7. Module map: hand-drawn cards (time, frames and coordinates, orbits, propagation, access, data clients,
    estimation). Shown again in full ink as a recap before the adopters.
-8. Design choices: SI units, composable pieces, compiled core, every documentation example run on each commit.
-9. Quick hits, code and result side by side: CelesTrak ground tracks, force-model propagation, frame
-   transforms. [S:quick_hits]
+8. Design choices: SI units, composable pieces, performance optimization abstracted away, every documentation
+   example run on each commit.
+9. Quick hits, code and result side by side: CelesTrak ground tracks, force-model propagation. The frame
+   transform example is in backup. [S:quick_hits]
 
 ### Act 3: Use it (about 7 min)
 10. Data clients. IGS SP3 download. [Q] "How far is the public TLE from the precise orbit for the same GPS
@@ -118,7 +120,7 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | File | Schema |
 |---|---|
 | `skyplot.json` | `{generated_utc, epoch_utc, product, station:{name, lat_deg, lon_deg, alt_m}, el_mask_deg, sats:[{prn, az_deg, el_deg, visible, track_azel_deg:[[az, el]]}], n_visible}` |
-| `three_levels.json` | `{generated_utc, epoch_utc, station:{name, lon_deg, lat_deg, alt_m}, el_mask_deg, product, gp_source, gp_epoch_range_utc, n_sats, levels:[{key:"basic"\|"tle", n_visible, visible_prns, sky_err_deg:{median, max}, el_err_deg:{median, max_abs}, pos_err_km:{median, max}, n_mask_flips, flipped_prns}, {key:"precise", n_visible, visible_prns}], sats:[{prn, az_el_deg:{basic, tle, precise}}]}` |
+| `three_levels.json` | `{generated_utc, epoch_utc, station:{name, lon_deg, lat_deg, alt_m}, el_mask_deg, product, gp_source, gp_epoch_range_utc, n_sats, check:{epoch_utc, days_before, ultra_rapid_product, rapid_product, n_sats, pos_err_m:{median, max}}, levels:[{key:"basic"\|"tle", n_visible, visible_prns, sky_err_deg:{median, max}, el_err_deg:{median, max_abs}, pos_err_km:{median, max}, n_mask_flips, flipped_prns}, {key:"precise", n_visible, visible_prns}], sats:[{prn, az_el_deg:{basic, tle, precise}}]}` |
 | `quick_hits.json` | `{generated_utc, tle:{group, source, n, match_max_residual_km, inc_range_deg, epoch_utc, tracks:[{name, norad, inc_deg, lonlat_deg}]}, propagate:{object, inc_deg, t_h, alt_twobody_km, alt_full_km, dr_km, dr_drag_km, force_model}, frames:{prn, product, start_utc, t_h, eci_xyz_km, ecef_xyz_km}}` |
 | `gps_constellation.json` | `{generated_utc, epoch_utc, talk_epoch_utc, talk_index, product, frame, step_s, period_s, prns, xyz_km:[time][satellite][x, y, z], planes}` |
 | `land.json` | `{source, rings:[[[lon, lat]]]}` (Natural Earth 1:110m land, `scripts/basemap.py`) |
@@ -129,6 +131,7 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | `walker_pnt.json` | `{generated_utc, config:{pattern, t, p, f, alt_km, inc_deg, source, force_model, integrator, mass_kg, drag_area_m2, cd, srp_area_m2, cr}, span_h, threads, wall_s_serial, wall_s_parallel, speedup, snapshot_xyz_km, planes, one_orbit_xyz_km, in_view:{lat_deg, walker_mean, gps_mean, el_mask_deg}, dop:{lat_deg, walker_pdop_median, gps_pdop_median, skipped:{walker, gps}, samples_per_lat}}` (a null median PDOP means no sample had 4 satellites in view) |
 | `gravity_crossover.json` | `{generated_utc, machine:{cpu, threads, load_avg_1min_start, load_avg_1min_end}, model, model_file_bytes, max_degree_available, kernel, integrator, steps, passes, repeats_per_pass, stages_per_step, method, degrees, serial_us, parallel_us, serial_us_q25, serial_us_q75, parallel_us_q25, parallel_us_q75, overhead_us_degree2, auto_threshold_nmax, measured_crossover_nmax, crossover_range_nmax}` |
 | `benchmarks.json` | `{generated_utc, brahe_version, brahe_build, benchmark_run_utc, statistic, iterations, source, hardware, library_versions, excluded:{<library>:{reason, version, min_median_s}}, tasks_in_run, tasks:[{name, label, batch, results:[{library, language, median_s, ratio_to_brahe}]}], faster_elsewhere:[{task, library, ratio_to_brahe}]}` |
+| `snippet_outputs.json` | `{generated_utc, runs, machine, snippets:{<name>:{stdout:[line], seconds}}}` (the module snippets' printed output and median run time, imports excluded, `scripts/snippet_outputs.py`) |
 
 ## Slide registry
 
@@ -138,49 +141,49 @@ Numbers are the footer numbers (deck.js gives a continuation the number of the s
 |---|---|---|---|
 | 1 | Title | `gpsConstellation` / gps_constellation.json | fresh; orbits draw on, satellites fade in and loop over one period from the talk-time sample (75 s per period) |
 | 2 | Sky Q | none | fresh; question alone (`data-flip="q-sky"`) |
-| 3 | Three levels | `threeLevels` / three_levels.json | magic move: question becomes the header; clicks 1 to 3: Basic, Better and Full cards, each with its count above the mask (and for Basic and Better the median position error, median sky-direction error beneath); click 4: closing sentence |
+| 3 | Three levels | `threeLevels` / three_levels.json | magic move: question becomes the header; clicks 1 to 3: Basic, Better and Full cards, each with its median position error centered beneath (Basic in Cardinal and Better in Poppy, both against the ultra-rapid orbit; Full in Palo Verde, the ultra-rapid prediction against the IGS rapid orbit seven days earlier, `check`) |
 | 4 | Sky plot | `skyplot`, `code-skyplot` / skyplot.json | same header as Three levels (no move); plot draws on, code card rises, count caption fades |
 | 5 | Errors | none | fresh; two boxes, each with its description; the measurement box adds that system design can reduce measurement error |
 | 5 | Errors 2 | none | continuation of Errors: measurement box dimmed, dynamics title and description move (`dyn-title`, `dyn-desc`) into a larger box that draws on, forces rise; click 1: the takeaway sentence |
-| 6 | Tradeoff | `tradeoff` | fresh; property cards rise; click 1: question; clicks 2 to 4: one tool family row each, symbols check (Palo Verde), tilde (sometimes, ink) and x (no, ink at 45%); click 2 also shows the legend and the tendencies caption |
-| 7 | Quote | none | fresh; quote and attribution. Holds hidden copies of the property cards at their Tradeoff positions as magic-move sources for the next slide |
-| 8 | brahe | `check` x4 / facts from `BRAHE` in figs.js | magic move: property cards fly from their Tradeoff positions into a row; checks draw; facts and install line fade |
+| 6 | Tradeoff | `tradeoff` | fresh; property cards rise; clicks 1 to 3: one tool family row each, symbols check (yes, Palo Verde), tilde (somewhat, Poppy) and x (no, Cardinal) at one stroke width; click 1 also shows the legend and the tendencies caption |
+| 7 | Quote | none | fresh; quote and attribution |
+| 8 | brahe | none / `img/brahe-logo.png`, facts from `BRAHE` in figs.js | fresh; logo and the statement of what brahe is; clicks 1 to 3: Fast, Cross-platform and Free panels; the install line appears with the third |
 | 9 | Modules | `moduleMap` | fresh; cards rise one by one |
 | 10 | Design choices | none | fresh; first panel on entry, clicks 1 to 3: one panel each |
 | 10 | Modules zoom | `moduleMap` (clone of Modules), `moduleZoomKeys` | continuation of Modules (deck.js gives it the footer number of the slide before it, Design choices); stepping back from Module Time reverses the move into it; `moduleZoomKeys` gives each cloned card title and icon a `data-flip` key (`mod-<key>`, `mod-<key>-icon`) |
-| 11 | Module Time | `modIcon`, `code-modTime` (snippets/mod_time.py) | magic move: the Time card title and icon fly into the header while a hidden copy of the map and its header fade out (`data-dim-to="0"`); supports list fades, code card rises |
-| 12 | Module Frames | `modIcon`, `code-modFrames` (snippets/mod_frames.py) | fresh; icon, header, supports list (four groups), code card |
-| 13 | Module Orbits | `modIcon`, `code-modOrbits` (snippets/mod_orbits.py) | fresh; same layout |
-| 14 | Module Propagation | `modIcon`, `code-modPropagation` (snippets/mod_propagation.py) | fresh; same layout |
-| 15 | Module Access | `modIcon`, `code-modAccess` (snippets/mod_access.py) | fresh; same layout |
-| 16 | Module Data | `modIcon`, `code-modData` (snippets/mod_data.py) | fresh; same layout |
-| 17 | Module Estimation | `modIcon`, `code-modEstimation` (snippets/mod_estimation.py) | fresh; same layout |
+| 11 | Module Time | `modIcon`, `code-modTime` (snippets/mod_time.py) / snippet_outputs.json | magic move: the Time card title and icon fly into the header while a hidden copy of the map and its header fade out (`data-dim-to="0"`); supports list fades, code card rises; under the code card, a box with the program's output and its run time in Lagunita |
+| 12 | Module Frames | `modIcon`, `code-modFrames` (snippets/mod_frames.py) / snippet_outputs.json | fresh; icon, header, supports list (four groups), code card |
+| 13 | Module Orbits | `modIcon`, `code-modOrbits` (snippets/mod_orbits.py) / snippet_outputs.json | fresh; same layout |
+| 14 | Module Propagation | `modIcon`, `code-modPropagation` (snippets/mod_propagation.py) / snippet_outputs.json | fresh; same layout |
+| 15 | Module Access | `modIcon`, `code-modAccess` (snippets/mod_access.py) / snippet_outputs.json | fresh; same layout |
+| 16 | Module Data | `modIcon`, `code-modData` (snippets/mod_data.py) / snippet_outputs.json | fresh; same layout |
+| 17 | Module Estimation | `modIcon`, `code-modEstimation` (snippets/mod_estimation.py) / snippet_outputs.json | fresh; same layout |
 | 18 | Quick TLE | `code-tle`, `groundTracks` / quick_hits.json, land.json, skyplot.json | fresh; code card rises, tracks draw on |
 | 19 | Quick force model | `code-propagate`, `forceModelEffect` / quick_hits.json | fresh; curves draw on, labels fade |
-| 20 | Quick frames | `code-frames`, `eciVsEcef` / quick_hits.json | fresh; both frames draw on together |
-| 21 | TLE vs IGS | `code-tleSp3`, `tleVsSp3` / tle_vs_sp3.json | fresh; question as header, code card rises; click 1: R, T, N curves draw on (along-track in Cardinal) with RMS and largest difference |
-| 22 | LEO receiver | `code-leoReceiver`, `leoLinks` / leo_receiver.json | fresh; code card with the ISS argument in Cardinal; Earth, ISS orbit and lines of sight to visible GPS satellites draw on, to scale |
-| 23 | LEO counts | `leoCounts` / leo_receiver.json | fresh; ground series with mean; click 1: ISS series with mean, ground dims, comparison caption |
-| 24 | MMS orbit | `mmsOrbit` / mms_visibility.json | fresh; question as header, orbit face-on to scale with GPS radius circle, main and side lobe half angles for one GPS satellite, Earth shadow; click 1: replay of MMS along the orbit (50 s per orbit) with distance and counts in the readout (`data-readout`, refreshed twice a second), a trace of the main-lobe count over the orbit (`data-mms-trace`), "Geometric visibility, no link budget" |
-| 25 | MMS counts | `mmsCounts` / mms_visibility.json | fresh; main-lobe counts against radius and its 4+ fraction; click 1: main or side lobes, main dims, second fraction and no-link-budget label |
-| 26 | Walker build | `code-walker`, `walkerGlobe` / walker_pnt.json | fresh; planes draw on one by one, then satellites move (kinematic, one period per 20 s); click 1: serial, parallel, threads, speedup |
-| 27 | Walker in view | `inViewByLat` / walker_pnt.json | fresh; GPS by latitude; click 1: Walker shell with inclination line, GPS dims, comparison sentence; cite is `config.source` |
-| 28 | Gravity | `gravityCrossover` / gravity_crossover.json | fresh; log-log axes, serial line with interquartile band draws on, serial values at the low and highest degree; click 1: parallel line and band (Lagunita) draw on, parallel values; click 2: brahe's automatic threshold as an exact vertical line, measured crossover range as a shaded band, sentence on the automatic switch |
-| 29 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one row per task on a shared log axis of time relative to brahe (Rust), brahe as the Lagunita 1x line, every other library an ink dot with its name centered above or below its own dot (a leader line when a label has to move further out; ratio added for dots on the faster side); a task label wider than the 500 px label column wraps at its last comma and its second line carries the batch size; rows fade in one by one; captions bind the Python overhead range and the count of tasks in the run where another library is faster |
-| 30 | Modules recap | `moduleMap` | fresh; the module map again in full ink, cards rise one by one |
-| 31 | Adopters | `adopters` | fresh; ten logos in a 5 x 2 grid, cells fade in |
-| 32 | Next | none | fresh; roadmap panel; click 1: "How you can get involved" panel with share data; clicks 2 and 3: request features, contribute |
-| 33 | Links | `closeLinks` | fresh; name and email under the header; two 440 px QR codes side by side, each with its label and URLs beneath: brahe (`img/brahe-qr.webp`, brahe.space and github.com/duncaneddy/brahe) and the talk repository (`img/repo-qr.webp`, github.com/duncaneddy/2026_spnt_symposium) |
+| 20 | TLE vs IGS | `code-tleSp3`, `tleVsSp3` / tle_vs_sp3.json | fresh; question as header, code card rises; click 1: R, T, N curves draw on (along-track in Cardinal) with RMS and largest difference |
+| 21 | LEO receiver | `code-leoReceiver`, `leoLinks` / leo_receiver.json | fresh; code card with the ISS argument in Cardinal; Earth, ISS orbit and lines of sight to visible GPS satellites draw on, to scale |
+| 22 | LEO counts | `leoCounts` / leo_receiver.json | fresh; ground series with mean; click 1: ISS series with mean, ground dims, comparison caption |
+| 23 | MMS orbit | `mmsOrbit` / mms_visibility.json | fresh; question as header, orbit face-on to scale with GPS radius circle, main and side lobe half angles for one GPS satellite, Earth shadow; click 1: replay of MMS along the orbit (50 s per orbit) with distance and counts in the readout (`data-readout`, refreshed twice a second), a trace of the main-lobe count over the orbit (`data-mms-trace`), "Geometric visibility, no link budget" |
+| 24 | MMS counts | `mmsCounts` / mms_visibility.json | fresh; main-lobe counts against radius and its 4+ fraction; click 1: main or side lobes, main dims, second fraction and no-link-budget label |
+| 25 | Walker build | `code-walker`, `walkerGlobe` / walker_pnt.json | fresh; planes draw on one by one, then satellites move (kinematic, one period per 20 s); click 1: serial, parallel, threads, speedup |
+| 26 | Walker in view | `inViewByLat` / walker_pnt.json | fresh; GPS by latitude; click 1: Walker shell with inclination line, GPS dims, comparison sentence; cite is `config.source` |
+| 27 | Gravity | `gravityCrossover` / gravity_crossover.json | fresh; log-log axes, serial line with interquartile band draws on, serial values at the low and highest degree; click 1: parallel line and band (Lagunita) draw on, parallel values; click 2: brahe's automatic threshold as an exact vertical line, measured crossover range as a shaded band, sentence on the automatic switch |
+| 28 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one row per task on a shared log axis of time relative to brahe (Rust), brahe as the Lagunita 1x line, every other library an ink dot with its name centered above or below its own dot (a leader line when a label has to move further out; ratio added for dots on the faster side); a task label wider than the 500 px label column wraps at its last comma and its second line carries the batch size; rows fade in one by one; captions bind the Python overhead range and the count of tasks in the run where another library is faster |
+| 29 | Modules recap | `moduleMap` | fresh; the module map again in full ink, cards rise one by one |
+| 30 | Adopters | `adopters` | fresh; ten logos in a 5 x 2 grid, cells fade in |
+| 31 | Next | none | fresh; roadmap panel; click 1: "How you can get involved" panel with share data; clicks 2 and 3: request features, contribute |
+| 32 | Links | `closeLinks` | fresh; name and email under the header; two 440 px QR codes side by side, each with its label and URLs beneath: brahe (`img/brahe-qr.webp`, brahe.space and github.com/duncaneddy/brahe) and the talk repository (`img/repo-qr.webp`, github.com/duncaneddy/2026_spnt_symposium) |
 | B | Backup | none | divider |
-| B1 | Range mistake | `code-rangeEpochs`, `rangeMistake` / station_range.json | fresh; code card with `bh.GPS` (Palo Verde) and `bh.UTC` (Cardinal), question "How big is the error?"; click 1: satellite position error and GPS minus UTC; click 2: range error curve over the pass with its largest value |
-| B2 | Pseudorange | none / station_range.json (`terms_m`) | fresh; equation and geometric range; clicks 1 to 3: light time, Earth rotation (the three rows that sum to rho), satellite clock |
-| B3 | PDOP | `pdopByLat` / walker_pnt.json (`dop`) | fresh; GPS median PDOP by latitude (log); click 1: Walker shell with a gap and label where the median is null, GPS dims, skipped-sample counts |
-| B4 | Events | `code-valueEvent` (snippets/value_event.py) | fresh; after brahe example custom_value_event.py |
-| B5 | Extensible dynamics | `code-additionalDynamics` (snippets/battery.py) | fresh; after brahe example battery_tracking.py |
-| B6 | Sensitivity | `code-sensitivity` (snippets/sensitivity.py) | fresh, same header as B5 without entry motion; after brahe example sensitivity_analysis.py |
-| B7 | Property computer | `code-propertyComputer`, `code-propertyAccess` (one program, snippets/property_computer.py, split before `t0 = bh.Epoch(`) | fresh; after brahe example custom_property_computer.py, note that access takes ground locations |
-| B8 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
-| B9 | Benchmark detail | `benchmarkDetail` / benchmarks.json | fresh; table of every ratio on the Benchmarks slide plus brahe from Python, and every task in the run where another library is faster than brahe (Rust) |
+| B1 | Quick frames | `code-frames`, `eciVsEcef` / quick_hits.json | fresh; both frames draw on together |
+| B2 | Range mistake | `code-rangeEpochs`, `rangeMistake` / station_range.json | fresh; code card with `bh.GPS` (Palo Verde) and `bh.UTC` (Cardinal), question "How big is the error?"; click 1: satellite position error and GPS minus UTC; click 2: range error curve over the pass with its largest value |
+| B3 | Pseudorange | none / station_range.json (`terms_m`) | fresh; equation and geometric range; clicks 1 to 3: light time, Earth rotation (the three rows that sum to rho), satellite clock |
+| B4 | PDOP | `pdopByLat` / walker_pnt.json (`dop`) | fresh; GPS median PDOP by latitude (log); click 1: Walker shell with a gap and label where the median is null, GPS dims, skipped-sample counts |
+| B5 | Events | `code-valueEvent` (snippets/value_event.py) | fresh; after brahe example custom_value_event.py |
+| B6 | Extensible dynamics | `code-additionalDynamics` (snippets/battery.py) | fresh; after brahe example battery_tracking.py |
+| B7 | Sensitivity | `code-sensitivity` (snippets/sensitivity.py) | fresh, same header as B5 without entry motion; after brahe example sensitivity_analysis.py |
+| B8 | Property computer | `code-propertyComputer`, `code-propertyAccess` (one program, snippets/property_computer.py, split before `t0 = bh.Epoch(`) | fresh; after brahe example custom_property_computer.py, note that access takes ground locations |
+| B9 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
+| B10 | Benchmark detail | `benchmarkDetail` / benchmarks.json | fresh; table of every ratio on the Benchmarks slide plus brahe from Python, and every task in the run where another library is faster than brahe (Rust) |
 
 ## Deck implementation
 

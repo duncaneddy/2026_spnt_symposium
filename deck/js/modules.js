@@ -5,15 +5,16 @@ import { svgFor, text, haloText, exactPath, fadeIn, fmt, fmtInt, scaleLog, decad
 
 /* ---------- module slides ---------- */
 
-// One snippet per module slide: figure `code-mod<Name>` shows deck/snippets/mod_<module>.py.
+// One snippet per module slide: figure `code-mod<Name>` shows deck/snippets/mod_<module>.py and,
+// under it, the program's output and run time.
 export const moduleCode = {
-  modTime: { file: 'mod_time' },
-  modFrames: { file: 'mod_frames' },
-  modOrbits: { file: 'mod_orbits' },
-  modPropagation: { file: 'mod_propagation' },
-  modAccess: { file: 'mod_access' },
-  modData: { file: 'mod_data' },
-  modEstimation: { file: 'mod_estimation' },
+  modTime: { file: 'mod_time', output: true },
+  modFrames: { file: 'mod_frames', output: true },
+  modOrbits: { file: 'mod_orbits', output: true },
+  modPropagation: { file: 'mod_propagation', output: true },
+  modAccess: { file: 'mod_access', output: true },
+  modData: { file: 'mod_data', output: true },
+  modEstimation: { file: 'mod_estimation', output: true },
 };
 
 /* ---------- benchmarks ---------- */

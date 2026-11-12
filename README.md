@@ -50,7 +50,7 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 |---|---|
 | `basemap.py` | Natural Earth 1:110m land outline as longitude/latitude polylines, for the maps |
 | `skyplot.py` | Azimuth and elevation of every GPS satellite from the Stanford campus at the talk time, from an IGS ultra-rapid orbit, with tracks one hour either side |
-| `three_levels.py` | The same sky-plot question answered three ways (Keplerian orbits on a spinning sphere, TLEs with SGP4, the IGS orbit product), with the count above the mask and the position and sky-direction errors of the two simpler answers |
+| `three_levels.py` | The same sky-plot question answered three ways (Keplerian orbits on a spinning sphere, TLEs with SGP4, the IGS orbit product), with the position and sky-direction errors of the two simpler answers, and the ultra-rapid prediction checked against the IGS rapid orbit one week earlier |
 | `gps_constellation.py` | Every GPS satellite's position in GCRF over one orbital period, from the IGS ultra-rapid orbit, for the title animation |
 | `quick_hits.py` | Three short examples: GPS ground tracks from public GP elements with SGP4, two-body against full force-model propagation, and one GPS orbit in GCRF and ITRF |
 | `tle_vs_sp3.py` | Difference between SGP4 from the public GP elements and the IGS orbit for one GPS satellite, in radial, along-track and cross-track components |
@@ -60,6 +60,7 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 | `walker_pnt.py` | A LEO PNT Walker shell propagated serially and in parallel with a numerical force model, and satellites in view and PDOP by latitude against GPS |
 | `gravity_crossover.py` | Time per spherical-harmonic gravity evaluation against degree, with brahe's parallel mode forced off and on, measured through the numerical propagator |
 | `benchmarks.py` | Median run time of common tasks in brahe and other open-source libraries, relative to brahe, from brahe's comparative benchmark suite |
+| `snippet_outputs.py` | What each module snippet prints and how long it takes to run (imports excluded, median of three runs), for the output boxes on the module slides |
 
 ## Code on the slides
 

@@ -8,10 +8,17 @@ import numpy as np
 
 bh.initialize_eop()
 epc = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.UTC)
+
+# One state at GPS altitude, repeated 100,000 times
 oe = np.array([bh.R_EARTH + 20_200e3, 0.0, 55.0, 0.0, 0.0, 0.0])
 x0 = bh.state_koe_to_eci(oe, bh.AngleFormat.DEGREES)
-x = np.tile(x0, (100_000, 1))  # 100,000 states
+x = np.tile(x0, (100_000, 1))
+
+# Inertial to Earth-fixed, every state in one call
 x_itrf = bh.state_gcrf_to_itrf(epc, x)
+
+# Any frame to any frame, by name
 F = bh.CelestialFrame
 x_teme = bh.state_frame_to_frame(F.GCRF, F.TEME, epc, x)
+
 print(x_itrf.shape, x_teme.shape)

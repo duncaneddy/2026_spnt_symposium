@@ -6,6 +6,7 @@
   --sky: #0098DB;
   --paloverde: #279989;
   --plum: #620059;
+  --poppy: #E98300;
   --gray: #9A9A9A;
   --ink-50: rgba(46, 45, 41, 0.5);
   --ink-35: rgba(46, 45, 41, 0.35);
@@ -151,6 +152,7 @@ em { font-style: italic; }
 .c-lagunita { color: var(--lagunita); }
 .c-sky { color: var(--sky); }
 .c-green { color: var(--paloverde); }
+.c-poppy { color: var(--poppy); }
 .c-gray { color: var(--gray); }
 .c-dim { color: var(--ink-50); }
 .sans { font-family: var(--sans); }
@@ -177,6 +179,7 @@ em { font-style: italic; }
 .stats dd .unit { font-size: 38px; font-weight: 400; color: var(--ink-50); margin-left: 6px; }
 .stats dd.accent { color: var(--cardinal); }
 .stats dd.resolved { color: var(--paloverde); }
+.stats dd.caution { color: var(--poppy); }
 
 /* ---------- hand-drawn boxes & panels ---------- */
 
@@ -359,6 +362,12 @@ em { font-style: italic; }
 /* ---------- code cards (figs.js codeCard) ---------- */
 .code-card { position: absolute; left: 0; top: 0; width: 100%; padding: 22px 20px; }
 .code-card pre { margin: 0; font-family: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace; font-size: inherit; line-height: 1.25; color: var(--ink); white-space: pre; }
+.code-stack { position: absolute; left: 0; top: 0; width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.code-stack .code-card { position: relative; padding: 16px 20px; }
+.code-out { position: relative; display: flex; align-items: baseline; gap: 22px; padding: 10px 20px 12px; font-family: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace; font-size: 22px; line-height: 1.25; }
+.code-out .out-label { font-family: var(--sans); font-size: 22px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-50); }
+.code-out .out-time { margin-left: auto; font-family: var(--sans); font-weight: 600; color: var(--lagunita); font-variant-numeric: tabular-nums; }
+.code-out pre { margin: 0; font: inherit; white-space: pre; color: var(--ink); }
 .code-card .ln { position: relative; }
 .code-card .ln.blank { height: 0.625em; overflow: hidden; }
 .code-card .lnum { display: inline-block; width: 2ch; margin-right: 0.6ch; text-align: right; color: var(--ink-50); font-weight: 400; font-variant-numeric: tabular-nums; user-select: none; }
@@ -394,6 +403,9 @@ em { font-style: italic; }
 .quote { font-size: 64px; line-height: 1.22; font-style: italic; margin: 0; text-wrap: balance; }
 .statement .quote-by { font-family: var(--sans); font-size: 26px; color: var(--ink-50); margin-top: 36px; }
 .design-panel p { font-family: var(--sans); font-size: 28px; color: var(--ink-50); }
+.brahe-point { text-align: center; }
+.brahe-point h3 { font-size: 44px; }
+.brahe-point p { font-size: 30px; }
 
 /* ---------- adopters, roadmap, backup term table ---------- */
 .close-panel h3 { font-size: 40px; }
@@ -409,6 +421,7 @@ em { font-style: italic; }
 .level-card h3 { margin-bottom: 12px; }
 .level-card ul { font-family: var(--sans); }
 .level-card li { font-size: 27px; line-height: 1.25; margin-bottom: 8px; }
-.level-stats { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; align-content: start; }
-.level-stats dt { font-size: 24px; line-height: 1.2; }
-.level-stats .note { grid-column: 1 / -1; margin: 0; font-size: 24px; color: var(--ink-50); }
+.level-stats { text-align: center; }
+.level-stats dt { font-size: 26px; line-height: 1.2; margin-bottom: 6px; }
+.level-stats dd { font-size: 72px; margin-bottom: 8px; }
+.level-stats .note { margin: 0; font-size: 24px; line-height: 1.25; color: var(--ink-50); text-wrap: balance; }
