@@ -148,9 +148,9 @@ Numbers are the footer numbers (deck.js gives a continuation the number of the s
 | 5 | Errors 2 | none | continuation of Errors: measurement box dimmed, dynamics title and description move (`dyn-title`, `dyn-desc`) into a larger box that draws on, forces rise; click 1: the takeaway sentence |
 | 6 | Tradeoff | `tradeoff` | fresh; property cards rise; clicks 1 to 3: one tool family row each, symbols check (yes, Palo Verde), tilde (somewhat, Poppy) and x (no, Cardinal) at one stroke width; click 1 also shows the legend and the tendencies caption |
 | 7 | Quote | none | fresh; quote and attribution |
-| 8 | Timeline | `timeline` | fresh; a time arrow running down to today with the 2014 MATLAB version; clicks 1 to 5: one later version each (year left of the arrow, a borderless disc on it in the language's color, split for a version in two languages, what happened to its right) |
-| 9 | brahe | none / `img/brahe-logo.png`, facts from `BRAHE` in figs.js | fresh; logo and the statement of what brahe is; clicks 1 to 3: Fast, Cross-platform and Free panels; the install line appears with the third |
-| 10 | Modules | `moduleMap` | fresh; cards rise one by one |
+| 8 | brahe | none / `img/brahe-logo.png`, facts from `BRAHE` in figs.js | fresh; logo and the statement of what brahe is; clicks 1 to 3: Fast, Cross-platform and Free panels; the install line appears with the third |
+| 9 | Modules | `moduleMap` | fresh; cards rise one by one |
+| 10 | Timeline | `timeline` | fresh; a time arrow running down to today with the 2014 MATLAB version; clicks 1 to 5: one later version each (year left of the arrow, a borderless disc on it in the language's color, split for a version in two languages, what happened to its right) |
 | 11 | Design choices | none | fresh; first panel on entry, clicks 1 to 4: one panel each (SI units, composable pieces, explicit magic, performance abstracted, documentation) |
 | 12 | Docs | none / `img/docs-example.jpg`, `img/docs-api.jpg` (screenshots of docs.brahe.space) | magic move (`docs-zoom`): the documentation panel of Design choices grows into a frame holding the example page; click 1: the API reference page |
 | 12 | Modules zoom | `moduleMap` (clone of Modules), `moduleZoomKeys` | continuation of Modules (deck.js gives it the footer number of the slide before it, Design choices); stepping back from Module Time reverses the move into it; `moduleZoomKeys` gives each cloned card title and icon a `data-flip` key (`mod-<key>`, `mod-<key>-icon`) |
