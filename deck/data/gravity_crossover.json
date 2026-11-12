@@ -1,0 +1,61 @@
+{
+  "generated_utc": "2026-11-12T06:38:19+00:00",
+  "machine": {
+    "cpu": "Apple M1 Max",
+    "threads": 9,
+    "load_avg_1min_start": 16.56005859375,
+    "load_avg_1min_end": 15.85205078125
+  },
+  "model": "EGM96",
+  "max_degree_available": 360,
+  "kernel": "Clenshaw",
+  "integrator": "RK4 fixed step 10 s",
+  "steps": 200,
+  "stages_per_step": 4,
+  "method": "Wall time of NumericalOrbitPropagator.propagate_to (gravity-only force model, GravityConfiguration parallel=Never vs Always) divided by steps x RK4 stages. Includes integrator and ECI-ECEF frame-rotation overhead, estimated by overhead_us_degree2; median of 21 runs after one warm-up run.",
+  "degrees": [
+    2,
+    10,
+    20,
+    50,
+    90,
+    120,
+    150,
+    180,
+    210,
+    240,
+    300,
+    360
+  ],
+  "serial_us": [
+    1.6489587505930103,
+    1.6097924890345894,
+    1.8011462452705018,
+    2.780519971565809,
+    5.229634989518672,
+    7.720468747720588,
+    11.218958752579056,
+    15.1494275269215,
+    20.38906251982553,
+    25.837187495199032,
+    38.53859376249602,
+    55.83817750448361
+  ],
+  "parallel_us": [
+    6.048697505320888,
+    9.293853763665538,
+    9.39249999646563,
+    12.203646256239153,
+    13.627187472593505,
+    15.041562473925296,
+    17.061145008483436,
+    18.58171875937842,
+    21.152396257093642,
+    18.611197483551223,
+    23.228802492667455,
+    26.130104997719172
+  ],
+  "overhead_us_degree2": 1.6489587505930103,
+  "auto_threshold_nmax": 180,
+  "measured_crossover_nmax": 240
+}
