@@ -138,11 +138,6 @@ def gps_gp_records() -> tuple[str, list[dict]]:
     return cached["source"], cached["records"]
 
 
-def tle_lines(rec: dict) -> tuple[str, str]:
-    """TLE lines of a GP record with blank-padded catalog numbers zero-padded."""
-    return tuple(line[:2] + line[2:7].replace(" ", "0") + line[7:] for line in (rec["TLE_LINE1"], rec["TLE_LINE2"]))
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
@@ -174,7 +169,7 @@ def main() -> None:
     sat_gcrf_epoch = sat.state_gcrf(EPOCH)[:3]
     candidates = []
     for rec in records:
-        propagator = bh.SGPPropagator.from_tle(*tle_lines(rec), 60.0)
+        propagator = bh.GPRecord.from_json(json.dumps(rec)).to_sgp_propagator(60.0)
         dist_km = np.linalg.norm(propagator.state_gcrf(EPOCH)[:3] - sat_gcrf_epoch) / 1e3
         candidates.append((dist_km, rec, propagator))
     candidates.sort(key=lambda c: c[0])
