@@ -1,8 +1,12 @@
-scripts := "basemap skyplot gps_constellation quick_hits tle_vs_sp3 station_range leo_receiver mms_visibility walker_pnt gravity_crossover benchmarks"
+scripts := "basemap skyplot gps_constellation quick_hits tle_vs_sp3 station_range leo_receiver mms_visibility walker_pnt gravity_crossover"
 
-# Regenerate every data file the deck uses
+# Regenerate every data file except benchmarks.json
 data:
     for s in {{scripts}}; do uv run scripts/$s.py || exit 1; done
+
+# Rebuild benchmarks.json from brahe's comparative benchmark results, e.g. `just benchmarks --results path/to/run_latest.json`
+benchmarks *args:
+    uv run scripts/benchmarks.py {{args}}
 
 # Run one analysis script, e.g. `just run skyplot`
 run name:

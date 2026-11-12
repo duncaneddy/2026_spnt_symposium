@@ -12,11 +12,21 @@ astrodynamics library. Each script runs on its own with [uv](https://docs.astral
 uv run scripts/<name>.py
 ```
 
-Each script writes `deck/data/<name>.json`. To regenerate everything, in dependency order:
+Each script writes `deck/data/<name>.json`. To regenerate every data file except the benchmarks, in
+dependency order:
 
 ```bash
 just data
 ```
+
+`benchmarks.json` is built separately, because it reads results from a brahe checkout:
+
+```bash
+just benchmarks                                    # reads ~/repos/brahe
+just benchmarks --results path/to/run_latest.json  # or any results file
+```
+
+The `justfile` recipes are `data`, `benchmarks`, `run <name>` (one script), `serve` and `snippets`.
 
 - **brahe version:** the scripts pin brahe to a commit on its main branch that includes the IGS/SP3
   orbit product client, until a released version with that client is published. The pin builds brahe
@@ -27,7 +37,7 @@ just data
   `SPACETRACK_USER` and `SPACETRACK_PASS`. They are not needed while CelesTrak responds.
 - **`benchmarks.py`** reads the results of brahe's comparative benchmark suite from a brahe checkout
   (`~/repos/brahe/benchmarks/comparative/results/run_latest.json` by default; pass `--results` for
-  another path).
+  another path), so it is not part of `just data`.
 - **IGS orbit products** come from the BKG mirror of the IGS archive, which needs no login.
 
 Downloads are cached under `deck/data/raw/`, so the deck does not need the network during the talk.
@@ -49,8 +59,8 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 ## Code on the slides
 
 Every code card in the deck is a complete program in `deck/snippets/`, shown on its slide exactly as the
-file reads below its PEP 723 header (the deck loads the files directly). Each prints the number its slide
-shows and runs on its own:
+file reads below its PEP 723 header (the deck loads the files directly). Each runs on its own and prints
+its result:
 
 ```bash
 uv run deck/snippets/<name>.py
@@ -74,3 +84,14 @@ slide number followed by Enter to jump to that slide.
 
 Fonts (Source Serif 4, Source Sans 3, Source Code Pro) and KaTeX are bundled in `deck/fonts/` and
 `deck/vendor/`, so the deck loads with no network access.
+
+## Third-party material
+
+- **Fonts:** Source Serif 4, Source Sans 3 and Source Code Pro (Adobe), in `deck/fonts/`, under the
+  SIL Open Font License 1.1.
+- **KaTeX**, in `deck/vendor/katex/`, under the MIT License.
+- **Land outline:** Natural Earth 1:110m land, public domain (`scripts/basemap.py`).
+- **Logos:** the company logos in `deck/img/logos/` and the Stanford logos in `deck/img/` are
+  trademarks of their owners, used here for identification.
+
+The bundled font and KaTeX files do not include separate license files.

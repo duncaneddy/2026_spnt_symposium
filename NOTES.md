@@ -1,13 +1,13 @@
 # Practical Astrodynamics: SPNT Symposium (2026-11-12)
 
-Working notes for the deck. Not talk content.
+Documentation of the deck: story, visual system, conventions, data contracts and slide registry.
 
 ## Story
 
 - **Audience:** GNSS and navigation researchers and practitioners. Strong on measurement models, estimation,
   signals and receivers. Less likely to have built orbit propagation, time systems or frame transformations.
 - **Length:** 30 minute slot, main path planned for about 20 minutes, everything else after the Backup divider.
-- **Naive belief (builder's guess):** satellite positions come from a file, and orbit modeling is someone
+- **Audience belief to address:** satellite positions come from a file, and orbit modeling is someone
   else's problem that needs expensive or awkward tools.
 - **Leave with:** real orbit analysis takes about ten lines of open-source code, and the hard parts (time,
   frames, fast dynamics) are already done correctly.
@@ -48,7 +48,8 @@ Follows the AA 279B `design-guidelines.md`.
 ```
 scripts/      standalone `uv run` brahe scripts, each writes deck/data/<name>.json
 deck/         index.html, js/, css/, fonts/, vendor/, data/, img/
-justfile      `just data` regenerates all data, `just serve` serves the deck on 8280
+justfile      `just data` regenerates the data except benchmarks.json (`just benchmarks`),
+              `just serve` serves the deck on 8280, `just snippets` runs the code cards
 pocs/         gitignored scratch
 ```
 
@@ -97,7 +98,7 @@ pocs/         gitignored scratch
 ### Backup
 Pseudorange built term by term; dilution of precision for the designed constellation against GPS; event
 detection; extensible dynamics; custom property computer detail; benchmark detail; project history and test
-suite; Humphreys paper reproduction if built.
+suite.
 
 ### Cut order if the main path runs long
 MMS detail shortens to one slide, then beat 16 detail, then beat 11's mistake reveal moves to backup.
