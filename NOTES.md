@@ -114,18 +114,19 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 |---|---|
 | `skyplot.json` | `{generated_utc, epoch_utc, product, station:{name, lat_deg, lon_deg, alt_m}, el_mask_deg, sats:[{prn, az_deg, el_deg, visible, track_azel_deg:[[az, el]]}], n_visible}` |
 | `quick_hits.json` | `{generated_utc, tle:{group, source, n, match_max_residual_km, inc_range_deg, epoch_utc, tracks:[{name, norad, inc_deg, lonlat_deg}]}, propagate:{object, inc_deg, t_h, alt_twobody_km, alt_full_km, dr_km, dr_drag_km, force_model}, frames:{prn, product, start_utc, t_h, eci_xyz_km, ecef_xyz_km}}` |
+| `gps_constellation.json` | `{generated_utc, epoch_utc, talk_epoch_utc, talk_index, product, frame, step_s, period_s, prns, xyz_km:[time][satellite][x, y, z], planes}` |
 | `land.json` | `{source, rings:[[[lon, lat]]]}` (Natural Earth 1:110m land, `scripts/basemap.py`) |
 
 ## Slide registry
 
 | # | Label | Figure / data | Transition |
 |---|---|---|---|
-| 1 | Title | none | fresh |
+| 1 | Title | `gpsConstellation` / gps_constellation.json | fresh; orbits draw on, satellites fade in and loop over one period from the talk-time sample (75 s per period) |
 | 2 | Sky Q | none | fresh; question alone (`data-flip="q-sky"`) |
 | 2 | Sky plot | `skyplot`, `code-skyplot` / skyplot.json | magic move: question becomes the header; plot draws on, code card rises, count caption fades |
 | 3 | Errors | none | fresh; two boxes |
 | 3 | Errors 2 | none | continuation of Errors: measurement box dimmed, dynamics title moves (`dyn-title`) into a larger box that draws on, forces rise; click 1: the takeaway sentence |
-| 4 | Tradeoff | `tradeoff` | fresh; property cards rise; click 1: question; clicks 2 to 4: one tool family row each |
+| 4 | Tradeoff | `tradeoff` | fresh; property cards rise; click 1: question; clicks 2 to 4: one tool family row each (click 2 also shows the tendencies caption) |
 | 5 | Quote | none | fresh; click 1: "I enjoy both, a lot." Holds hidden copies of the property cards at their Tradeoff positions as magic-move sources for the next slide |
 | 6 | brahe | `check` x4 / facts from `BRAHE` in figs.js | magic move: property cards fly from their Tradeoff positions into a row; checks draw; facts and install line fade |
 | 7 | Modules | `moduleMap` | fresh; cards rise one by one (overview for the module dividers) |
@@ -167,9 +168,6 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 
 ## Needed from Duncan
 
-- Source of the poliastro quote (beat 5). The slide attributes it to "The poliastro project"; a web search
-  did not find the exact wording. Confirm the wording and the author, or change the attribution line.
-- `deck/img/stanford-logo.png`: footer seal and name logo (a labeled placeholder shows until it exists).
 - `deck/img/logos/xona.png` (or svg): Xona Space Systems logo for the adopters slide.
 - `deck/img/logos/aws.png` (or svg): AWS logo for the adopters slide.
 - QR code image for `github.com/duncaneddy/2026_spnt_symposium` (the closing slide shows the URL as text until then).

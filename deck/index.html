@@ -17,16 +17,16 @@
 <!-- ======================= ACT 1: THE PROBLEM ======================= -->
 
 <section class="slide" data-label="Title" data-nofooter>
+  <div class="fig" data-fig="gpsConstellation" style="left:1250px; top:140px; width:720px; height:720px;"></div>
   <div style="position:absolute; left:140px; top:250px; width:1120px;">
     <h1 style="font-size:84px; line-height:1.08; margin:0; font-weight:400;" data-in="up" data-delay="150">Practical Astrodynamics:<br><em>Open-Source Tools for Constellation Analysis and Design</em></h1>
     <div data-rough="underline" data-color="cardinal" data-rough-key="title-ul" style="width:520px; height:6px; margin-top:20px;" data-in="draw" data-delay="350"></div>
     <p style="font-size:36px; margin:46px 0 0; color:var(--ink-50);" data-in="fade" data-delay="450">Duncan Eddy</p>
     <p class="sans" style="font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:var(--cardinal); margin:18px 0 0;" data-in="fade" data-delay="550">2026 SPNT Symposium · November 12, 2026</p>
   </div>
-  <div style="position:absolute; left:1420px; top:330px; width:300px; height:300px;" data-rough="ellipse" data-color="ink" data-rough-key="title-earth" data-in="draw" data-delay="300"></div>
-  <div style="position:absolute; left:1330px; top:430px; width:480px; height:100px;" data-rough="ellipse" data-color="lagunita" data-rough-key="title-orbit" data-in="draw" data-delay="600"></div>
-  <div style="position:absolute; left:140px; bottom:70px;" data-in="fade" data-delay="500"><span class="logo-placeholder" data-rough="box" data-color="dim" data-rough-key="title-logo" style="font-family:var(--sans); font-size:28px; color:var(--ink-50); padding:10px 22px; display:inline-block;">Stanford logo</span></div>
-  <aside class="notes">Introduce brahe, an open-source astrodynamics library, with a GNSS audience in mind. Plan for about 20 minutes on the main path, leaving room for questions.</aside>
+  <img src="img/stanford-logo-title.png" alt="Stanford University" style="position:absolute; left:140px; bottom:70px; height:72px;" data-in="fade" data-delay="500">
+  <p class="cite" style="left:auto; right:64px; bottom:40px; text-align:right;" data-in="fade" data-delay="1800" data-bind-wrap><span data-bind="gps.n">--</span> GPS satellites on <span data-bind="gps.date">--</span>, from the IGS ultra-rapid orbit <span data-bind="gps.product">--</span></p>
+  <aside class="notes">The animation is the real GPS constellation today: every satellite in the IGS ultra-rapid orbit product, converted to an inertial frame with brahe and replayed over one orbital period, starting at the talk time. Introduce brahe, an open-source astrodynamics library, with a GNSS audience in mind. Plan for about 20 minutes on the main path, leaving room for questions.</aside>
 </section>
 
 <section class="slide question" data-label="Sky Q">
@@ -40,7 +40,7 @@
   <h2 class="header" data-flip="q-sky">Which GPS satellites are above this building right now?</h2>
   <div class="fig" data-fig="skyplot" style="left:130px; top:220px; width:680px; height:680px;"></div>
   <div class="fig" data-fig="code-skyplot" style="left:900px; top:250px; width:900px; height:560px;" data-in="up" data-delay="500"></div>
-  <p class="caption" style="position:absolute; left:900px; top:836px; width:900px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
+  <p class="caption" style="position:absolute; left:900px; top:680px; width:900px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
   <p class="cite">IGS ultra-rapid orbit <span data-bind="sky.product">--</span> at <span data-bind="sky.timeUTC">--</span> · scripts/skyplot.py</p>
   <aside class="notes">This is the sky over campus at 11:00 Pacific today, from the IGS ultra-rapid orbit product (predicted half of the file, issued before the talk). Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: satellites above the horizon but below the mask. The code on the right is the real code from scripts/skyplot.py, trimmed: download the SP3 file, read it, and turn each position into azimuth and elevation from the station. That is most of it. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions." The rest of the talk is about what is behind those few lines.</aside>
 </section>
@@ -80,7 +80,8 @@
   <div class="prop-slot" data-flip="prop-easy" style="position:absolute; left:1280px; top:262px; width:240px; height:110px;" data-in="up" data-delay="600"><div class="card prop-card" data-rough="box" data-rough-key="prop-easy"><h3>Easy to use</h3></div></div>
   <div class="prop-slot" data-flip="prop-open" style="position:absolute; left:1540px; top:262px; width:240px; height:110px;" data-in="up" data-delay="750"><div class="card prop-card" data-rough="box" data-rough-key="prop-open"><h3>Open</h3></div></div>
   <div class="fig" data-fig="tradeoff" data-step-start="2" style="left:140px; top:416px; width:1660px; height:390px;"></div>
-  <p style="position:absolute; left:140px; right:140px; top:830px; margin:0; text-align:center; font-size:44px; text-wrap:balance;" data-in="fade" data-step="1">Which tool do you use, and which of these did you give up?</p>
+  <p class="caption" style="position:absolute; left:760px; top:800px; margin:0;" data-step="2">General tendencies, not a ranking of any one tool</p>
+  <p style="position:absolute; left:140px; right:140px; top:868px; margin:0; text-align:center; font-size:44px; text-wrap:balance;" data-in="fade" data-step="1">Which tool do you use, and which of these did you give up?</p>
   <aside class="notes">Four things you want from an orbit tool: capable (the physics and features you need), fast, easy to use from a script, and open (source you can read, and no license server). Click: ask the question and wait for a few answers. Expected: STK, GMAT, Orekit, MATLAB scripts, "something my advisor wrote". Then one family per click. These are general tendencies, not a review of any one product. Commercial tools (STK, FreeFlyer) are capable and fast, but scripting them is awkward and they are closed and licensed. Research scripts and small open-source packages are open and sometimes easy, but usually limited in scope with uncertain validation. Established open-source toolkits such as Orekit and GMAT are capable and open, with a steeper path to use (Java, a mission scripting language). Speed is shown only for commercial tools here; the benchmarks at the end compare brahe with Orekit, GMAT, Nyx and Basilisk directly. Planned remark: "Pick any two. On a good day."</aside>
 </section>
 
@@ -91,10 +92,11 @@
   <div class="prop-slot" data-flip="prop-open" style="position:absolute; left:1540px; top:262px; width:240px; height:110px; visibility:hidden;" aria-hidden="true"><div class="card prop-card"><h3>Open</h3></div></div>
   <div class="statement">
     <p class="quote" data-in="up" data-delay="150">“It has always been too much astrodynamics for software engineers, and too much software engineering for astrodynamicists.”</p>
-    <p class="quote-by" data-in="fade" data-delay="700">The poliastro project</p>
+    <p class="quote-by" data-in="fade" data-delay="700">Juan Luis Cano Rodríguez, “Juan Luis steps down as maintainer of the project”, poliastro blog, December 21, 2022</p>
     <p class="turn" style="color:var(--ink);" data-in="fade" data-step="1">I enjoy both, a lot.</p>
   </div>
-  <aside class="notes">Why the tradeoff exists. poliastro was an open-source Python astrodynamics library; this line is from its maintainers about why such projects are hard to keep alive. (Confirm the exact source before the talk; see NOTES.) Pause after reading it. Click: "I enjoy both, a lot." Deliver it flat; it is the light remark that sets up brahe.</aside>
+  <p class="cite"><a href="https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/" target="_blank" rel="noopener">https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/</a></p>
+  <aside class="notes">Why the tradeoff exists. poliastro was an open-source Python astrodynamics library; this line is from its creator, Juan Luis Cano Rodríguez, in "Juan Luis steps down as maintainer of the project" on the poliastro blog, December 21, 2022 (https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/), explaining why such projects are hard to keep alive. Pause after reading it. Click: "I enjoy both, a lot." Deliver it flat; it is the light remark that sets up brahe.</aside>
 </section>
 
 <section class="slide" data-label="brahe">
@@ -132,7 +134,7 @@
   </div>
   <div class="panel design-panel" data-rough="box" data-rough-key="dc-core" style="left:180px; top:570px; width:740px; height:230px;" data-step="2">
     <h3>Compiled core with Python bindings</h3>
-    <p>The numerical work runs in Rust. Python calls into it, so a short script runs at compiled speed.</p>
+    <p>The numerical work runs in compiled Rust, called from Python.</p>
   </div>
   <div class="panel design-panel" data-rough="box" data-rough-key="dc-docs" style="left:1000px; top:570px; width:740px; height:230px;" data-step="3">
     <h3>Every documentation example runs</h3>
@@ -178,7 +180,7 @@
 <div id="chrome" style="visibility:hidden">
   <div id="crumbs"></div>
   <div id="footer">
-    <div class="logo"><img src="img/stanford-logo.png" alt="Stanford University" onload="this.nextElementSibling.remove()" onerror="this.remove()"><span class="logo-placeholder" data-rough="box" data-color="dim" data-rough-key="footer-logo" style="font-family:var(--sans); font-size:22px; font-weight:400; color:var(--ink-50); padding:4px 14px;">Stanford logo</span></div>
+    <div class="logo"><img src="img/stanford-logo.png" alt="Stanford"></div>
     <div class="right"><span>2026 SPNT Symposium · Practical Astrodynamics</span><span class="num"></span></div>
   </div>
 </div>

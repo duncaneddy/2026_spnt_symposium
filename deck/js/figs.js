@@ -2,7 +2,7 @@
 // Hand-drawn strokes (sketch.js) for frames, axes and diagrams; exact paths for orbits and data.
 import { roughLine, roughRect, roughEllipse, roughArrow, roughPolyline, svgEl, strokePath, hashSeed, mulberry32 } from './sketch.js';
 
-export const DATA_FILES = ['skyplot', 'quick_hits', 'land'];
+export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation'];
 
 const EASE_IN = 'cubic-bezier(.2,.7,.2,1)';
 const EASE_MOVE = 'cubic-bezier(.65,0,.25,1)';
@@ -177,6 +177,9 @@ export const binds = {
   'brahe.license': () => BRAHE.license,
   'brahe.core': () => BRAHE.core,
   'brahe.bindings': () => BRAHE.bindings,
+  'gps.n': d => String(d.gps_constellation.prns.length),
+  'gps.date': d => PT_DATE.format(new Date(d.gps_constellation.talk_epoch_utc ?? d.gps_constellation.epoch_utc)),
+  'gps.product': d => d.gps_constellation.product.replace(/\.SP3(\.gz)?$/i, ''),
   'sky.nVisible': d => String(d.skyplot.n_visible),
   'sky.mask': d => fmt(d.skyplot.el_mask_deg, 0),
   'sky.timePT': d => PT_TIME.format(new Date(d.skyplot.epoch_utc)).replace(/\s?([AP])M$/, (m, a) => ` ${a.toLowerCase()}.m.`),
@@ -295,10 +298,6 @@ const CODE = {
   skyplot: {
     needs: ['skyplot'],
     lines: [
-      'client = bh.IGSProductsClient(bh.IGSProductSource.BKG)',
-      'product = newest_product_covering(client, epoch)',
-      'client.save(product, str(RAW_DIR))',
-      '',
       'sp3 = bh.SP3.from_file(str(path))',
       'site_ecef = bh.position_geodetic_to_ecef(',
       '    STANFORD_LLA, bh.AngleFormat.DEGREES)',
@@ -306,7 +305,6 @@ const CODE = {
       '       if sat.get_name().startswith("G")]',
       'r_epoch = {sat.get_name(): sat.state_ecef(EPOCH)[:3]',
       '           for sat in gps}',
-      '',
       'enz = bh.relative_position_ecef_to_enz(',
       '    site_ecef, sat_ecef, bh.EllipsoidalConversionType.GEODETIC)',
       'az, el, _ = bh.position_enz_to_azel(',
@@ -334,7 +332,10 @@ const CODE = {
   propagate: {
     needs: ['quick_hits'],
     lines: [
-      'def propagate(x0, force, epochs):',
+      'def propagate(',
+      '    x0: np.ndarray, force: bh.ForceModelConfig,',
+      '    epochs: list[bh.Epoch]',
+      ') -> bh.NumericalOrbitPropagator:',
       '    config = bh.NumericalPropagationConfig.with_method(',
       '        bh.IntegrationMethod.RKF78',
       '    ).with_abs_tol(1e-6).with_rel_tol(1e-12)',
@@ -342,7 +343,6 @@ const CODE = {
       '        EPOCH, x0, config, force, SSO_PARAMS)',
       '    prop.propagate_to(epochs[-1])',
       '    return prop',
-      '',
       'no_drag = bh.ForceModelConfig.default()',
       'no_drag.drag = None',
       'runs = {',
@@ -436,7 +436,7 @@ figures.skyplot = {
 const TOOL_FAMILIES = [
   { name: 'Commercial tools', eg: 'STK, FreeFlyer', has: ['yes', 'yes', 'no', 'no'] },
   { name: 'Research scripts and small packages', eg: 'university and personal projects', has: ['no', 'no', 'sometimes', 'yes'] },
-  { name: 'Established open-source toolkits', eg: 'Orekit, GMAT', has: ['yes', 'no', 'no', 'yes'] },
+  { name: 'Established open-source toolkits', eg: 'Orekit, GMAT', has: ['yes', 'sometimes', 'no', 'yes'] },
 ];
 
 figures.tradeoff = {
@@ -640,6 +640,57 @@ figures.eciVsEcef = {
   animate(el, d, s, A) {
     fadeIn(el.__base, A, 0, 600);
     drawOnAnim(el.__paths, A, 300, 2200, 0);
+  },
+};
+
+/* ---------- title: the GPS constellation ---------- */
+// Orthographic view of every GPS satellite's GCRF track over one orbital period. Behind-Earth
+// parts of the tracks are drawn at 20% of the front opacity; dots replay the tracks in a loop that
+// starts at the talk-time sample, one orbital period per GPS_LOOP_MS of wall time.
+const GPS_LOOP_MS = 75000;
+
+figures.gpsConstellation = {
+  needs: ['gps_constellation'],
+  render(el, d) {
+    const G = d.gps_constellation, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
+    const nT = G.xyz_km.length, nS = G.prns.length;
+    const rmax = Math.max(...G.xyz_km[0].map(p => Math.hypot(...p)));
+    const cx = W / 2, cy = H / 2, kmPerPx = rmax / (Math.min(W, H) / 2 - 10);
+    const proj = projector(cx, cy, kmPerPx, 20, 62), re = R_EARTH / kmPerPx;
+    // Closed loop: the last sample repeats the first when the samples span the whole period.
+    const closes = (nT - 1) * G.step_s >= G.period_s - 1;
+    const nI = closes ? nT - 1 : nT;
+    const pts = Array.from({ length: nS }, (_, s) => Array.from({ length: nI }, (_, t) => proj(G.xyz_km[t][s])));
+    const back = svgEl('g', {}, svg);
+    el.__earth = svgEl('g', {}, svg);
+    earth(el.__earth, cx, cy, re, 5101);
+    const front = svgEl('g', {}, svg), dots = svgEl('g', {}, svg);
+    el.__paths = [];
+    pts.forEach(track => frontBack([...track, track[0]], cx, cy, re).forEach(run => {
+      if (run.pts.length > 1) el.__paths.push(exactPath(run.h ? back : front, run.pts, { color: C.lagunita, width: 2, opacity: run.h ? 0.07 : 0.35 }));
+    }));
+    el.__dots = pts.map(() => svgEl('circle', { r: 7, fill: C.lagunita }, dots));
+    el.__dotLayer = dots;
+    const t0 = G.talk_index ?? 0;
+    el.__set = u => {
+      const i = Math.floor(u) % nI, j = (i + 1) % nI, f = u - Math.floor(u);
+      pts.forEach((track, s) => {
+        const a = track[i], b = track[j], p = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+        const dot = el.__dots[s];
+        dot.setAttribute('cx', p[0].toFixed(1));
+        dot.setAttribute('cy', p[1].toFixed(1));
+        dot.setAttribute('opacity', hidden(p, cx, cy, re) ? 0.15 : 1);
+      });
+    };
+    el.__nI = nI;
+    el.__t0 = t0;
+    el.__set(t0);
+  },
+  animate(el, d, s, A) {
+    fadeIn(el.__earth, A, 0, 600);
+    drawOnAnim(el.__paths, A, 200, 1600, 0);
+    fadeIn(el.__dotLayer, A, 1500, 700);
+    return loop(t => { el.__set((el.__t0 + t / GPS_LOOP_MS * el.__nI) % el.__nI); });
   },
 };
 
