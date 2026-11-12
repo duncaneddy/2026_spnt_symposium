@@ -112,11 +112,27 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 
 | File | Schema |
 |---|---|
+| `skyplot.json` | `{generated_utc, epoch_utc, product, station:{name, lat_deg, lon_deg, alt_m}, el_mask_deg, sats:[{prn, az_deg, el_deg, visible, track_azel_deg:[[az, el]]}], n_visible}` |
+| `quick_hits.json` | `{generated_utc, tle:{group, source, n, match_max_residual_km, inc_range_deg, epoch_utc, tracks:[{name, norad, inc_deg, lonlat_deg}]}, propagate:{object, inc_deg, t_h, alt_twobody_km, alt_full_km, dr_km, dr_drag_km, force_model}, frames:{prn, product, start_utc, t_h, eci_xyz_km, ecef_xyz_km}}` |
+| `land.json` | `{source, rings:[[[lon, lat]]]}` (Natural Earth 1:110m land, `scripts/basemap.py`) |
 
 ## Slide registry
 
 | # | Label | Figure / data | Transition |
 |---|---|---|---|
+| 1 | Title | none | fresh |
+| 2 | Sky Q | none | fresh; question alone (`data-flip="q-sky"`) |
+| 2 | Sky plot | `skyplot`, `code-skyplot` / skyplot.json | magic move: question becomes the header; plot draws on, code card rises, count caption fades |
+| 3 | Errors | none | fresh; two boxes |
+| 3 | Errors 2 | none | continuation of Errors: measurement box dimmed, dynamics title moves (`dyn-title`) into a larger box that draws on, forces rise; click 1: the takeaway sentence |
+| 4 | Tradeoff | `tradeoff` | fresh; property cards rise; click 1: question; clicks 2 to 4: one tool family row each |
+| 5 | Quote | none | fresh; click 1: "I enjoy both, a lot." Holds hidden copies of the property cards at their Tradeoff positions as magic-move sources for the next slide |
+| 6 | brahe | `check` x4 / facts from `BRAHE` in figs.js | magic move: property cards fly from their Tradeoff positions into a row; checks draw; facts and install line fade |
+| 7 | Modules | `moduleMap` | fresh; cards rise one by one (overview for the module dividers) |
+| 8 | Design choices | none | fresh; first panel on entry, clicks 1 to 3: one panel each |
+| 9 | Quick TLE | `code-tle`, `groundTracks` / quick_hits.json, land.json, skyplot.json | fresh; code card rises, tracks draw on |
+| 9 | Quick force model | `code-propagate`, `forceModelEffect` / quick_hits.json | fresh; curves draw on, labels fade |
+| 9 | Quick frames | `code-frames`, `eciVsEcef` / quick_hits.json | fresh; both frames draw on together |
 
 ## Deck implementation
 
@@ -134,9 +150,25 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 - Math: `\( ... \)` in slide text is typeset by the bundled KaTeX.
 - Keys: arrows or space, `n` notes, `b` backup, `r` replay, `f` full screen.
 - Dev server: `just serve` (`scripts/serve.py`, no-cache headers) on port 8280.
+- Code cards: `codeCard(el, lines, {highlight, steps, size, key})` in figs.js draws monospace Python in a
+  hand-drawn box as wide as `el`; brahe calls (`bh.*`) in Lagunita. `highlight: [n]` draws line n in
+  Cardinal; `highlight: [[n, k]]` turns line n Cardinal on click k; `steps: {n: k}` hides line n until
+  click k. Slide code lives in the `CODE` table (`key: {needs, lines, opts}`); each entry is registered as
+  figure `code-<key>` and shows the data-pending note while its JSON is missing. Lines are real script
+  lines, trimmed and wrapped at Python continuation points, at most 63 characters for a 900 px card at
+  22 px.
+- Module map: `figures.moduleMap` renders one card per entry of `MODULES` (keys `time`, `frames`,
+  `orbits`, `propagation`, `access`, `data`, `estimation`). Divider slide:
+  `<section class="slide" data-label="Section X" data-clone="Modules" data-lc-current="data">` (several
+  keys comma separated, e.g. `"time,frames"`). Current cards turn Cardinal, cards current on an earlier
+  divider turn gray, the rest stay ink; moving between adjacent dividers animates the colors.
+- Magic moves of hand-drawn boxes: put the outline on an inner element and `data-flip` on a positioned
+  wrapper (see `.prop-slot`), so the outline moves with the card.
 
 ## Needed from Duncan
 
+- Source of the poliastro quote (beat 5). The slide attributes it to "The poliastro project"; a web search
+  did not find the exact wording. Confirm the wording and the author, or change the attribution line.
 - `deck/img/stanford-logo.png`: footer seal and name logo (a labeled placeholder shows until it exists).
 - `deck/img/logos/xona.png` (or svg): Xona Space Systems logo for the adopters slide.
 - `deck/img/logos/aws.png` (or svg): AWS logo for the adopters slide.

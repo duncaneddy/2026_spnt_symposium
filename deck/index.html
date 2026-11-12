@@ -29,10 +29,150 @@
   <aside class="notes">Introduce brahe, an open-source astrodynamics library, with a GNSS audience in mind. Plan for about 20 minutes on the main path, leaving room for questions.</aside>
 </section>
 
+<section class="slide question" data-label="Sky Q">
+  <div class="statement">
+    <p class="line" data-flip="q-sky" data-in="up" data-delay="150">Which GPS satellites are above this building right now?</p>
+  </div>
+  <aside class="notes">Ask it literally and wait a few seconds. Expected answers: "I would check my phone", "about eight to ten", "whatever the almanac says". Point out that most of the room uses these positions every day, and most of us have never computed one. Click: the answer, computed last night for 11:00 this morning.</aside>
+</section>
+
+<section class="slide" data-label="Sky plot">
+  <h2 class="header" data-flip="q-sky">Which GPS satellites are above this building right now?</h2>
+  <div class="fig" data-fig="skyplot" style="left:130px; top:220px; width:680px; height:680px;"></div>
+  <div class="fig" data-fig="code-skyplot" style="left:900px; top:250px; width:900px; height:560px;" data-in="up" data-delay="500"></div>
+  <p class="caption" style="position:absolute; left:900px; top:836px; width:900px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
+  <p class="cite">IGS ultra-rapid orbit <span data-bind="sky.product">--</span> at <span data-bind="sky.timeUTC">--</span> · scripts/skyplot.py</p>
+  <aside class="notes">This is the sky over campus at 11:00 Pacific today, from the IGS ultra-rapid orbit product (predicted half of the file, issued before the talk). Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: satellites above the horizon but below the mask. The code on the right is the real code from scripts/skyplot.py, trimmed: download the SP3 file, read it, and turn each position into azimuth and elevation from the station. That is most of it. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions." The rest of the talk is about what is behind those few lines.</aside>
+</section>
+
+<section class="slide" data-label="Errors">
+  <h2 class="header center" data-in="up">Navigation is largely removing error</h2>
+  <div class="panel meas" data-rough="box" data-rough-key="err-meas" style="left:180px; top:290px; width:720px; height:240px;" data-in="up" data-delay="300">
+    <h3>Measurement error</h3>
+    <p>Clocks, ionosphere, troposphere, multipath, receiver noise</p>
+  </div>
+  <div class="panel dyn-small" data-rough="box" data-rough-key="err-dyn" style="left:1020px; top:290px; width:720px; height:240px;" data-in="up" data-delay="550">
+    <h3 data-flip="dyn-title" style="width:640px;">Dynamics model error</h3>
+    <p>Where the satellite actually is between measurements</p>
+  </div>
+  <aside class="notes">Two sources of error in any navigation solution. The left box is this room's field: you model, estimate and correct measurement errors every day. The right box is the other half: how well you know where the transmitter (or the receiver) is and how it moves. Click to open up the right box.</aside>
+</section>
+
+<section class="slide" data-label="Errors 2" data-clone="Errors" data-drop=".dyn-small" data-dim=".meas:0.45">
+  <div data-rough="box" data-rough-key="err-dyn-big" style="position:absolute; left:1020px; top:290px; width:720px; height:540px;" data-in="draw"></div>
+  <h3 data-flip="dyn-title" style="position:absolute; left:1060px; top:326px; width:640px; margin:0; font-size:40px; font-weight:600;">Dynamics model error</h3>
+  <ul class="force-list" style="left:1060px; top:404px; width:640px;">
+    <li data-in="up" data-delay="500">Earth's gravity field beyond a point mass</li>
+    <li data-in="up" data-delay="650">Atmospheric drag</li>
+    <li data-in="up" data-delay="800">Solar radiation pressure</li>
+    <li data-in="up" data-delay="950">Sun and Moon gravity</li>
+    <li data-in="up" data-delay="1100">Solid Earth tides and relativity</li>
+    <li data-in="up" data-delay="1250">The time systems and frames all of these are expressed in</li>
+  </ul>
+  <p style="position:absolute; left:180px; top:650px; width:720px; margin:0; font-size:38px; line-height:1.3; text-wrap:balance;" data-in="fade" data-step="1">Much of the dynamics can be modeled, but it is hard to get right and hard to make fast.</p>
+  <aside class="notes">Most of what moves a satellite is known physics: the gravity field, drag, radiation pressure, third bodies, tides, relativity. Then everything has to be evaluated in the right time system and the right frame, which is where subtle bugs live. Click: the point of the slide. Modeling these is possible, but it is hard to get right and hard to make fast, and that is the job of an astrodynamics library.</aside>
+</section>
+
+<section class="slide" data-label="Tradeoff">
+  <h2 class="header" data-in="up">Astrodynamics tools tend to trade these properties off against each other</h2>
+  <div class="prop-slot" data-flip="prop-capable" style="position:absolute; left:760px; top:262px; width:240px; height:110px;" data-in="up" data-delay="300"><div class="card prop-card" data-rough="box" data-rough-key="prop-capable"><h3>Capable</h3></div></div>
+  <div class="prop-slot" data-flip="prop-fast" style="position:absolute; left:1020px; top:262px; width:240px; height:110px;" data-in="up" data-delay="450"><div class="card prop-card" data-rough="box" data-rough-key="prop-fast"><h3>Fast</h3></div></div>
+  <div class="prop-slot" data-flip="prop-easy" style="position:absolute; left:1280px; top:262px; width:240px; height:110px;" data-in="up" data-delay="600"><div class="card prop-card" data-rough="box" data-rough-key="prop-easy"><h3>Easy to use</h3></div></div>
+  <div class="prop-slot" data-flip="prop-open" style="position:absolute; left:1540px; top:262px; width:240px; height:110px;" data-in="up" data-delay="750"><div class="card prop-card" data-rough="box" data-rough-key="prop-open"><h3>Open</h3></div></div>
+  <div class="fig" data-fig="tradeoff" data-step-start="2" style="left:140px; top:416px; width:1660px; height:390px;"></div>
+  <p style="position:absolute; left:140px; right:140px; top:830px; margin:0; text-align:center; font-size:44px; text-wrap:balance;" data-in="fade" data-step="1">Which tool do you use, and which of these did you give up?</p>
+  <aside class="notes">Four things you want from an orbit tool: capable (the physics and features you need), fast, easy to use from a script, and open (source you can read, and no license server). Click: ask the question and wait for a few answers. Expected: STK, GMAT, Orekit, MATLAB scripts, "something my advisor wrote". Then one family per click. These are general tendencies, not a review of any one product. Commercial tools (STK, FreeFlyer) are capable and fast, but scripting them is awkward and they are closed and licensed. Research scripts and small open-source packages are open and sometimes easy, but usually limited in scope with uncertain validation. Established open-source toolkits such as Orekit and GMAT are capable and open, with a steeper path to use (Java, a mission scripting language). Speed is shown only for commercial tools here; the benchmarks at the end compare brahe with Orekit, GMAT, Nyx and Basilisk directly. Planned remark: "Pick any two. On a good day."</aside>
+</section>
+
+<section class="slide" data-label="Quote">
+  <div class="prop-slot" data-flip="prop-capable" style="position:absolute; left:760px; top:262px; width:240px; height:110px; visibility:hidden;" aria-hidden="true"><div class="card prop-card"><h3>Capable</h3></div></div>
+  <div class="prop-slot" data-flip="prop-fast" style="position:absolute; left:1020px; top:262px; width:240px; height:110px; visibility:hidden;" aria-hidden="true"><div class="card prop-card"><h3>Fast</h3></div></div>
+  <div class="prop-slot" data-flip="prop-easy" style="position:absolute; left:1280px; top:262px; width:240px; height:110px; visibility:hidden;" aria-hidden="true"><div class="card prop-card"><h3>Easy to use</h3></div></div>
+  <div class="prop-slot" data-flip="prop-open" style="position:absolute; left:1540px; top:262px; width:240px; height:110px; visibility:hidden;" aria-hidden="true"><div class="card prop-card"><h3>Open</h3></div></div>
+  <div class="statement">
+    <p class="quote" data-in="up" data-delay="150">“It has always been too much astrodynamics for software engineers, and too much software engineering for astrodynamicists.”</p>
+    <p class="quote-by" data-in="fade" data-delay="700">The poliastro project</p>
+    <p class="turn" style="color:var(--ink);" data-in="fade" data-step="1">I enjoy both, a lot.</p>
+  </div>
+  <aside class="notes">Why the tradeoff exists. poliastro was an open-source Python astrodynamics library; this line is from its maintainers about why such projects are hard to keep alive. (Confirm the exact source before the talk; see NOTES.) Pause after reading it. Click: "I enjoy both, a lot." Deliver it flat; it is the light remark that sets up brahe.</aside>
+</section>
+
+<section class="slide" data-label="brahe">
+  <h2 class="header center" data-in="up">brahe aims to be the numpy for space</h2>
+  <div class="prop-slot" data-flip="prop-capable" style="position:absolute; left:400px; top:300px; width:240px; height:110px;"><div class="card prop-card" data-rough="box" data-rough-key="prop-capable"><h3>Capable</h3></div></div>
+  <div class="prop-slot" data-flip="prop-fast" style="position:absolute; left:680px; top:300px; width:240px; height:110px;"><div class="card prop-card" data-rough="box" data-rough-key="prop-fast"><h3>Fast</h3></div></div>
+  <div class="prop-slot" data-flip="prop-easy" style="position:absolute; left:960px; top:300px; width:240px; height:110px;"><div class="card prop-card" data-rough="box" data-rough-key="prop-easy"><h3>Easy to use</h3></div></div>
+  <div class="prop-slot" data-flip="prop-open" style="position:absolute; left:1240px; top:300px; width:240px; height:110px;"><div class="card prop-card" data-rough="box" data-rough-key="prop-open"><h3>Open</h3></div></div>
+  <div class="fig" data-fig="check" data-state="capable" data-delay="1000" style="left:490px; top:432px; width:60px; height:50px;"></div>
+  <div class="fig" data-fig="check" data-state="fast" data-delay="1150" style="left:770px; top:432px; width:60px; height:50px;"></div>
+  <div class="fig" data-fig="check" data-state="easy" data-delay="1300" style="left:1050px; top:432px; width:60px; height:50px;"></div>
+  <div class="fig" data-fig="check" data-state="open" data-delay="1450" style="left:1330px; top:432px; width:60px; height:50px;"></div>
+  <p style="position:absolute; left:200px; right:200px; top:580px; margin:0; text-align:center; font-size:40px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="1700">Developed since <span data-bind="brahe.since">--</span>, <span data-bind="brahe.license">--</span> licensed, with a <span data-bind="brahe.core">--</span> core and <span data-bind="brahe.bindings">--</span> bindings. Runs on Linux, macOS and Windows.</p>
+  <p style="position:absolute; left:0; right:0; top:760px; margin:0; text-align:center; font-family:'Source Code Pro', ui-monospace, Menlo, monospace; font-size:34px; color:var(--lagunita);" data-in="fade" data-delay="1900">pip install brahe</p>
+  <aside class="notes">brahe aims to be for astrodynamics what numpy is for arrays: the common, dependable layer you build on without thinking about it. The four properties come back, and the goal is all four at once. Developed since 2014, MIT licensed, a Rust core with Python bindings, and it runs on Linux, macOS and Windows. One pip install. The rest of the talk is evidence for each check mark: modules (capable), benchmarks (fast), short scripts (easy), and every script is public (open).</aside>
+</section>
+
+<!-- ======================= ACT 2: WHAT IS IN IT ======================= -->
+
+<section class="slide" data-label="Modules">
+  <h2 class="header center" data-in="up">The modules in brahe</h2>
+  <div class="fig" data-fig="moduleMap" style="left:120px; top:330px; width:1680px; height:320px;"></div>
+  <aside class="notes">A quick tour, left to right. Time: epochs and conversions between UTC, GPS time, TAI and TT. Frames and coordinates: inertial and Earth-fixed frames with Earth orientation data, geodetic and topocentric coordinates. Orbits: element sets, TLEs, Walker constellations. Propagation: SGP4 and numerical propagation with configurable force models. Access: when can a station or satellite see another object, under which constraints. Data clients: CelesTrak, Space-Track, IGS orbit products. Estimation: extended and unscented Kalman filters and batch least squares. This row comes back as a divider, with the module in use lit up.</aside>
+</section>
+
+<section class="slide" data-label="Design choices">
+  <h2 class="header" data-in="up">Design choices in brahe</h2>
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-si" style="left:180px; top:280px; width:740px; height:230px;" data-in="up" data-delay="300">
+    <h3>SI units everywhere</h3>
+    <p>Meters, seconds and kilograms in and out of every function. Angles take an explicit degrees or radians argument.</p>
+  </div>
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-compose" style="left:1000px; top:280px; width:740px; height:230px;" data-step="1">
+    <h3>Composable pieces</h3>
+    <p>Propagators, force models, access constraints and event detectors are separate objects that you combine.</p>
+  </div>
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-core" style="left:180px; top:570px; width:740px; height:230px;" data-step="2">
+    <h3>Compiled core with Python bindings</h3>
+    <p>The numerical work runs in Rust. Python calls into it, so a short script runs at compiled speed.</p>
+  </div>
+  <div class="panel design-panel" data-rough="box" data-rough-key="dc-docs" style="left:1000px; top:570px; width:740px; height:230px;" data-step="3">
+    <h3>Every documentation example runs</h3>
+    <p>Each example in the documentation is compiled and run on every commit, so the docs match the code.</p>
+  </div>
+  <aside class="notes">Four choices that make the library usable as a dependency. SI units everywhere: no guessing whether a function wants kilometers. Planned remark: "SI everywhere. I promised myself I would not tell the Mars Climate Orbiter story at a navigation conference, so I will just say: meters." Click: composable pieces; the same propagator feeds access, events and estimation, which we will see when the receiver moves from the ground to orbit with one line changed. Click: compiled core; the expensive loops are in Rust. Click: every documentation example is compiled and run in continuous integration on each commit, so a copied example works.</aside>
+</section>
+
+<section class="slide" data-label="Quick TLE">
+  <h2 class="header" data-in="up">Download public GPS orbit elements and plot ground tracks</h2>
+  <div class="fig" data-fig="code-tle" style="left:120px; top:250px; width:880px; height:620px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="groundTracks" style="left:1050px; top:290px; width:760px; height:380px;"></div>
+  <p class="caption" style="position:absolute; left:1050px; top:700px; width:760px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1400">Ground tracks of <span data-bind="qh.nTracks">--</span> of the <span data-bind="qh.nGps">--</span> GPS satellites in the public GP catalog, one per orbital plane, starting at the talk time</p>
+  <p class="cite">Public GP element sets, propagated with SGP4 · scripts/quick_hits.py</p>
+  <aside class="notes">First quick hit: query the GP element sets for the operational GPS satellites, build an SGP4 propagator from each, and convert to longitude and latitude. Six satellites, one per orbital plane. In this run CelesTrak was unreachable from the build machine, so the script fell back to the same GP data from Space-Track; the code shown is the CelesTrak path, and the script records which source it used.</aside>
+</section>
+
+<section class="slide" data-label="Quick force model">
+  <h2 class="header" data-in="up">Propagate an orbit with two-body and full force-model dynamics</h2>
+  <div class="fig" data-fig="code-propagate" style="left:120px; top:250px; width:880px; height:620px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="forceModelEffect" style="left:1050px; top:250px; width:760px; height:560px;"></div>
+  <p class="caption" style="position:absolute; left:1050px; top:830px; width:760px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1800" data-bind-wrap><span data-bind="qh.object">--</span>: the two predictions are <span data-bind="qh.drEnd">--</span> km apart after <span data-bind="qh.days">--</span> days, and drag alone moves it <span data-bind="qh.drDragEnd">--</span> km</p>
+  <p class="cite">brahe default force model · scripts/quick_hits.py</p>
+  <aside class="notes">Second quick hit: one initial state, propagated twice, once with two-body gravity and once with brahe's default force model (20 by 20 EGM2008 gravity, NRLMSISE-00 drag, solar radiation pressure, Sun and Moon). The blue curve is the distance between the two predictions; most of it is Earth's oblateness (J2). The ink curve is the effect of drag alone: the same full model with and without drag. Changing the force model is one argument.</aside>
+</section>
+
+<section class="slide" data-label="Quick frames">
+  <h2 class="header" data-in="up">The same GPS orbit in an inertial frame and an Earth-fixed frame</h2>
+  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:880px; height:620px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="eciVsEcef" style="left:1050px; top:250px; width:760px; height:560px;"></div>
+  <p class="caption" style="position:absolute; left:1050px; top:830px; width:760px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="2400" data-bind-wrap><span data-bind="qh.prn">--</span> over <span data-bind="qh.frameH">--</span> hours: ITRF as published in the IGS orbit file, GCRF computed by brahe</p>
+  <p class="cite">IGS ultra-rapid orbit · scripts/quick_hits.py</p>
+  <aside class="notes">Third quick hit: one GPS satellite from the IGS orbit file, in the Earth-fixed frame the file uses and in the inertial frame. Inertial: a closed orbit, twice per sidereal day. Earth-fixed: the familiar repeating pattern. The transformation includes precession, nutation, Earth rotation and polar motion, with Earth orientation data that brahe downloads and caches. It is one method call.</aside>
+</section>
+
 <!-- ======================= BACKUP ======================= -->
 
 <section class="slide" data-label="Backup">
   <div class="statement"><p class="term" style="color:var(--ink-50)">Backup</p></div>
+  <aside class="notes">Backup slides follow. Press b from anywhere to jump here.</aside>
 </section>
 
 <div id="chrome" style="visibility:hidden">
