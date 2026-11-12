@@ -97,8 +97,7 @@ pocs/         gitignored scratch
 
 ### Backup
 Pseudorange built term by term; dilution of precision for the designed constellation against GPS; event
-detection; extensible dynamics; custom property computer detail; benchmark detail; project history and test
-suite.
+detection; extensible dynamics; custom property computer detail; project history and test suite.
 
 ### Cut order if the main path runs long
 MMS detail shortens to one slide, then beat 16 detail, then beat 11's mistake reveal moves to backup.
