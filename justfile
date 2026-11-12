@@ -4,9 +4,10 @@ scripts := "basemap skyplot three_levels gps_constellation quick_hits tle_vs_sp3
 data:
     for s in {{scripts}}; do uv run scripts/$s.py || exit 1; done
 
-# Rebuild benchmarks.json from brahe's comparative benchmark results, e.g. `just benchmarks --results path/to/run_latest.json`
-benchmarks *args:
-    uv run scripts/benchmarks.py {{args}}
+# Rebuild benchmarks.json from a comparative benchmark results file, e.g. `just benchmarks path/to/run_latest.json --hardware "..."`
+[positional-arguments]
+benchmarks results *args:
+    uv run scripts/benchmarks.py --results "$@"
 
 # Run one analysis script, e.g. `just run skyplot`
 run name:

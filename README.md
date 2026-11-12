@@ -19,14 +19,16 @@ dependency order:
 just data
 ```
 
-`benchmarks.json` is built separately, because it reads results from a brahe checkout:
+`benchmarks.json` is built separately from a comparative benchmark results file, which the recipe
+requires as its first argument (further arguments go to `scripts/benchmarks.py`, for example
+`--source`, `--hardware` and `--brahe-build`):
 
 ```bash
-just benchmarks                                    # reads ~/repos/brahe
-just benchmarks --results path/to/run_latest.json  # or any results file
+just benchmarks path/to/run_latest.json
 ```
 
-The `justfile` recipes are `data`, `benchmarks`, `run <name>` (one script), `serve` and `snippets`.
+The `justfile` recipes are `data`, `benchmarks <results>`, `run <name>` (one script), `serve` and
+`snippets`.
 
 - **brahe version:** the scripts pin brahe to a commit on its main branch that includes the IGS/SP3
   orbit product client, until a released version with that client is published. The pin builds brahe
@@ -35,9 +37,9 @@ The `justfile` recipes are `data`, `benchmarks`, `run <name>` (one script), `ser
 - **Space-Track credentials:** GP element sets come from CelesTrak. When CelesTrak is unreachable the
   scripts fall back to Space-Track, which needs an account, read from the environment variables
   `SPACETRACK_USER` and `SPACETRACK_PASS`. They are not needed while CelesTrak responds.
-- **`benchmarks.py`** reads the results of brahe's comparative benchmark suite from a brahe checkout
-  (`~/repos/brahe/benchmarks/comparative/results/run_latest.json` by default; pass `--results` for
-  another path), so it is not part of `just data`. The deck's `benchmarks.json` is built with
+- **`benchmarks.py`** reads the results of brahe's comparative benchmark suite
+  (`~/repos/brahe/benchmarks/comparative/results/run_latest.json` when run directly without
+  `--results`; `just benchmarks` always takes the path), so it is not part of `just data`. The deck's `benchmarks.json` is built with
   `--results` pointing at the comparative run in the Brahe-and-Astrojax-JAIS- paper repository
   (`reproducibility/results/comparative/run_latest.json`), which has the same format and more libraries.
 - **IGS orbit products** come from the BKG mirror of the IGS archive, which needs no login.
@@ -62,9 +64,9 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 ## Code on the slides
 
 Every code card in the deck is a complete program in `deck/snippets/`, shown on its slide as the file
-reads below its PEP 723 header (the deck loads the files directly), except for a few lines each card
-leaves out (alias constants and the closing `print`). Each runs on its own and prints
-its result:
+reads below its PEP 723 header (the deck loads the files directly), except for the closing `print`
+(and, on the Walker card, the timing lines that only feed it). The seven `mod_*.py` files are the
+module slides' examples and show their `print` too. Each runs on its own and prints its result:
 
 ```bash
 uv run deck/snippets/<name>.py
