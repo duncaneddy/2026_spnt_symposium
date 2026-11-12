@@ -667,7 +667,7 @@ figures.gpsConstellation = {
     const front = svgEl('g', {}, svg), dots = svgEl('g', {}, svg);
     el.__paths = [];
     pts.forEach(track => frontBack([...track, track[0]], cx, cy, re).forEach(run => {
-      if (run.pts.length > 1) el.__paths.push(exactPath(run.h ? back : front, run.pts, { color: C.lagunita, width: 2, opacity: run.h ? 0.07 : 0.35 }));
+      if (run.pts.length > 1) el.__paths.push(exactPath(run.h ? back : front, run.pts, { color: C.lagunita, width: 1.6, opacity: run.h ? 0.06 : 0.3 }));
     }));
     el.__dots = pts.map(() => svgEl('circle', { r: 7, fill: C.lagunita }, dots));
     el.__dotLayer = dots;
