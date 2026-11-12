@@ -360,3 +360,34 @@ em { font-style: italic; }
 .code-full .cm { color: var(--gray); font-style: italic; }
 .code-full.half { right: auto; left: 100px; width: 1000px; padding: 22px 28px; }
 .code-full.half pre { font-size: 20px; }
+
+/* ---------- code cards (figs.js codeCard) ---------- */
+.code-card { position: absolute; left: 0; top: 0; width: 100%; padding: 22px 28px; }
+.code-card pre { margin: 0; font-family: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace; font-size: inherit; line-height: 1.42; color: var(--ink); white-space: pre; }
+.code-card .ln { position: relative; }
+.code-card .kw { font-weight: 600; }
+.code-card .bh { color: var(--lagunita); }
+.code-card .st { color: rgba(46, 45, 41, 0.72); }
+.code-card .cm { color: var(--gray); font-style: italic; }
+.code-card .ln.hl, .code-card .ln.hl span { color: var(--cardinal); font-weight: 600; }
+.code-card .ln-hl { position: absolute; left: 0; top: 0; right: 0; display: block; background: var(--board); color: var(--cardinal); font-weight: 600; white-space: pre; }
+
+/* ---------- module map cards (figs.js moduleMap) ---------- */
+.card.mod-card { padding: 22px 12px; }
+.mod-card .icon { position: relative; height: 92px; margin-bottom: 14px; }
+.mod-card h3 { font-size: 30px; line-height: 1.15; text-wrap: balance; }
+.mod-card p { font-family: var(--sans); font-size: 22px; text-wrap: balance; }
+
+/* ---------- property cards and tool families ---------- */
+.card.prop-card { left: 0; top: 0; width: 100%; height: 100%; padding: 0; display: flex; align-items: center; justify-content: center; }
+.prop-card h3 { margin: 0; font-size: 36px; }
+.tool-row { padding-top: 14px; }
+.tool-row .tool-name { width: 580px; font-size: 32px; font-weight: 600; line-height: 1.15; }
+.tool-row .tool-eg { width: 580px; margin-top: 4px; font-family: var(--sans); font-size: 24px; color: var(--ink-50); }
+
+/* ---------- lists inside panels and quote ---------- */
+.force-list { position: absolute; margin: 0; padding: 0; list-style: none; font-family: var(--sans); font-size: 30px; line-height: 1.3; }
+.force-list li { margin: 0 0 16px; }
+.quote { font-size: 64px; line-height: 1.22; font-style: italic; margin: 0; text-wrap: balance; }
+.statement .quote-by { font-family: var(--sans); font-size: 26px; color: var(--ink-50); margin-top: 36px; }
+.design-panel p { font-family: var(--sans); font-size: 28px; color: var(--ink-50); }

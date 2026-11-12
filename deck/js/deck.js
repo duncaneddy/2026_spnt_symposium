@@ -10,7 +10,6 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const stage = document.getElementById('stage');
 const sections = [...stage.querySelectorAll(':scope > section.slide')];
-const STAGES = ['Measure', 'Catalog', 'Screen', 'Assess', 'Decide', 'Share'];
 let current = -1, previous = -1;
 const data = {};
 
@@ -102,19 +101,21 @@ function renderFigures(root = stage) {
 
 /* ---------------- lifecycle section dividers ---------------- */
 
-// Divider slides (data-lc-current) color the lifecycle cards: past sections gray, the current
-// section red, upcoming sections ink. Moving between dividers animates from the previous colors.
+// Divider slides (data-lc-current="key" or "key1,key2") color the overview cards: cards that
+// were current on an earlier divider gray, the current cards red, the rest ink. Moving between
+// dividers animates from the previous colors.
 const LC_STROKE = { past: '#9A9A9A', current: '#8C1515', future: '#2E2D29' };
 
 function applyLifecycle() {
+  const seen = new Set();
   sections.forEach(sec => {
-    const ci = STAGES.indexOf(sec.dataset.lcCurrent);
-    if (ci < 0) { sec.querySelectorAll('[data-lc]').forEach(card => card.__roughPath?.setAttribute('stroke', LC_STROKE.future)); return; }
+    const cur = (sec.dataset.lcCurrent || '').split(',').map(k => k.trim()).filter(Boolean);
     sec.querySelectorAll('[data-lc]').forEach(card => {
-      const i = STAGES.indexOf(card.dataset.lc), st = i < ci ? 'past' : i === ci ? 'current' : 'future';
-      card.classList.add(`lc-${st}`);
+      const k = card.dataset.lc, st = cur.includes(k) ? 'current' : cur.length && seen.has(k) ? 'past' : 'future';
+      if (cur.length) card.classList.add(`lc-${st}`);
       card.__roughPath?.setAttribute('stroke', LC_STROKE[st]);
     });
+    cur.forEach(k => seen.add(k));
   });
 }
 
