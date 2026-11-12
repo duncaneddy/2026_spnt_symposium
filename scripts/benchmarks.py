@@ -6,7 +6,11 @@
 
 Reads the headline results of the brahe comparative benchmark suite
 (benchmarks/comparative in the brahe repository) and keeps, for a handful of
-tasks relevant to navigation work, one timing per library and language.
+tasks relevant to navigation work, one timing per library and language. The
+default input is a brahe checkout; `--results` also accepts the comparative
+run of the Brahe-and-Astrojax-JAIS- paper repository
+(reproducibility/results/comparative/run_latest.json), which uses the same
+harness and file format with more libraries (OSTk, FreeFlyer).
 
 Statistic:
   The suite records the wall-clock time of every iteration of a task
@@ -14,25 +18,36 @@ Statistic:
   `times_seconds`. Its report tables list the median alongside the mean; this
   script uses the median, which is robust to warm-up and scheduler outliers.
   Times are seconds per task invocation, as defined by the benchmark task
-  (see benchmarks/comparative/tasks), identical across libraries.
+  (see benchmarks/comparative/tasks), identical across libraries. One
+  invocation processes a batch of inputs (`batch` in the output).
 
 Ratios:
   ratio_to_brahe = library median / brahe (Rust) median for the same task.
   A value above 1 means the library is slower than brahe; below 1 means it is
   faster. brahe's Python bindings are included as their own row, with the same
-  Rust reference, so the slide can show both.
+  Rust reference.
 
 Kept tasks:
-  time.utc_to_gps, coordinates.geodetic_to_ecef, coordinates.ecef_to_azel,
-  frames.state_eci_to_ecef, propagation.sgp4_trajectory,
-  propagation.numerical_rk4_grav20x20_sun_moon, access.sgp4_access.
+  time.utc_to_gps, coordinates.geodetic_to_ecef, frames.state_eci_to_ecef,
+  propagation.sgp4_trajectory, access.sgp4_access,
+  propagation.numerical_rk4_grav20x20_sun_moon.
+  `faster_elsewhere` lists every task in the run, kept or not, where another
+  library's median is below brahe (Rust)'s.
+
+Excluded libraries:
+  FreeFlyer runs one subprocess per invocation, so its medians measure process
+  startup rather than the task. It is left out of the tasks and reported under
+  `excluded` with its smallest median.
 
 Run:
   uv run scripts/benchmarks.py [--results path/to/run_latest.json] [--out path.json]
+      [--source "repository: path"] [--hardware "..."] [--brahe-build "..."]
 
 Output (deck/data/benchmarks.json):
-  {generated_utc, brahe_version, benchmark_run_utc, statistic, source,
-   tasks:[{name, label, results:[{library, language, median_s, ratio_to_brahe}]}]}
+  {generated_utc, brahe_version, brahe_build, benchmark_run_utc, statistic,
+   iterations, source, hardware, library_versions, excluded, tasks_in_run,
+   tasks:[{name, label, batch, results:[{library, language, median_s, ratio_to_brahe}]}],
+   faster_elsewhere:[{task, library, ratio_to_brahe}]}
   Results within a task are sorted fastest first.
 """
 
@@ -46,16 +61,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "deck/data/benchmarks.json"
 DEFAULT_RESULTS = Path("~/repos/brahe/benchmarks/comparative/results/run_latest.json").expanduser()
-SOURCE = "benchmarks/comparative/results/run_latest.json"
+SOURCE = "brahe: benchmarks/comparative/results/run_latest.json"
+EXCLUDED = {"freeflyer": "one subprocess per invocation; medians measure process startup"}
 
+# Task name -> (slide label, inputs per timed invocation, from the task definitions).
 TASKS = {
-    "time.utc_to_gps": "UTC to GPS time conversion",
-    "coordinates.geodetic_to_ecef": "Geodetic to ECEF position",
-    "coordinates.ecef_to_azel": "ECEF to azimuth/elevation",
-    "frames.state_eci_to_ecef": "ECI to ECEF state transformation",
-    "propagation.sgp4_trajectory": "SGP4 trajectory propagation",
-    "propagation.numerical_rk4_grav20x20_sun_moon": "Numerical propagation, 20x20 gravity + Sun/Moon",
-    "access.sgp4_access": "Ground-station access windows (SGP4)",
+    "time.utc_to_gps": ("UTC to GPS time conversion", "50 epochs"),
+    "coordinates.geodetic_to_ecef": ("Geodetic to ECEF position", "50 positions"),
+    "frames.state_eci_to_ecef": ("ECI to ECEF state transformation", "50 states"),
+    "propagation.sgp4_trajectory": ("SGP4 trajectory propagation", "1 day at 60 s"),
+    "access.sgp4_access": ("Ground-station access windows", "100 sites, 1 day"),
+    "propagation.numerical_rk4_grav20x20_sun_moon": (
+        "Numerical propagation, 20x20 gravity, Sun and Moon",
+        "about one LEO orbit",
+    ),
 }
 
 
@@ -63,14 +82,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--results", type=Path, default=DEFAULT_RESULTS)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--source", default=SOURCE, help="repository and path of the results file")
+    parser.add_argument("--hardware", default=None, help="machine description (default: from system_info)")
+    parser.add_argument("--brahe-build", default=None, help="how the benchmarked brahe was built")
     return parser.parse_args()
 
 
-def build_task(name: str, runs: list[dict]) -> dict:
+def build_task(name: str, medians: dict[tuple[str, str], float]) -> dict:
     """One task entry: median per library/language with ratio to brahe (Rust)."""
-    medians = {
-        (r["library"], r["language"]): statistics.median(r["times_seconds"]) for r in runs
-    }
     reference = medians[("brahe", "rust")]
     results = [
         {
@@ -81,7 +100,8 @@ def build_task(name: str, runs: list[dict]) -> dict:
         }
         for (library, language), median in sorted(medians.items(), key=lambda kv: kv[1])
     ]
-    return {"name": name, "label": TASKS[name], "results": results}
+    label, batch = TASKS[name]
+    return {"name": name, "label": label, "batch": batch, "results": results}
 
 
 def main() -> None:
@@ -89,37 +109,72 @@ def main() -> None:
     if not args.results.is_file():
         sys.exit(f"benchmark results not found: {args.results} (pass --results or check out brahe)")
     run = json.loads(args.results.read_text())
+    info = run["system_info"]
 
-    by_task: dict[str, list[dict]] = {name: [] for name in TASKS}
-    for result in run["task_results"]:
-        if result["task_name"] in by_task:
-            by_task[result["task_name"]].append(result)
+    by_task: dict[str, dict[tuple[str, str], float]] = {}
+    for r in run["task_results"]:
+        if r["library"] not in EXCLUDED:
+            by_task.setdefault(r["task_name"], {})[(r["library"], r["language"])] = statistics.median(r["times_seconds"])
 
-    tasks = [build_task(name, runs) for name, runs in by_task.items()]
+    tasks = [build_task(name, by_task[name]) for name in TASKS]
 
-    brahe_version = run["system_info"]["brahe_version"]
+    faster = [
+        {"task": name, "library": lib, "ratio_to_brahe": median / meds[("brahe", "rust")]}
+        for name, meds in sorted(by_task.items())
+        if meds.get(("brahe", "rust"), 0) > 0
+        for (lib, _), median in sorted(meds.items(), key=lambda kv: kv[1])
+        if lib != "brahe" and median < meds[("brahe", "rust")]
+    ]
+
+    versions = {}
+    for r in run["task_results"]:
+        version = r.get("metadata", {}).get("version")
+        if r["library"] != "brahe" and version and version.lower() != r["library"]:
+            versions[r["library"]] = version
+
+    excluded = {}
+    for lib, reason in EXCLUDED.items():
+        lib_medians = [statistics.median(r["times_seconds"]) for r in run["task_results"] if r["library"] == lib]
+        if lib_medians:
+            excluded[lib] = {"reason": reason, "version": versions.get(lib), "min_median_s": min(lib_medians)}
+
+    iterations = {r["iterations"] for r in run["task_results"] if r["task_name"] in TASKS}
+
+    brahe_version = info["brahe_version"]
     assert brahe_version, "brahe_version missing from benchmark results"
+    assert len(iterations) == 1, f"mixed iteration counts: {iterations}"
     for task in tasks:
         libs = {(r["library"], r["language"]) for r in task["results"]}
         assert ("brahe", "rust") in libs, f"{task['name']}: no brahe (Rust) result"
         assert any(lib != "brahe" for lib, _ in libs), f"{task['name']}: no other library"
         assert all(r["ratio_to_brahe"] > 0 for r in task["results"]), f"{task['name']}: bad ratio"
+        assert not any(r["library"] in EXCLUDED for r in task["results"]), f"{task['name']}: excluded library"
 
     out = {
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "brahe_version": brahe_version,
+        "brahe_build": args.brahe_build,
         "benchmark_run_utc": run["timestamp"],
-        "statistic": "median of per-iteration wall-clock time, 200 iterations",
-        "source": SOURCE,
+        "statistic": "median of per-iteration wall-clock time",
+        "iterations": iterations.pop(),
+        "source": args.source,
+        "hardware": args.hardware or f"{info['platform']}, {info['cpu_count']} CPUs",
+        "library_versions": {k: versions[k] for k in sorted(versions) if k not in EXCLUDED},
+        "excluded": excluded,
+        "tasks_in_run": len(by_task),
         "tasks": tasks,
+        "faster_elsewhere": faster,
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(out, indent=2) + "\n")
 
     for task in tasks:
-        print(task["label"])
+        print(f"{task['label']} ({task['batch']})")
         for r in task["results"]:
             print(f"  {r['library']:9s}{r['language']:9s}{r['median_s']:12.3e} s  x{r['ratio_to_brahe']:8.2f}")
+    print("Another library faster than brahe (Rust):")
+    for f in faster:
+        print(f"  {f['task']:48s}{f['library']:9s}x{f['ratio_to_brahe']:8.3f}")
 
 
 if __name__ == "__main__":
