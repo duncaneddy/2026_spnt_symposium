@@ -47,7 +47,16 @@ function setText(t, str) {
 
 // HTML with each "Pc" typeset by KaTeX.
 
-function linPath(pts) { return pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(''); }
+// Polyline path data; a null entry ends a run and the next point starts a new one.
+function linPath(pts) {
+  let move = true;
+  return pts.map(p => {
+    if (!p) { move = true; return ''; }
+    const cmd = move ? 'M' : 'L';
+    move = false;
+    return `${cmd}${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+  }).join('');
+}
 
 function exactPath(parent, pts, { color = C.ink, width = 3, opacity = 1, dash = null, fill = 'none', closed = false } = {}) {
   const p = svgEl('path', { d: linPath(pts) + (closed ? 'Z' : ''), stroke: color, 'stroke-width': width, fill, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, parent);
@@ -734,11 +743,22 @@ figures.forceModelEffect = {
     const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...late(P.dr_km), ...late(P.dr_drag_km)))));
     const hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...P.dr_km))));
     const ax = axes(svg, { left: 120, right: 40, top: 70, bottom: 80, xr: [0, last(days)], yr: [lo, hi], ylog: true, xlabel: 'days', ylabel: 'position difference (km, log scale)', xticks: niceTicks(0, last(days), 3), yfmt: v => pow10(Math.round(Math.log10(v))), seed: 4501 });
-    const series = (vals) => vals.map((v, i) => [ax.x(days[i]), ax.y(Math.max(v, lo))]).filter((p, i) => vals[i] > 0);
+    // Samples at or above lo, in pixels; where the curve crosses lo it is cut at the crossing,
+    // interpolated in (days, log10 value), and samples below lo are left out.
+    const series = (vals) => vals.flatMap((v, i) => {
+      const inside = v >= lo, prev = vals[i - 1], pts = [];
+      if (i && inside !== prev >= lo && v > 0 && prev > 0) {
+        const f = (Math.log10(lo) - Math.log10(prev)) / (Math.log10(v) - Math.log10(prev));
+        pts.push([ax.x(days[i - 1] + f * (days[i] - days[i - 1])), ax.y(lo)]);
+      }
+      if (inside) pts.push([ax.x(days[i]), ax.y(v)]);
+      else if (i && prev >= lo) pts.push(null);
+      return pts;
+    });
     el.__axes = ax.g;
     el.__drag = exactPath(svg, series(P.dr_drag_km), { color: C.ink, width: 3 });
     el.__full = exactPath(svg, series(P.dr_km), { color: C.lagunita, width: 4.5 });
-    const yFull = ax.y(last(P.dr_km)), yDrag = ax.y(Math.max(last(P.dr_drag_km), lo));
+    const yFull = ax.y(last(P.dr_km)), yDrag = ax.y(last(P.dr_drag_km));
     const [lf, ld] = yDrag - yFull < 60 ? [yFull - 18, yDrag + 36] : [yFull - 18, yDrag - 18];
     el.__labels = svgEl('g', {}, svg);
     text(el.__labels, ax.box.x1, lf, 'two-body vs full force model', { size: 24, anchor: 'end', color: C.lagunita, weight: 600 });
