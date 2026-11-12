@@ -7,13 +7,14 @@ import brahe as bh
 import numpy as np
 
 lla = [-122.1697, 37.4275, 30.0]  # Stanford lon, lat, alt
-NAME = "IGS0OPSULT_20263150000_02D_15M_ORB.SP3.gz"
 correct = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.GPS)
 mistaken = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.UTC)
 
 igs = bh.IGSProductsClient("BKG")
-product = {p.name: p for p in igs.list_products(correct)}[NAME]
-sp3 = igs.download_sp3(product)
+ultra_rapid = igs.list_products_between(
+    correct, correct, center="IGS", solution="ULT", content="ORB"
+)
+sp3 = igs.download_sp3(ultra_rapid[-1])  # latest issue
 sat = next(s for s in sp3.satellites() if s.get_name() == "G09")
 site = bh.position_geodetic_to_ecef(lla, bh.AngleFormat.DEGREES)
 

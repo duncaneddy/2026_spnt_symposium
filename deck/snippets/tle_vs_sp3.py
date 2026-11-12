@@ -8,11 +8,12 @@ import numpy as np
 
 bh.initialize_eop()
 epoch = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.UTC)
-NAME = "IGS0OPSULT_20263150000_02D_15M_ORB.SP3.gz"
 
 igs = bh.IGSProductsClient("BKG")
-product = {p.name: p for p in igs.list_products(epoch)}[NAME]
-sp3 = igs.download_sp3(product)
+ultra_rapid = igs.list_products_between(
+    epoch, epoch, center="IGS", solution="ULT", content="ORB"
+)
+sp3 = igs.download_sp3(ultra_rapid[-1])  # latest issue
 sat = next(s for s in sp3.satellites() if s.get_name() == "G09")
 
 celestrak = bh.celestrak.CelestrakClient()
