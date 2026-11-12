@@ -117,6 +117,12 @@
   <aside class="notes">Why the tradeoff exists. poliastro was an open-source Python astrodynamics library; this line is from its creator, Juan Luis Cano Rodríguez, in "Juan Luis steps down as maintainer of the project" on the poliastro blog, December 21, 2022 (https://www.poliastro.space/blog/2022/12/21/juan-luis-steps-down/), explaining why such projects are hard to keep alive. Pause after reading it; it sets up brahe.</aside>
 </section>
 
+<section class="slide" data-label="Timeline">
+  <h2 class="header" data-in="up">I have rewritten this project five times since 2014</h2>
+  <div class="fig" data-fig="timeline" style="left:120px; top:270px; width:1680px; height:600px;"></div>
+  <aside class="notes">How I ended up on both sides of that quote. 2014: I start astrodynamics research at Stanford, cannot find good open-source software to work in, and start writing my own in MATLAB. Click: 2015 to 2016, MATLAB is too slow, so I rewrite it in C++ with MEX bindings. Click: 2017, I join Capella Space and rewrite it in pure C++. Click: 2018, C++ is a pain to write quickly, so I rewrite it in pure Python. Click: 2019, I return to Stanford and rewrite it in Julia. Click: 2021, I join Amazon Kuiper and start rewriting it in Rust with Python bindings, which is what it has been since. Planned remark: "Six languages in, I am fairly confident about this one." Each circle is one version, colored by language; a split circle is a version in two languages.</aside>
+</section>
+
 <section class="slide" data-label="brahe">
   <img src="img/brahe-logo.png" alt="brahe" style="position:absolute; left:770px; top:92px; width:380px; height:181px;" data-in="fade">
   <p style="position:absolute; left:200px; right:200px; top:330px; margin:0; text-align:center; font-size:48px; line-height:1.32; text-wrap:balance;" data-in="up" data-delay="300"><b>brahe</b> is an open-source astrodynamics project that aims to solve this problem: to empower engineers and researchers to use the <span class="c-lagunita">highest‑fidelity models</span>, with the speed of simpler ones, without adding complexity.</p>

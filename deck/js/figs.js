@@ -8,7 +8,7 @@ export const DATA_FILES = ['skyplot', 'three_levels', 'quick_hits', 'land', 'gps
 const EASE_IN = 'cubic-bezier(.2,.7,.2,1)';
 const EASE_MOVE = 'cubic-bezier(.65,0,.25,1)';
 const FILL = { fill: 'both' };
-const C = { ink: '#2E2D29', cardinal: '#8C1515', lagunita: '#006CB8', sky: '#0098DB', green: '#279989', poppy: '#E98300', gray: '#9A9A9A', board: '#FAF8F3' };
+const C = { ink: '#2E2D29', cardinal: '#8C1515', lagunita: '#006CB8', sky: '#0098DB', green: '#279989', poppy: '#E98300', plum: '#620059', spirited: '#E04F39', illuminating: '#FEC51D', gray: '#9A9A9A', board: '#FAF8F3' };
 const R_EARTH = 6378.137;
 
 /* ======================= helpers ======================= */
@@ -673,6 +673,42 @@ figures.tradeoff = {
   },
 };
 
+/* ---------- project timeline ---------- */
+// One column per version of the project, evenly spaced along a hand-drawn time arrow: the year
+// above the arrow, a line down to a circle filled in the language's color (two halves for a
+// version in two languages), then the language and what prompted the version. The first column
+// shows on entry; each later column is one click.
+const LANG_COLOR = { MATLAB: C.poppy, 'C++': C.lagunita, Python: C.illuminating, Julia: C.plum, Rust: C.spirited };
+const VERSIONS = [
+  { year: '2014', langs: ['MATLAB'], name: 'MATLAB', why: 'Start astrodynamics research at Stanford. No open-source software to build on.' },
+  { year: '2015 to 2016', langs: ['C++', 'MATLAB'], name: 'C++ with MEX bindings', why: 'MATLAB is too slow.' },
+  { year: '2017', langs: ['C++'], name: 'C++', why: 'Join Capella Space.' },
+  { year: '2018', langs: ['Python'], name: 'Python', why: 'C++ is a pain to write quickly.' },
+  { year: '2019', langs: ['Julia'], name: 'Julia', why: 'Return to Stanford.' },
+  { year: '2021', langs: ['Rust', 'Python'], name: 'Rust with Python bindings', why: 'Join Amazon Kuiper. It has been this ever since.' },
+];
+
+figures.timeline = {
+  render(el) {
+    const W = el.offsetWidth, n = VERSIONS.length, colW = W / n, axisY = 86, cy = 230, r = 50;
+    strokePath(svgFor(el), roughArrow(10, axisY, W - 10, axisY, { seed: 2014, head: 18, rough: 0.5 }), { color: C.ink, width: 3 });
+    VERSIONS.forEach((v, i) => {
+      const col = document.createElement('div');
+      col.className = 'tl-col';
+      if (i) col.dataset.step = i;
+      col.style.cssText = `left:${i * colW}px; width:${colW}px;`;
+      col.innerHTML = `<div class="tl-year">${v.year}</div><div class="tl-name" style="top:${cy + r + 22}px;">${v.name}</div><div class="tl-why" style="top:${cy + r + 112}px;">${v.why}</div>`;
+      el.appendChild(col);
+      const svg = svgFor(col), cx = colW / 2, seed = hashSeed(v.name);
+      strokePath(svg, roughLine(cx, axisY - 12, cx, cy - r, { seed, rough: 0.4, passes: 1 }), { color: C.ink, width: 2.6 });
+      const [a, b = a] = v.langs.map(l => LANG_COLOR[l]);
+      svgEl('path', { d: `M${cx} ${cy - r}A${r} ${r} 0 0 0 ${cx} ${cy + r}Z`, fill: a }, svg);
+      svgEl('path', { d: `M${cx} ${cy - r}A${r} ${r} 0 0 1 ${cx} ${cy + r}Z`, fill: b }, svg);
+      strokePath(svg, roughEllipse(cx, cy, r, r, { seed: seed + 1, rough: 0.5 }), { color: C.ink, width: 2.6 });
+    });
+  },
+};
+
 /* ---------- module map ---------- */
 // The overview of brahe's modules. Reused as a section divider: a slide with
 // data-clone="Modules" data-lc-current="<key>[,<key>]" shows those cards in Cardinal, cards that
@@ -1203,13 +1239,16 @@ figures.mmsCounts = {
 // at the orbital rate of the shell, one period per WALKER_LOOP_MS of wall time.
 const WALKER_LOOP_MS = 20000;
 
+// One color per orbital plane, so the planes can be told apart as the satellites move.
+const PLANE_COLORS = [C.lagunita, C.cardinal, C.green, C.poppy, C.plum, C.sky, C.spirited, '#8F993E', '#651C32', '#6FA287', C.illuminating, '#5D4B3C'];
+
 figures.walkerGlobe = {
   needs: ['walker_pnt'],
   render(el, d) {
     const Wd = d.walker_pnt, S = Wd.snapshot_xyz_km, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
     const r = Math.hypot(...S[0]), cx = W / 2, cy = H / 2, kmPerPx = r / (Math.min(W, H) / 2 - 12), re = R_EARTH / kmPerPx;
     const proj = projector(cx, cy, kmPerPx, 25, 28);
-    const nP = Math.max(...Wd.planes) + 1;
+    const nP = Math.max(...Wd.planes) + 1, color = p => PLANE_COLORS[p % PLANE_COLORS.length];
     const normals = Array.from({ length: nP }, (_, p) => { const [a, b] = S.filter((_, i) => Wd.planes[i] === p); return unit3(cross3(a, b)); });
     const back = svgEl('g', {}, svg);
     el.__earth = svgEl('g', {}, svg);
@@ -1219,11 +1258,11 @@ figures.walkerGlobe = {
       const e1 = unit3(S[Wd.planes.indexOf(p)]), e2 = cross3(nv, e1);
       const pts = Array.from({ length: 181 }, (_, i) => { const a = i / 180 * 2 * Math.PI; return e1.map((v, c) => r * (v * Math.cos(a) + e2[c] * Math.sin(a))); });
       return frontBack(pts.map(proj), cx, cy, re).filter(q => q.pts.length > 1)
-        .map(q => exactPath(q.h ? back : front, q.pts, { color: C.lagunita, width: 1.6, opacity: q.h ? 0.09 : 0.45 }));
+        .map(q => exactPath(q.h ? back : front, q.pts, { color: color(p), width: 1.8, opacity: q.h ? 0.12 : 0.6 }));
     });
     const dots = svgEl('g', {}, svg);
     el.__planeDots = Array.from({ length: nP }, () => svgEl('g', {}, dots));
-    el.__dots = S.map((_, i) => svgEl('circle', { r: 5, fill: C.lagunita }, el.__planeDots[Wd.planes[i]]));
+    el.__dots = S.map((_, i) => svgEl('circle', { r: 5, fill: color(Wd.planes[i]) }, el.__planeDots[Wd.planes[i]]));
     const omega = 2 * Math.PI / (Wd.span_h * 3600);
     el.__set = tSim => S.forEach((p, i) => {
       const nv = normals[Wd.planes[i]], q = cross3(nv, p), c = Math.cos(omega * tSim), s = Math.sin(omega * tSim);

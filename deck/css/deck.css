@@ -407,6 +407,13 @@ em { font-style: italic; }
 .brahe-point h3 { font-size: 44px; }
 .brahe-point p { font-size: 30px; }
 
+/* ---------- project timeline (figs.js timeline) ---------- */
+.tl-col { position: absolute; top: 0; height: 100%; text-align: center; }
+.tl-col > div { position: absolute; left: 12px; right: 12px; text-wrap: balance; }
+.tl-year { top: 0; font-family: var(--sans); font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tl-name { font-size: 32px; font-weight: 600; line-height: 1.15; }
+.tl-why { font-family: var(--sans); font-size: 26px; line-height: 1.25; color: var(--ink-50); }
+
 /* ---------- adopters, roadmap, backup term table ---------- */
 .close-panel h3 { font-size: 40px; }
 .close-panel li { font-family: var(--sans); font-size: 32px; line-height: 1.35; margin-bottom: 14px; }
