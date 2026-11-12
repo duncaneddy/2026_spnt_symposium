@@ -52,8 +52,10 @@ export const moduleBinds = {
 };
 
 // One row per task on a shared log axis of time relative to brahe (Rust): brahe is the Lagunita 1x
-// line, every other library an ink dot with its name, de-overlapped above and below the row. Dots
-// left of the line (faster than brahe) carry their ratio as well. brahe's Python bindings are not
+// line, every other library an ink dot with its name centered above or below its own dot (a label
+// that has to move sideways gets a leader line to its dot). Dots left of the line (faster than
+// brahe) carry their ratio as well. A task label wider than the label column wraps at its last
+// comma that fits, and its second line carries the batch size. brahe's Python bindings are not
 // plotted (the slide states their overhead in a caption line).
 function benchmarkRender(el, d) {
   const T = B(d).tasks, svg = svgFor(el), W = el.offsetWidth, H = el.offsetHeight;
@@ -78,26 +80,36 @@ function benchmarkRender(el, d) {
   exactPath(el.__frame, [[x1, top - 8], [x1, yAxis]], { color: C.lagunita, width: 3 });
   haloText(el.__frame, x1, top - 18, 'brahe (Rust)', { size: 22, anchor: 'middle', color: C.lagunita, weight: 600 });
 
-  const placed = [[x1 - 2, -Infinity, x1 + 2, Infinity]];
+  const placed = [];
   const clear = b => placed.every(p => b[2] < p[0] - 8 || b[0] > p[2] + 8 || b[3] < p[1] || b[1] > p[3]);
   el.__rows = T.map((t, k) => {
     const g = svgEl('g', {}, svg), y = top + pitch * (k + 0.5);
-    text(g, 0, y - 2, t.label, { size: 26, weight: 600 });
-    text(g, 0, y + 26, t.batch ? `per call: ${t.batch}` : '', { size: 22, color: 'rgba(46,45,41,.55)' });
+    const batch = t.batch ? `per call: ${t.batch}` : '';
+    const head = text(g, 0, y - 2, t.label, { size: 26, weight: 600 });
+    const cuts = [...t.label.matchAll(/, /g)].map(m => m.index).reverse();
+    const fits = i => { head.textContent = t.label.slice(0, i + 1); return head.getComputedTextLength() <= labelW; };
+    const cut = head.getComputedTextLength() > labelW ? cuts.find(fits) : undefined;
+    head.textContent = cut === undefined ? t.label : t.label.slice(0, cut + 1);
+    const sub = text(g, 0, y + 26, cut === undefined ? '' : t.label.slice(cut + 2), { size: 26, weight: 600 });
+    svgEl('tspan', { 'font-size': 22, 'font-weight': 400, fill: 'rgba(46,45,41,.55)' }, sub).textContent = cut === undefined ? batch : ` · ${batch}`;
     svgEl('line', { x1: labelW + 20, x2: W - right, y1: y, y2: y, stroke: 'rgba(46,45,41,.12)', 'stroke-width': 1.5 }, g);
     [...marks[k]].sort((a, b) => a.ratio_to_brahe - b.ratio_to_brahe).forEach(r => {
       const v = r.ratio_to_brahe, x = X(v), faster = v < 1;
       svgEl('circle', { cx: x, cy: y, r: 8, fill: C.ink }, g);
       const lbl = faster ? `${libName(r)} ${ratioFmt(v)}×` : libName(r);
-      const t0 = text(g, 0, 0, lbl, { size: 22, color: C.ink, weight: faster ? 600 : 400 });
+      const t0 = haloText(g, 0, 0, lbl, { size: 22, color: C.ink, weight: faster ? 600 : 400 });
       const w = t0.getComputedTextLength();
       const cands = faster
         ? [[x - 16 - w, y + 8], [x - w / 2, y - 16], [x - w / 2, y + 34]]
-        : [[x - w / 2, y - 16], [x - w / 2, y + 34], [x + 4, y - 16], [x + 4, y + 34], [x - w - 4, y - 16], [x - w - 4, y + 34], [x + 16, y + 8]];
+        : [[x - w / 2, y - 16], [x - w / 2, y + 34], [x - w / 2, y - 42], [x - w / 2, y + 60], [x + 16, y + 8]];
       const box = ([lx, ly]) => [lx, ly - 18, lx + w, ly + 4];
       const pick = cands.find(c => clear(box(c)) && c[0] >= labelW + 10) || cands[0];
       placed.push(box(pick));
       t0.setAttribute('x', pick[0]); t0.setAttribute('y', pick[1]);
+      if (pick[1] === y - 42 || pick[1] === y + 60) {
+        const up = pick[1] < y;
+        svgEl('line', { x1: x, x2: x, y1: up ? y - 10 : y + 10, y2: up ? pick[1] + 6 : pick[1] - 20, stroke: 'rgba(46,45,41,.55)', 'stroke-width': 1.5 }, g);
+      }
     });
     return g;
   });
