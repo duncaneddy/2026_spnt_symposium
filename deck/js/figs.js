@@ -978,7 +978,8 @@ figures.leoCounts = {
 // radius as an exact circle; one GPS satellite opposite the apogee with its main-lobe and side-lobe
 // half angles drawn exactly from the pattern, and the shadow of the Earth plus mask altitude.
 // Click 1 starts a replay of MMS along the orbit; the slide's [data-readout] fields show the
-// distance and the main-lobe and main-plus-side-lobe counts for the current sample.
+// distance and the main-lobe and main-plus-side-lobe counts for the current sample. Stepping back
+// to step 0 stops the replay and returns MMS to the first sample.
 const MMS_LOOP_MS = 16000;
 
 figures.mmsOrbit = {
@@ -1053,9 +1054,12 @@ figures.mmsOrbit = {
     fadeIn(el.__labels, A, 1400, 500);
     let stop = null;
     const start = () => { stop?.(); stop = loop(t => el.__set(Math.floor((t / MMS_LOOP_MS % 1) * el.__n))); };
-    if ((sec.__step || 0) >= 1) start(); else el.__set(0);
+    const reset = () => { stop?.(); stop = null; el.__set(0); };
+    if ((sec.__step || 0) >= 1) start(); else reset();
     const off = onStep(el, 1, start);
-    return () => { off(); stop?.(); };
+    const back = e => { if (e.detail.step < 1) reset(); };
+    sec.addEventListener('deckstep', back);
+    return () => { off(); sec.removeEventListener('deckstep', back); stop?.(); };
   },
 };
 
