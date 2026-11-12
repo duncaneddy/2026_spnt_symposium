@@ -639,9 +639,11 @@ figures.tradeoff = {
       const svg = svgFor(row), cy = 46, seed = hashSeed(f.name);
       f.has.forEach((h, i) => {
         const cx = cols[i];
-        if (h === 'yes') strokePath(svg, roughPolyline([[cx - 18, cy], [cx - 5, cy + 14], [cx + 20, cy - 16]], { seed: seed + i, rough: 0.6 }), { color: C.ink, width: 4 });
-        else if (h === 'no') strokePath(svg, roughLine(cx - 16, cy, cx + 16, cy, { seed: seed + i, rough: 0.5, passes: 1 }), { color: C.gray, width: 3 });
-        else text(svg, cx, cy + 8, h, { size: 24, anchor: 'middle', color: C.gray, italic: true });
+        if (h === 'yes') strokePath(svg, roughPolyline([[cx - 18, cy], [cx - 5, cy + 14], [cx + 20, cy - 16]], { seed: seed + i, rough: 0.6 }), { color: C.green, width: 4 });
+        else if (h === 'no') {
+          strokePath(svg, roughLine(cx - 15, cy - 15, cx + 15, cy + 15, { seed: seed + i, rough: 0.5, passes: 1 }), { color: 'rgba(46,45,41,.45)', width: 4 });
+          strokePath(svg, roughLine(cx + 15, cy - 15, cx - 15, cy + 15, { seed: seed + i + 50, rough: 0.5, passes: 1 }), { color: 'rgba(46,45,41,.45)', width: 4 });
+        } else strokePath(svg, tildePath(cx, cy, seed + i), { color: C.ink, width: 4 });
       });
     });
   },
