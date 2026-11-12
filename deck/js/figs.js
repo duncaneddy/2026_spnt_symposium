@@ -410,12 +410,13 @@ function pyHTML(line) {
 }
 
 // Monospace code inside a hand-drawn box that spans the width of el; its height follows the lines.
-//   lines      source lines, one string per line ('' for a blank line)
-//   highlight  1-based line numbers drawn in Cardinal; [n, step] turns line n Cardinal on click `step`
-//   steps      {lineNumber: step}: the line stays hidden until that click
-//   marks      [[lineNumber, 'text', 'cardinal' | 'green']]: that text on the line drawn in the color
+//   lines      source lines, one string per line ('' for a blank line, drawn at half height)
+//   highlight  line matches drawn in Cardinal; [match, step] turns that line Cardinal on click `step`
+//   steps      {match: step}: the line stays hidden until that click
+//   marks      [[match, 'text', 'cardinal' | 'green']]: that text on the line drawn in the color
 //   size       font size in px (22 minimum)
 //   key        seed for the hand-drawn box, so clones redraw the same outline
+// A match selects the first line that contains it as a substring.
 function markedHTML(line, mark) {
   const i = mark ? line.indexOf(mark[1]) : -1;
   if (i < 0) return pyHTML(line);
@@ -430,20 +431,22 @@ function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22
   box.dataset.roughKey = `code-${key || lines[0]}`;
   box.style.fontSize = `${Math.max(22, size)}px`;
   const pre = document.createElement('pre');
-  const hl = new Map(highlight.map(h => (Array.isArray(h) ? h : [h, 0])));
+  const lineOf = match => lines.findIndex(ln => ln.includes(match));
+  const hl = new Map(highlight.map(h => (Array.isArray(h) ? [lineOf(h[0]), h[1]] : [lineOf(h), 0])));
+  const stepAt = new Map(Object.entries(steps).map(([m, k]) => [lineOf(m), k]));
   lines.forEach((ln, i) => {
-    const n = i + 1, row = document.createElement('div');
-    row.className = 'ln';
-    row.innerHTML = markedHTML(ln, marks.find(m => m[0] === n)) || '​';
-    if (hl.get(n) === 0) row.classList.add('hl');
-    else if (hl.has(n)) {
+    const row = document.createElement('div');
+    row.className = ln ? 'ln' : 'ln blank';
+    row.innerHTML = markedHTML(ln, marks.find(m => lineOf(m[0]) === i)) || '​';
+    if (hl.get(i) === 0) row.classList.add('hl');
+    else if (hl.has(i)) {
       const over = document.createElement('span');
       over.className = 'ln-hl';
       over.textContent = ln;
-      over.dataset.step = hl.get(n);
+      over.dataset.step = hl.get(i);
       row.appendChild(over);
     }
-    if (steps[n]) row.dataset.step = steps[n];
+    if (stepAt.has(i)) row.dataset.step = stepAt.get(i);
     pre.appendChild(row);
   });
   box.appendChild(pre);
@@ -451,263 +454,62 @@ function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22
   return box;
 }
 
-// Code shown on slides: real lines from the named script, trimmed to the lines that matter.
-// Each entry becomes the figure `code-<key>` (use <div class="fig" data-fig="code-<key>">), which
-// shows the data-pending note while the script's JSON is missing.
+// Code shown on slides: the complete programs in deck/snippets/<file>.py, loaded when the deck
+// starts. A card shows the file below its PEP 723 header and the blank line after it, verbatim.
+// `from`/`to` (line matches) show part of a file on one card when a program spans two cards.
+// Each entry becomes the figure `code-<key>` (use <div class="fig" data-fig="code-<key>">); a
+// snippet file that fails to load shows a pending note.
 const CODE = {
-  skyplot: {
-    needs: ['skyplot'],
-    lines: [
-      'sp3 = bh.SP3.from_file(str(path))',
-      'site_ecef = bh.position_geodetic_to_ecef(',
-      '    STANFORD_LLA, bh.AngleFormat.DEGREES)',
-      'gps = [sat for sat in sp3.satellites()',
-      '       if sat.get_name().startswith("G")]',
-      'r_epoch = {sat.get_name(): sat.state_ecef(EPOCH)[:3]',
-      '           for sat in gps}',
-      'enz = bh.relative_position_ecef_to_enz(',
-      '    site_ecef, sat_ecef, bh.EllipsoidalConversionType.GEODETIC)',
-      'az, el, _ = bh.position_enz_to_azel(',
-      '    enz, bh.AngleFormat.DEGREES)',
-    ],
-  },
-  tle: {
-    needs: ['quick_hits'],
-    lines: [
-      'query = bh.celestrak.CelestrakQuery.gp.group(',
-      '    "gps-ops").format(bh.celestrak.CelestrakOutputFormat.JSON)',
-      'bh.celestrak.CelestrakClient(max_retries=0).download(',
-      '    query, str(GP_CACHE))',
-      '',
-      'epochs = [EPOCH + t',
-      '          for t in range(0, TRACK_SPAN_S + 1, TRACK_STEP_S)]',
-      'for rec in records:',
-      '    sat = bh.GPRecord.from_json(',
-      '        json.dumps(rec)).to_sgp_propagator(TRACK_STEP_S)',
-      '    r_itrf = np.array(sat.states_itrf(epochs))[:, :3]',
-      '    lonlat = [bh.position_ecef_to_geodetic(',
-      '        r, bh.AngleFormat.DEGREES)[:2] for r in r_itrf]',
-    ],
-  },
-  propagate: {
-    needs: ['quick_hits'],
-    lines: [
-      'def propagate(',
-      '    x0: np.ndarray, force: bh.ForceModelConfig,',
-      '    epochs: list[bh.Epoch]',
-      ') -> bh.NumericalOrbitPropagator:',
-      '    config = bh.NumericalPropagationConfig.with_method(',
-      '        bh.IntegrationMethod.RKF78',
-      '    ).with_abs_tol(1e-6).with_rel_tol(1e-12)',
-      '    prop = bh.NumericalOrbitPropagator(',
-      '        EPOCH, x0, config, force, SSO_PARAMS)',
-      '    prop.propagate_to(epochs[-1])',
-      '    return prop',
-      'no_drag = bh.ForceModelConfig.default()',
-      'no_drag.drag = None',
-      'runs = {',
-      '    "twobody": propagate(',
-      '        x0, bh.ForceModelConfig.two_body(), epochs),',
-      '    "full": propagate(',
-      '        x0, bh.ForceModelConfig.default(), epochs),',
-      '    "no_drag": propagate(x0, no_drag, epochs),',
-      '}',
-    ],
-  },
-  frames: {
-    needs: ['quick_hits'],
-    lines: [
-      'sp3 = bh.SP3.from_file(str(path))',
-      'sat = next(s for s in sp3.satellites()',
-      '           if s.get_name() == f"G{FRAMES_PRN:02d}")',
-      '',
-      't0 = EPOCH - FRAMES_SPAN_S',
-      'epochs = [t0 + t',
-      '          for t in range(0, FRAMES_SPAN_S + 1, FRAMES_STEP_S)]',
-      'return {',
-      '    "eci_xyz_km":',
-      '        np.array(sat.states_gcrf(epochs))[:, :3] / 1e3,',
-      '    "ecef_xyz_km":',
-      '        np.array(sat.states_itrf(epochs))[:, :3] / 1e3,',
-      '}',
-    ],
-  },
-  tleSp3: {
-    needs: ['tle_vs_sp3'],
-    lines: [
-      'client = bh.IGSProductsClient(bh.IGSProductSource.BKG)',
-      'product = newest_product_covering(client, EPOCH)',
-      'sp3 = bh.SP3.from_file(str(fetch_sp3(product, client)))',
-      '',
-      'query = (',
-      '    bh.SpaceTrackQuery(bh.RequestClass.GP)',
-      '    .filter("OBJECT_NAME", "~~NAVSTAR")',
-      '    .filter("DECAY_DATE", "null-val")',
-      '    .order_by("NORAD_CAT_ID", bh.SortOrder.ASC)',
-      ')',
-      '',
-      'x_sp3 = np.array(sat.states_gcrf(epochs))',
-      'x_sgp4 = np.array(sgp.states_gcrf(epochs))',
-      'd_rtn_km = bh.state_eci_to_rtn(x_sp3, x_sgp4)[:, :3] / 1e3',
-    ],
-  },
-  rangeEpochs: {
-    needs: ['station_range'],
-    lines: [
-      'correct = bh.Epoch(2026, 11, 12, 19, 0, 0.0, 0.0, time_system=bh.GPS)',
-      'mistaken = bh.Epoch(2026, 11, 12, 19, 0, 0.0, 0.0, time_system=bh.UTC)',
-      '',
-      'def range_m(sat, t):',
-      '    return float(np.linalg.norm(sat.state_ecef(t)[:3] - site_ecef))',
-      '',
-      'range_km = np.array([range_m(sat, correct + dt) for dt in offsets]) / 1e3',
-      'range_wrong_km = np.array([range_m(sat, mistaken + dt) for dt in offsets]) / 1e3',
-    ],
-    opts: { marks: [[1, 'bh.GPS', 'green'], [2, 'bh.UTC', 'cardinal']] },
-  },
-  leoReceiver: {
-    needs: ['leo_receiver'],
-    lines: [
-      'gp, gp_source = fetch_gp()',
-      'iss = bh.GPRecord.from_json(',
-      '    json.dumps(gp)).to_sgp_propagator(STEP_S)',
-      '',
-      'n_ground, _ = visible_count(',
-      '    lambda t: site_ecef, gps_sats, epochs)',
-      'n_leo, visible_leo = visible_count(',
-      '    lambda t: iss.state_itrf(t)[:3], gps_sats, epochs)',
-    ],
-    opts: { marks: [[8, 'lambda t: iss.state_itrf(t)[:3]', 'cardinal']] },
-  },
-  walker: {
-    needs: ['walker_pnt'],
-    lines: [
-      'walker = (',
-      '    bh.WalkerConstellationGenerator.builder(',
-      '        T, P, F, bh.R_EARTH + ALT_KM * 1e3, INC_DEG, EPOCH)',
-      '    .pattern(bh.WalkerPattern.DELTA)',
-      '    .base_name("PULSAR")',
-      '    .build()',
-      ')',
-      'serial = walker.as_numerical_propagators(',
-      '    prop_config, force_model(), params)',
-      'for prop in serial:',
-      '    prop.propagate_to(t_end)',
-      '',
-      'props = walker.as_numerical_propagators(',
-      '    prop_config, force_model(), params)',
-      'bh.par_propagate_to(props, t_end)',
-    ],
-  },
-  // Excerpts of brahe's own examples (brahe repository, examples/...), cited on their slides.
-  valueEvent: {
-    needs: [],
-    lines: [
-      'def z_position(epoch, state):',
-      '    """Return z-component of position (meters)."""',
-      '    return state[2]',
-      '',
-      'ascending_node = bh.ValueEvent(',
-      '    "Ascending Node",',
-      '    z_position,',
-      '    0.0,  # target value',
-      '    bh.EventDirection.INCREASING,',
-      ')',
-      '',
-      'prop.add_event_detector(ascending_node)',
-      'prop.propagate_to(epoch + 3 * orbital_period)',
-      'events = prop.event_log()',
-    ],
-    opts: { size: 24 },
-  },
-  additionalDynamics: {
-    needs: [],
-    lines: [
-      'initial_state = np.concatenate([orbital_state, [initial_charge]])',
-      'def additional_dynamics(t, state, params):',
-      '    dx = np.zeros(len(state))',
-      '    r_eci = state[:3]',
-      '    current_epoch = epoch + t',
-      '    r_sun = bh.sun_position(current_epoch)',
-      '    illumination = bh.eclipse_conical(r_eci, r_sun)',
-      '    power_in = illumination * solar_panel_power  # W',
-      '    power_out = load_power  # W',
-      '    charge_rate = (power_in - power_out) / 3600.0  # Wh/s',
-      '    dx[6] = charge_rate',
-      '    return dx',
-      'prop = bh.NumericalOrbitPropagator(',
-      '    epoch,',
-      '    initial_state,',
-      '    prop_config,',
-      '    force_config,',
-      '    params=params,',
-      '    additional_dynamics=additional_dynamics,',
-      ')',
-    ],
-  },
-  sensitivity: {
-    needs: [],
-    lines: [
-      'prop_config = (',
-      '    bh.NumericalPropagationConfig.default()',
-      '    .with_sensitivity()',
-      '    .with_sensitivity_history()',
-      ')',
-      'params = np.array([500.0, 2.0, 2.2, 2.0, 1.3])',
-      'prop = bh.NumericalOrbitPropagator(',
-      '    epoch,',
-      '    state,',
-      '    prop_config,',
-      '    bh.ForceModelConfig.default(),',
-      '    params=params,',
-      ')',
-      'prop.propagate_to(epoch + orbital_period)',
-      'sens = prop.sensitivity()',
-    ],
-  },
-  propertyComputer: {
-    needs: [],
-    lines: [
-      'class MinRangeComputer(bh.AccessPropertyComputer):',
-      '    def sampling_config(self):',
-      '        return bh.SamplingConfig.midpoint()',
-      '',
-      '    def compute(',
-      '        self,',
-      '        window,',
-      '        sample_epochs,',
-      '        sample_states_ecef,',
-      '        location_ecef,',
-      '        location_geodetic,',
-      '    ):',
-      '        satellite_state = sample_states_ecef[0]',
-      '        range_vec = satellite_state[:3] - location_ecef',
-      '        range_km = np.linalg.norm(range_vec) / 1000.0',
-      '        return {"min_range_km": float(range_km)}',
-      '',
-      '    def property_names(self):',
-      '        return ["min_range_km"]',
-    ],
-  },
-  propertyAccess: {
-    needs: [],
-    lines: [
-      'property_computers = [MinRangeComputer()]',
-      '',
-      'windows = bh.location_accesses(',
-      '    [location],',
-      '    [propagator],',
-      '    epoch_start,',
-      '    epoch_end,',
-      '    constraint,',
-      '    property_computers=property_computers,',
-      ')',
-    ],
-  },
+  skyplot: { file: 'skyplot' },
+  tle: { file: 'ground_tracks' },
+  propagate: { file: 'force_model' },
+  frames: { file: 'frames' },
+  tleSp3: { file: 'tle_vs_sp3' },
+  rangeEpochs: { file: 'gps_time_as_utc', opts: { marks: [['correct = bh.Epoch(', 'bh.GPS', 'green'], ['mistaken = bh.Epoch(', 'bh.UTC', 'cardinal']] } },
+  leoReceiver: { file: 'leo_receiver', opts: { marks: [['n_iss = gps_in_view(', 'iss.state_itrf(epoch)[:3]', 'cardinal']] } },
+  walker: { file: 'walker' },
+  valueEvent: { file: 'value_event' },
+  additionalDynamics: { file: 'battery' },
+  sensitivity: { file: 'sensitivity' },
+  propertyComputer: { file: 'property_computer', to: 't0 = bh.Epoch(' },
+  propertyAccess: { file: 'property_computer', from: 't0 = bh.Epoch(' },
 };
 
+const snippetBody = src => {
+  const lines = src.replace(/\r\n/g, '\n').split('\n');
+  const close = lines.findIndex((ln, i) => i > 0 && ln === '# ///');
+  const body = lines.slice(close + 1);
+  if (body[0] === '') body.shift();
+  while (body.length && body[body.length - 1] === '') body.pop();
+  return body;
+};
+
+const SNIPPETS = Object.fromEntries(await Promise.all([...new Set(Object.values(CODE).map(c => c.file))].map(async file => {
+  try {
+    const r = await fetch(`snippets/${file}.py`, { cache: 'no-cache' });
+    return [file, r.ok ? snippetBody(await r.text()) : null];
+  } catch { return [file, null]; }
+})));
+
+function snippetLines({ file, from, to }) {
+  let lines = SNIPPETS[file];
+  if (!lines) return null;
+  const at = m => lines.findIndex(ln => ln.includes(m));
+  lines = lines.slice(from ? at(from) : 0, to ? at(to) : lines.length);
+  while (lines.length && !lines[0]) lines = lines.slice(1);
+  while (lines.length && !lines[lines.length - 1]) lines = lines.slice(0, -1);
+  return lines;
+}
+
 Object.entries(CODE).forEach(([key, c]) => {
-  figures[`code-${key}`] = { needs: c.needs, render: el => codeCard(el, c.lines, { ...c.opts, key }) };
+  figures[`code-${key}`] = {
+    needs: [],
+    render(el) {
+      const lines = snippetLines(c);
+      if (!lines) { el.insertAdjacentHTML('beforeend', `<div class="pending">snippet pending: deck/snippets/${c.file}.py</div>`); return; }
+      codeCard(el, lines, { ...c.opts, key });
+    },
+  };
 });
 
 /* ---------- cold open: GPS sky plot ---------- */

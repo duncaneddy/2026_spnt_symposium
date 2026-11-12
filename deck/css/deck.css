@@ -357,8 +357,9 @@ em { font-style: italic; }
 
 /* ---------- code cards (figs.js codeCard) ---------- */
 .code-card { position: absolute; left: 0; top: 0; width: 100%; padding: 22px 28px; }
-.code-card pre { margin: 0; font-family: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace; font-size: inherit; line-height: 1.42; color: var(--ink); white-space: pre; }
+.code-card pre { margin: 0; font-family: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace; font-size: inherit; line-height: 1.25; color: var(--ink); white-space: pre; }
 .code-card .ln { position: relative; }
+.code-card .ln.blank { height: 0.625em; overflow: hidden; }
 .code-card .kw { font-weight: 600; }
 .code-card .bh { color: var(--lagunita); }
 .code-card .st { color: rgba(46, 45, 41, 0.72); }
