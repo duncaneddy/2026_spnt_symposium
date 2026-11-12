@@ -161,13 +161,13 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | 22 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one panel per task in file order, bars from the brahe (Rust) 1x line to each library's median ratio on a shared log axis (brahe Python in Lagunita), key in the last row; panels fade in one by one |
 | 23 | Adopters | `adopters` | fresh; nine logos plus Xona Space Systems and AWS by name, cells fade in |
 | 24 | Next | none | fresh; roadmap panel; click 1: the request for shareable orbital observations |
-| 25 | Links | `closeLinks` | fresh; brahe QR (brahe.space) with brahe.space and the GitHub repository, then the talk repository URL as text |
+| 25 | Links | `closeLinks` | fresh; two QR codes side by side at the same size, each with its label and URLs beneath: brahe (`img/brahe-qr.webp`, brahe.space and github.com/duncaneddy/brahe) and the talk repository (`img/repo-qr.webp`, github.com/duncaneddy/2026_spnt_symposium) |
 | B | Backup | none | divider |
-| B1 | Pseudorange | none / station_range.json (`terms_m`) | fresh; equation and geometric range; clicks 1 to 3: light time, Earth rotation, satellite clock |
+| B1 | Pseudorange | none / station_range.json (`terms_m`) | fresh; equation and geometric range; clicks 1 to 3: light time, Earth rotation (the three rows that sum to rho), satellite clock |
 | B2 | PDOP | `pdopByLat` / walker_pnt.json (`dop`) | fresh; GPS median PDOP by latitude (log); click 1: Walker shell with a gap and label where the median is null, GPS dims, skipped-sample counts |
 | B3 | Events | `code-valueEvent` | fresh; brahe example custom_value_event.py |
 | B4 | Extensible dynamics | `code-additionalDynamics`, `code-sensitivity` | fresh; brahe examples battery_tracking.py and sensitivity_analysis.py |
-| B5 | Property computer | `code-propertyComputer` | fresh; brahe example custom_property_computer.py, note that access takes ground locations |
+| B5 | Property computer | `code-propertyComputer`, `code-propertyAccess` | fresh; brahe example custom_property_computer.py (class, and the access call), note that access takes ground locations |
 | B6 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
 
 ## Deck implementation

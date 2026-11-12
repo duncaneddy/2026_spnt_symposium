@@ -324,6 +324,7 @@ export const binds = {
   'grav.threads': d => String(d.gravity_crossover.machine.threads),
   'grav.load': d => fmt((d.gravity_crossover.machine.load_avg_1min_start + d.gravity_crossover.machine.load_avg_1min_end) / 2, 1),
   'grav.threshold': d => String(d.gravity_crossover.auto_threshold_nmax),
+  'grav.overhead': d => fmt(d.gravity_crossover.overhead_us_degree2, 1),
   'grav.range': d => { const r = d.gravity_crossover.crossover_range_nmax; return r ? `${r[0]} to ${r[1]}` : undefined; },
   'grav.lowN': d => String(d.gravity_crossover.degrees[gravLow(d.gravity_crossover)]),
   'grav.lowSerial': d => fmt(d.gravity_crossover.serial_us[gravLow(d.gravity_crossover)], 1),
@@ -622,8 +623,7 @@ const CODE = {
   additionalDynamics: {
     needs: [],
     lines: [
-      'initial_state = np.concatenate(',
-      '    [orbital_state, [initial_charge]])',
+      'initial_state = np.concatenate([orbital_state, [initial_charge]])',
       'def additional_dynamics(t, state, params):',
       '    dx = np.zeros(len(state))',
       '    r_eci = state[:3]',
@@ -636,7 +636,10 @@ const CODE = {
       '    dx[6] = charge_rate',
       '    return dx',
       'prop = bh.NumericalOrbitPropagator(',
-      '    epoch, initial_state, prop_config, force_config,',
+      '    epoch,',
+      '    initial_state,',
+      '    prop_config,',
+      '    force_config,',
       '    params=params,',
       '    additional_dynamics=additional_dynamics,',
       ')',
@@ -650,16 +653,15 @@ const CODE = {
       '    .with_sensitivity()',
       '    .with_sensitivity_history()',
       ')',
-      '',
       'params = np.array([500.0, 2.0, 2.2, 2.0, 1.3])',
-      '',
       'prop = bh.NumericalOrbitPropagator(',
-      '    epoch, state, prop_config,',
+      '    epoch,',
+      '    state,',
+      '    prop_config,',
       '    bh.ForceModelConfig.default(),',
       '    params=params,',
       ')',
       'prop.propagate_to(epoch + orbital_period)',
-      '',
       'sens = prop.sensitivity()',
     ],
   },
@@ -671,8 +673,12 @@ const CODE = {
       '        return bh.SamplingConfig.midpoint()',
       '',
       '    def compute(',
-      '        self, window, sample_epochs, sample_states_ecef,',
-      '        location_ecef, location_geodetic,',
+      '        self,',
+      '        window,',
+      '        sample_epochs,',
+      '        sample_states_ecef,',
+      '        location_ecef,',
+      '        location_geodetic,',
       '    ):',
       '        satellite_state = sample_states_ecef[0]',
       '        range_vec = satellite_state[:3] - location_ecef',
@@ -681,10 +687,20 @@ const CODE = {
       '',
       '    def property_names(self):',
       '        return ["min_range_km"]',
+    ],
+  },
+  propertyAccess: {
+    needs: [],
+    lines: [
+      'property_computers = [MinRangeComputer()]',
       '',
       'windows = bh.location_accesses(',
-      '    [location], [propagator], epoch_start, epoch_end,',
-      '    constraint, property_computers=property_computers,',
+      '    [location],',
+      '    [propagator],',
+      '    epoch_start,',
+      '    epoch_end,',
+      '    constraint,',
+      '    property_computers=property_computers,',
       ')',
     ],
   },
@@ -1347,7 +1363,7 @@ function logTicks([a, b]) {
 
 // Time per gravity evaluation against degree and order, log-log. Serial (ink) on entry with its
 // interquartile band; parallel (Lagunita) on click 1; on click 2 brahe's automatic threshold as an
-// exact vertical line and the measured crossover range as a shaded band.
+// exact vertical ink line and the measured crossover range as a shaded band.
 figures.gravityCrossover = {
   needs: ['gravity_crossover'],
   render(el, d) {
@@ -1370,8 +1386,8 @@ figures.gravityCrossover = {
       haloText(el.__mark, xa - 10, B.y0 - 16, `measured crossover: degree ${R[0]} to ${R[1]}`, { size: 24, anchor: 'end', color: C.ink });
     }
     const tx = ax.x(G.auto_threshold_nmax);
-    exactPath(el.__mark, [[tx, B.y0], [tx, B.y1 - 20]], { color: C.cardinal, width: 3 });
-    haloText(el.__mark, tx - 10, B.y1 - 2, `brahe switches to parallel at degree ${G.auto_threshold_nmax}`, { size: 24, anchor: 'end', color: C.cardinal, weight: 600 });
+    exactPath(el.__mark, [[tx, B.y0], [tx, B.y1 - 20]], { color: C.ink, width: 3 });
+    haloText(el.__mark, tx - 10, B.y1 - 2, `brahe switches to parallel at degree ${G.auto_threshold_nmax}`, { size: 24, anchor: 'end', color: C.ink, weight: 600 });
 
     el.__serial = svgEl('g', {}, svg);
     band(G.serial_us_q25, G.serial_us_q75, C.ink, 0.14, el.__serial);
@@ -1506,10 +1522,10 @@ figures.adopters = {
 /* ---------- links: brahe and the talk's scripts ---------- */
 figures.closeLinks = {
   render(el) {
-    const url = u => `<br><b style="color:var(--lagunita); font-size:44px;">${u}</b>`;
-    el.innerHTML = `<div style="position:absolute; inset:0;">
-      <div style="position:absolute; left:0; right:0; top:0; height:300px; display:flex; align-items:center; justify-content:center; gap:48px;"><img src="img/brahe-qr.webp" alt="QR code for brahe.space" style="height:100%;"><div class="sans" style="font-size:30px; color:var(--ink-50); line-height:1.45">brahe documentation and source${url('brahe.space')}${url('github.com/duncaneddy/brahe')}</div></div>
-      <div class="sans" style="position:absolute; left:0; right:0; top:360px; text-align:center; font-size:30px; color:var(--ink-50); line-height:1.45">Scripts and slides for this talk${url('github.com/duncaneddy/2026_spnt_symposium')}</div></div>`;
+    const block = (img, alt, label, urls) => `<div style="display:flex; flex-direction:column; align-items:center; width:720px; text-align:center;"><img src="${img}" alt="${alt}" style="width:300px; height:300px;"><div class="sans" style="margin-top:22px; font-size:30px; color:var(--ink-50); line-height:1.4">${label}${urls.map(u => `<br><b style="color:var(--lagunita); font-size:38px;">${u}</b>`).join('')}</div></div>`;
+    el.innerHTML = `<div style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; gap:80px;">${
+      block('img/brahe-qr.webp', 'QR code for brahe.space', 'brahe documentation and source', ['brahe.space', 'github.com/duncaneddy/brahe'])}${
+      block('img/repo-qr.webp', 'QR code for the talk repository', 'Scripts and slides for this talk', ['github.com/duncaneddy/2026_spnt_symposium'])}</div>`;
   },
   animate(el, d, s, A) { fadeIn(el.firstElementChild, A); },
 };
