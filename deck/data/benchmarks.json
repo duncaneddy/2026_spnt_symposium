@@ -1,0 +1,261 @@
+{
+  "generated_utc": "2026-11-12T06:33:38Z",
+  "brahe_version": "1.5.2",
+  "benchmark_run_utc": "2026-05-22T22:05:21.296133+00:00",
+  "statistic": "median of per-iteration wall-clock time, 200 iterations",
+  "source": "benchmarks/comparative/results/run_latest.json",
+  "tasks": [
+    {
+      "name": "time.utc_to_gps",
+      "label": "UTC to GPS time conversion",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 1.67e-07,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 2.417e-06,
+          "ratio_to_brahe": 14.47305389221557
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 3.3329997677356005e-06,
+          "ratio_to_brahe": 19.958082441530543
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 9.520500000000001e-06,
+          "ratio_to_brahe": 57.00898203592815
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 3.433300298638642e-05,
+          "ratio_to_brahe": 205.5868442298588
+        }
+      ]
+    },
+    {
+      "name": "coordinates.geodetic_to_ecef",
+      "label": "Geodetic to ECEF position",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 7.92e-07,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 1.333e-06,
+          "ratio_to_brahe": 1.6830808080808082
+        },
+        {
+          "library": "basilisk",
+          "language": "basilisk",
+          "median_s": 3.21669940603897e-05,
+          "ratio_to_brahe": 40.61489149039103
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 4.862499190494418e-05,
+          "ratio_to_brahe": 61.39519179917195
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 4.9520499999999995e-05,
+          "ratio_to_brahe": 62.525883838383834
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 0.00011566698958631605,
+          "ratio_to_brahe": 146.04417877060106
+        }
+      ]
+    },
+    {
+      "name": "coordinates.ecef_to_azel",
+      "label": "ECEF to azimuth/elevation",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 1.0917e-05,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 5.61455e-05,
+          "ratio_to_brahe": 5.14294220023816
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.0001185830042231828,
+          "ratio_to_brahe": 10.862233601097627
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.0001606665,
+          "ratio_to_brahe": 14.7170926078593
+        }
+      ]
+    },
+    {
+      "name": "frames.state_eci_to_ecef",
+      "label": "ECI to ECEF state transformation",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 0.00017245850000000002,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.00021862499124836177,
+          "ratio_to_brahe": 1.2676962356066053
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.0002255415,
+          "ratio_to_brahe": 1.3078015870484783
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 0.0003163545,
+          "ratio_to_brahe": 1.834380445150572
+        },
+        {
+          "library": "basilisk",
+          "language": "basilisk",
+          "median_s": 0.0004877290048170835,
+          "ratio_to_brahe": 2.828094902930754
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 0.041699686997162644,
+          "ratio_to_brahe": 241.79548701376063
+        }
+      ]
+    },
+    {
+      "name": "propagation.sgp4_trajectory",
+      "label": "SGP4 trajectory propagation",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 0.0003921045,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.0008650630043121055,
+          "ratio_to_brahe": 2.2062052445511475
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.0022605205,
+          "ratio_to_brahe": 5.765097059584881
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 0.13525872950413032,
+          "ratio_to_brahe": 344.95582046145944
+        }
+      ]
+    },
+    {
+      "name": "propagation.numerical_rk4_grav20x20_sun_moon",
+      "label": "Numerical propagation, 20x20 gravity + Sun/Moon",
+      "results": [
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.0048257084999999995,
+          "ratio_to_brahe": 0.5725182131939369
+        },
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 0.008428917000000001,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.008937499995226972,
+          "ratio_to_brahe": 1.0603378815127698
+        },
+        {
+          "library": "nyx",
+          "language": "nyx",
+          "median_s": 0.01834425,
+          "ratio_to_brahe": 2.1763472104423376
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 0.07256129199231509,
+          "ratio_to_brahe": 8.608613893376228
+        },
+        {
+          "library": "basilisk",
+          "language": "basilisk",
+          "median_s": 0.09897662499861326,
+          "ratio_to_brahe": 11.742507963788615
+        }
+      ]
+    },
+    {
+      "name": "access.sgp4_access",
+      "label": "Ground-station access windows (SGP4)",
+      "results": [
+        {
+          "library": "brahe",
+          "language": "rust",
+          "median_s": 0.14096895799999998,
+          "ratio_to_brahe": 1.0
+        },
+        {
+          "library": "brahe",
+          "language": "python",
+          "median_s": 0.1420523749984568,
+          "ratio_to_brahe": 1.0076855005089618
+        },
+        {
+          "library": "orekit",
+          "language": "java",
+          "median_s": 0.6472489795,
+          "ratio_to_brahe": 4.591429125126967
+        },
+        {
+          "library": "gmat",
+          "language": "gmat",
+          "median_s": 8.720265854506579,
+          "ratio_to_brahe": 61.85947586068261
+        }
+      ]
+    }
+  ]
+}
