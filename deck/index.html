@@ -119,7 +119,7 @@
 <section class="slide" data-label="Modules">
   <h2 class="header center" data-in="up">The modules in brahe</h2>
   <div class="fig" data-fig="moduleMap" style="left:120px; top:330px; width:1680px; height:320px;"></div>
-  <aside class="notes">A quick tour, left to right. Time: epochs and conversions between UTC, GPS time, TAI and TT. Frames and coordinates: inertial and Earth-fixed frames with Earth orientation data, geodetic and topocentric coordinates. Orbits: element sets, TLEs, Walker constellations. Propagation: SGP4 and numerical propagation with configurable force models. Access: when can a station or satellite see another object, under which constraints. Data clients: CelesTrak, Space-Track, IGS orbit products. Estimation: extended and unscented Kalman filters and batch least squares. This row comes back as a divider, with the module in use lit up.</aside>
+  <aside class="notes">A quick tour, left to right. Time: epochs and conversions between UTC, GPS time, TAI and TT. Frames and coordinates: inertial and Earth-fixed frames with Earth orientation data, geodetic and topocentric coordinates. Orbits: element sets, TLEs, Walker constellations. Propagation: SGP4 and numerical propagation with configurable force models. Access: when can a station or satellite see another object, under which constraints. Data clients: CelesTrak, Space-Track, IGS orbit products. Estimation: extended and unscented Kalman filters and batch least squares. This row comes back at the end.</aside>
 </section>
 
 <section class="slide" data-label="Design choices">
@@ -172,13 +172,9 @@
 
 <!-- ======================= ACT 3: USE IT ======================= -->
 
-<section class="slide" data-label="Section Data" data-clone="Modules" data-lc-current="data">
-  <aside class="notes">Act 3: using it, one module at a time, with the running GNSS example. First: data clients.</aside>
-</section>
-
 <section class="slide" data-label="TLE vs IGS">
   <h2 class="header" data-in="up">How far is the public TLE from the precise orbit for the same GPS satellite?</h2>
-  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:290px; width:910px; height:600px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:290px; width:930px; height:600px;" data-in="up" data-delay="300"></div>
   <div class="fig" data-fig="tleVsSp3" data-step="1" style="left:1070px; top:290px; width:730px; height:340px;"></div>
   <dl class="stats compact" data-step="1" style="left:1140px; top:652px; width:640px; margin:0;">
     <dt>RMS difference over <span data-bind="tle.span">--</span> hours</dt><dd><span data-bind="tle.rms">--</span><span class="unit">km</span></dd>
@@ -188,30 +184,9 @@
   <aside class="notes">Two data clients in a few lines, for G09, the highest GPS satellite over Stanford at the talk time. Ask the question and wait. Expected guesses run from meters to hundreds of kilometers. Click: about 3 km, almost all along-track. The TLE puts the satellite in the right orbit slightly ahead of where it is, a little under a second of orbital motion. Radial and cross-track stay well under a kilometer. Caveats: the window is 9.3 hours, not a day, because the newest IGS file only reaches about 4.7 hours past the talk time, and the reference is the predicted half of the ultra-rapid file, which the IGS quotes at centimeter level, far below the kilometers on the plot. Planned remark: "The TLE knows exactly where the satellite is going. It just gets there a little early."<br><br>If asked: the IGS files come from the BKG mirror, no login. This run took the GP elements from Space-Track because CelesTrak was unreachable; the card shows the CelesTrak call. G09 is NAVSTAR 71 (catalog number 40105), matched to the catalog by position. The difference is in the radial, along-track and cross-track frame of the IGS orbit. The TLE goes from TEME and the IGS orbit from ITRF to the inertial frame before differencing.</aside>
 </section>
 
-<section class="slide" data-label="Section Time" data-clone="Modules" data-lc-current="time,frames">
-  <aside class="notes">Next: time and frames, the part most of us assume someone else got right.</aside>
-</section>
-
-<section class="slide" data-label="Range mistake">
-  <h2 class="header" data-in="up">Range from Stanford to <span data-bind="range.prn">--</span>, with the same epoch labeled GPS time and UTC</h2>
-  <div class="fig" data-fig="code-rangeEpochs" style="left:120px; top:220px; width:940px; height:700px;" data-in="up" data-delay="300"></div>
-  <p style="position:absolute; left:1110px; top:250px; width:690px; margin:0; font-size:52px; line-height:1.2; text-wrap:balance;" data-in="fade" data-delay="900">How big is the error?</p>
-  <dl class="stats compact" data-step="1" style="left:1110px; top:350px; width:500px; margin:0;">
-    <dt>Satellite position error</dt><dd class="accent"><span data-bind="range.pos">--</span><span class="unit">km</span></dd>
-    <dt>GPS time minus UTC</dt><dd><span data-bind="range.dt">--</span><span class="unit">s</span></dd>
-  </dl>
-  <div class="fig" data-fig="rangeMistake" data-step="2" style="left:1110px; top:600px; width:690px; height:335px;"></div>
-  <p class="cite"><span data-bind="range.prn">--</span> over its pass above Stanford · IGS ultra-rapid orbit <span data-bind="range.product">--</span> · snippets/gps_time_as_utc.py · full analysis in scripts/station_range.py</p>
-  <aside class="notes">The range from the campus station to G09 over its pass. The epochs differ in one argument: the IGS timestamps are GPS time, and the common mistake is building the same calendar time as UTC, which means the instant 18 seconds later, because GPS time has not taken the leap seconds since 1980. Ask: how big is the error? Wait. Click: the satellite is about 52 km from where it should be, 18 seconds of motion in the Earth-fixed frame. Click: the range error over the pass, up to about 13 km; only motion along the line of sight changes the range, so it is smaller and changes sign overhead. Nothing crashes and the ranges look plausible, which is what makes this bug expensive. Planned remark: "18 seconds. GPS never took the leap seconds, which makes it the only clock in this room that has not aged since 1980."<br><br>If asked: the satellite moves at about 2.9 km/s in the Earth-fixed frame.</aside>
-</section>
-
-<section class="slide" data-label="Section Orbits" data-clone="Modules" data-lc-current="orbits,propagation">
-  <aside class="notes">Next: orbits and propagation, with the receiver moving off the ground.</aside>
-</section>
-
 <section class="slide" data-label="LEO receiver">
   <h2 class="header" data-in="up">Move the receiver from Stanford to the ISS by changing one argument</h2>
-  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:196px; width:966px; height:720px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:216px; width:980px; height:670px;" data-in="up" data-delay="300"></div>
   <p class="caption" style="position:absolute; left:1130px; top:790px; width:670px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap>The <span data-bind="leo.rx">--</span> at the talk time, about <span data-bind="leo.alt">--</span> km up, with lines of sight to the <span data-bind="leo.nLinks">--</span> GPS satellites it sees above a <span data-bind="leo.mask">--</span>° mask</p>
   <div class="fig" data-fig="leoLinks" style="left:1130px; top:220px; width:670px; height:550px;"></div>
   <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4 · IGS ultra-rapid orbit <span data-bind="leo.product">--</span> · drawn to scale · snippets/leo_receiver.py · full analysis in scripts/leo_receiver.py</p>
@@ -224,10 +199,6 @@
   <p class="caption" data-step="1" style="position:absolute; left:160px; top:820px; width:1600px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;">With the same <span data-bind="leo.mask">--</span>° mask and a zenith antenna, the ISS sees slightly fewer GPS satellites than the ground station: <span data-bind="leo.meanLeo">--</span> against <span data-bind="leo.meanGround">--</span> on average.</p>
   <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4, station on the Stanford campus, one sample every <span data-bind="leo.stepS">--</span> s · scripts/leo_receiver.py</p>
   <aside class="notes">First the familiar case: the station on campus sees about ten or eleven GPS satellites, and the count changes slowly. The mask here is <span data-bind="leo.mask">--</span> degrees, not the <span data-bind="sky.mask">--</span> of the sky plot, so the ground count is ten or eleven rather than nine. Click: the ISS, same rule, same mask. It sees slightly fewer on average, which surprises people. With a zenith antenna and a mask measured from the local horizontal, a receiver 400 km up sees almost the same piece of the GPS shell as one on the ground. What changes in orbit is how fast the geometry changes: the count moves every few minutes, satellites rise and set across a whole hemisphere in under an hour, and the Doppler is large. That is what an orbital receiver has to handle, and it is the same code. Planned remark: "Going to space to see more satellites turns out to be a poor return on a very large investment."</aside>
-</section>
-
-<section class="slide" data-label="Section Access" data-clone="Modules" data-lc-current="access">
-  <aside class="notes">Next: access, the geometry of who can see whom, pushed past where GPS was designed to work.</aside>
 </section>
 
 <section class="slide" data-label="MMS orbit">
@@ -256,13 +227,9 @@
   <aside class="notes">Main lobe only: above about 8 Earth radii the count is mostly zero to two, and four or more are available in about 4 percent of the orbit: near perigee, below about 6 Earth radii, and in short windows between about 10 and 17 Earth radii. Click: add the side lobes. Geometrically, four or more are always in view. That is an upper bound. Published MMS flight results (Winternitz et al.) show GPS navigation working well above the constellation, with fewer signals tracked than this geometric count; this figure is geometry only, with no link budget. So yes, with a careful receiver and a link budget this plot does not include.<br><br>If asked: the 70 degree side-lobe limit is from Donaldson et al., ION GNSS+ 2018, and the 23.5 degree main lobe from the GPS III space service volume specification as discussed in Donaldson et al., NAVIGATION 2020.</aside>
 </section>
 
-<section class="slide" data-label="Section Walker" data-clone="Modules" data-lc-current="orbits,propagation">
-  <aside class="notes">Last example: orbits and propagation again, this time for a constellation you design yourself.</aside>
-</section>
-
 <section class="slide" data-label="Walker build">
   <h2 class="header" data-in="up">Generate a Walker constellation and propagate every satellite in parallel</h2>
-  <div class="fig" data-fig="code-walker" style="left:120px; top:212px; width:860px; height:710px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-walker" style="left:120px; top:212px; width:880px; height:680px;" data-in="up" data-delay="300"></div>
   <p class="caption" style="position:absolute; left:1020px; top:820px; width:780px; margin:0; font-size:26px; text-wrap:balance;" data-in="fade" data-delay="1400" data-bind-wrap><span data-bind="walker.t">--</span> satellites in <span data-bind="walker.p">--</span> planes at <span data-bind="walker.alt">--</span> km and <span data-bind="walker.inc">--</span>°, propagated for one orbit (<span data-bind="walker.minutes">--</span> minutes) with <span data-bind="walker.force">--</span></p>
   <div class="fig" data-fig="walkerGlobe" style="left:1020px; top:250px; width:540px; height:540px;"></div>
   <dl class="stats compact" data-step="1" style="left:1600px; top:260px; width:240px; margin:0;">
@@ -284,10 +251,6 @@
 </section>
 
 <!-- ======================= ACT 4: MAKING THE HARD PART FAST ======================= -->
-
-<section class="slide" data-label="Section Speed" data-clone="Modules" data-lc-current="propagation">
-  <aside class="notes">Act 4: making the hard part fast. Most of the compute time in any of these examples goes into propagation, and most of that goes into the gravity field.</aside>
-</section>
 
 <section class="slide" data-label="Gravity">
   <h2 class="header" data-in="up">Time per gravity evaluation against degree and order, serial and parallel</h2>
@@ -312,6 +275,12 @@
 </section>
 
 <!-- ======================= CLOSE ======================= -->
+
+<section class="slide" data-label="Modules recap">
+  <h2 class="header center" data-in="up">The modules in brahe, after these examples</h2>
+  <div class="fig" data-fig="moduleMap" style="left:120px; top:330px; width:1680px; height:320px;"></div>
+  <aside class="notes">The same row of modules. The examples used time, frames and coordinates, orbits, propagation and the data clients. Access appears in the backup, and estimation is where the roadmap goes next.</aside>
+</section>
 
 <section class="slide" data-label="Adopters">
   <h2 class="header center" data-in="up">Organizations that use brahe</h2>
@@ -348,6 +317,19 @@
 <section class="slide" data-label="Backup">
   <div class="statement"><p class="term" style="color:var(--ink-50)">Backup</p></div>
   <aside class="notes">Backup slides follow. Press b from anywhere to jump here.</aside>
+</section>
+
+<section class="slide" data-label="Range mistake">
+  <h2 class="header" data-in="up">Range from Stanford to <span data-bind="range.prn">--</span>, with the same epoch labeled GPS time and UTC</h2>
+  <div class="fig" data-fig="code-rangeEpochs" style="left:120px; top:220px; width:960px; height:640px;" data-in="up" data-delay="300"></div>
+  <p style="position:absolute; left:1110px; top:250px; width:690px; margin:0; font-size:52px; line-height:1.2; text-wrap:balance;" data-in="fade" data-delay="900">How big is the error?</p>
+  <dl class="stats compact" data-step="1" style="left:1110px; top:350px; width:500px; margin:0;">
+    <dt>Satellite position error</dt><dd class="accent"><span data-bind="range.pos">--</span><span class="unit">km</span></dd>
+    <dt>GPS time minus UTC</dt><dd><span data-bind="range.dt">--</span><span class="unit">s</span></dd>
+  </dl>
+  <div class="fig" data-fig="rangeMistake" data-step="2" style="left:1110px; top:600px; width:690px; height:335px;"></div>
+  <p class="cite"><span data-bind="range.prn">--</span> over its pass above Stanford · IGS ultra-rapid orbit <span data-bind="range.product">--</span> · snippets/gps_time_as_utc.py · full analysis in scripts/station_range.py</p>
+  <aside class="notes">The range from the campus station to G09 over its pass. The epochs differ in one argument: the IGS timestamps are GPS time, and the common mistake is building the same calendar time as UTC, which means the instant 18 seconds later, because GPS time has not taken the leap seconds since 1980. Ask: how big is the error? Wait. Click: the satellite is about 52 km from where it should be, 18 seconds of motion in the Earth-fixed frame. Click: the range error over the pass, up to about 13 km; only motion along the line of sight changes the range, so it is smaller and changes sign overhead. Nothing crashes and the ranges look plausible, which is what makes this bug expensive. Planned remark: "18 seconds. GPS never took the leap seconds, which makes it the only clock in this room that has not aged since 1980."<br><br>If asked: the satellite moves at about 2.9 km/s in the Earth-fixed frame.</aside>
 </section>
 
 <section class="slide" data-label="Pseudorange">
