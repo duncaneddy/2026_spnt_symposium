@@ -52,8 +52,8 @@ export const moduleBinds = {
   'benchmark.nRun': d => String(B(d).tasks_in_run),
 };
 
-// One row per task on a shared log axis of time relative to brahe (Rust): brahe is the Lagunita 1x
-// line, every other library an ink dot with its name centered above or below its own dot (a label
+// One row per task on a shared log axis of time relative to brahe (Rust): brahe is the 1x
+// line in Poppy, every other library a dot in its own color (one color per library) with its name centered above or below its own dot (a label
 // that has to move sideways gets a leader line to its dot). Dots left of the line (faster than
 // brahe) carry their ratio as well. A task label wider than the label column wraps at its last
 // comma that fits, and its second line carries the batch size. brahe's Python bindings are not
@@ -66,6 +66,8 @@ function benchmarkRender(el, d) {
   const all = marks.flat().map(r => r.ratio_to_brahe);
   const lo = Math.min(0.1, 10 ** Math.floor(Math.log10(Math.min(...all)))), hi = 10 ** Math.ceil(Math.log10(Math.max(...all)));
   const X = scaleLog(lo, hi, labelW + 20, W - right), x1 = X(1), yAxis = H - axisH + 14;
+  const palette = [C.lagunita, C.cardinal, C.green, C.plum, C.spirited, '#5D4B3C'];
+  const libColor = Object.fromEntries(otherLibs(d).sort().map((lib, i) => [lib, palette[i % palette.length]]));
 
   el.__frame = svgEl('g', {}, svg);
   strokePath(el.__frame, roughLine(labelW + 10, yAxis, W - right + 16, yAxis, { seed: 7400, rough: 0.8 }), { color: 'rgba(46,45,41,.55)', width: 2.2 });
@@ -78,8 +80,8 @@ function benchmarkRender(el, d) {
   text(el.__frame, x1 - 162, 34, 'faster than brahe', { size: 24, anchor: 'end', color: 'rgba(46,45,41,.7)' });
   strokePath(el.__frame, roughArrow(x1 + 24, 26, x1 + 150, 26, { seed: 7402, head: 10, rough: 0.5 }), { color: 'rgba(46,45,41,.55)', width: 2.2 });
   text(el.__frame, x1 + 162, 34, 'slower than brahe', { size: 24, color: 'rgba(46,45,41,.7)' });
-  exactPath(el.__frame, [[x1, top - 8], [x1, yAxis]], { color: C.lagunita, width: 3 });
-  haloText(el.__frame, x1, top - 18, 'brahe (Rust)', { size: 22, anchor: 'middle', color: C.lagunita, weight: 600 });
+  exactPath(el.__frame, [[x1, top - 8], [x1, yAxis]], { color: C.poppy, width: 4 });
+  haloText(el.__frame, x1, top - 18, 'brahe (Rust)', { size: 22, anchor: 'middle', color: C.poppy, weight: 600 });
 
   const placed = [];
   const clear = b => placed.every(p => b[2] < p[0] - 8 || b[0] > p[2] + 8 || b[3] < p[1] || b[1] > p[3]);
@@ -96,9 +98,9 @@ function benchmarkRender(el, d) {
     svgEl('line', { x1: labelW + 20, x2: W - right, y1: y, y2: y, stroke: 'rgba(46,45,41,.12)', 'stroke-width': 1.5 }, g);
     [...marks[k]].sort((a, b) => a.ratio_to_brahe - b.ratio_to_brahe).forEach(r => {
       const v = r.ratio_to_brahe, x = X(v), faster = v < 1;
-      svgEl('circle', { cx: x, cy: y, r: 8, fill: C.ink }, g);
+      svgEl('circle', { cx: x, cy: y, r: 9, fill: libColor[r.library] }, g);
       const lbl = faster ? `${libName(r)} ${ratioFmt(v)}×` : libName(r);
-      const t0 = haloText(g, 0, 0, lbl, { size: 22, color: C.ink, weight: faster ? 600 : 400 });
+      const t0 = haloText(g, 0, 0, lbl, { size: 22, color: libColor[r.library], weight: 600 });
       const w = t0.getComputedTextLength();
       const cands = faster
         ? [[x - 16 - w, y + 8], [x - w / 2, y - 16], [x - w / 2, y + 34]]

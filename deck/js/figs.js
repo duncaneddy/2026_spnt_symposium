@@ -674,37 +674,37 @@ figures.tradeoff = {
 };
 
 /* ---------- project timeline ---------- */
-// One column per version of the project, evenly spaced along a hand-drawn time arrow: the year
-// above the arrow, a line down to a circle filled in the language's color (two halves for a
-// version in two languages), then the language and what prompted the version. The first column
-// shows on entry; each later column is one click.
+// One row per version of the project, evenly spaced down a hand-drawn time arrow that ends at
+// today: the year left of the arrow, a circle on it filled in the language's color (two halves
+// for a version in two languages), and what happened to its right. The first row shows on
+// entry; each later row is one click.
 const LANG_COLOR = { MATLAB: C.poppy, 'C++': C.lagunita, Python: C.illuminating, Julia: C.plum, Rust: C.spirited };
 const VERSIONS = [
-  { year: '2014', langs: ['MATLAB'], name: 'MATLAB', why: 'Start astrodynamics research at Stanford. No open-source software to build on.' },
-  { year: '2015 to 2016', langs: ['C++', 'MATLAB'], name: 'C++ with MEX bindings', why: 'MATLAB is too slow.' },
-  { year: '2017', langs: ['C++'], name: 'C++', why: 'Join Capella Space.' },
-  { year: '2018', langs: ['Python'], name: 'Python', why: 'C++ is a pain to write quickly.' },
-  { year: '2019', langs: ['Julia'], name: 'Julia', why: 'Return to Stanford.' },
-  { year: '2021', langs: ['Rust', 'Python'], name: 'Rust with Python bindings', why: 'Join Amazon Kuiper. It has been this ever since.' },
+  { year: '2014', langs: ['MATLAB'], text: 'Start astrodynamics research at Stanford and find no good open-source software to work in. Start writing it in <b>MATLAB</b>.' },
+  { year: '2015 to 2016', langs: ['C++', 'MATLAB'], text: 'Find out MATLAB is too slow. Rewrite in <b>C++ with MEX bindings</b>.' },
+  { year: '2017', langs: ['C++'], text: 'Join Capella Space. Rewrite in <b>pure C++</b>.' },
+  { year: '2018', langs: ['Python'], text: 'Find C++ is a pain to write quickly. Rewrite in <b>pure Python</b>.' },
+  { year: '2019', langs: ['Julia'], text: 'Return to Stanford. Rewrite in <b>Julia</b>.' },
+  { year: '2021', langs: ['Rust', 'Python'], text: 'Join Amazon Kuiper. Start rewriting in <b>Rust with Python bindings</b>, which is what it has been since.' },
 ];
 
 figures.timeline = {
   render(el) {
-    const W = el.offsetWidth, n = VERSIONS.length, colW = W / n, axisY = 86, cy = 230, r = 50;
-    strokePath(svgFor(el), roughArrow(10, axisY, W - 10, axisY, { seed: 2014, head: 18, rough: 0.5 }), { color: C.ink, width: 3 });
+    const W = el.offsetWidth, H = el.offsetHeight, n = VERSIONS.length, x = 300, r = 32, top = 44, rowH = (H - 110 - top) / (n - 1);
+    strokePath(svgFor(el), roughArrow(x, 0, x, H - 44, { seed: 2014, head: 18, rough: 0.5 }), { color: C.ink, width: 3 });
+    el.insertAdjacentHTML('beforeend', `<div class="tl-today" style="left:${x - 120}px; top:${H - 36}px; width:240px;">today</div>`);
     VERSIONS.forEach((v, i) => {
-      const col = document.createElement('div');
-      col.className = 'tl-col';
-      if (i) col.dataset.step = i;
-      col.style.cssText = `left:${i * colW}px; width:${colW}px;`;
-      col.innerHTML = `<div class="tl-year">${v.year}</div><div class="tl-name" style="top:${cy + r + 22}px;">${v.name}</div><div class="tl-why" style="top:${cy + r + 112}px;">${v.why}</div>`;
-      el.appendChild(col);
-      const svg = svgFor(col), cx = colW / 2, seed = hashSeed(v.name);
-      strokePath(svg, roughLine(cx, axisY - 12, cx, cy - r, { seed, rough: 0.4, passes: 1 }), { color: C.ink, width: 2.6 });
+      const row = document.createElement('div');
+      row.className = 'tl-row';
+      if (i) row.dataset.step = i;
+      row.style.cssText = `left:0; top:${top + i * rowH - r - 6}px; width:${W}px; height:${2 * r + 12}px;`;
+      row.innerHTML = `<div class="tl-year" style="width:${x - r - 26}px;">${v.year}</div><div class="tl-text" style="left:${x + r + 30}px;">${v.text}</div>`;
+      el.appendChild(row);
+      const svg = svgFor(row), cy = r + 6, seed = hashSeed(v.year);
       const [a, b = a] = v.langs.map(l => LANG_COLOR[l]);
-      svgEl('path', { d: `M${cx} ${cy - r}A${r} ${r} 0 0 0 ${cx} ${cy + r}Z`, fill: a }, svg);
-      svgEl('path', { d: `M${cx} ${cy - r}A${r} ${r} 0 0 1 ${cx} ${cy + r}Z`, fill: b }, svg);
-      strokePath(svg, roughEllipse(cx, cy, r, r, { seed: seed + 1, rough: 0.5 }), { color: C.ink, width: 2.6 });
+      svgEl('path', { d: `M${x} ${cy - r}A${r} ${r} 0 0 0 ${x} ${cy + r}Z`, fill: a }, svg);
+      svgEl('path', { d: `M${x} ${cy - r}A${r} ${r} 0 0 1 ${x} ${cy + r}Z`, fill: b }, svg);
+      strokePath(svg, roughEllipse(x, cy, r, r, { seed, rough: 0.5 }), { color: C.ink, width: 2.6 });
     });
   },
 };
@@ -754,8 +754,13 @@ function moduleIcon(svg, key, w, seed) {
   }
   if (key === 'access') {
     R(roughLine(cx - 80, 80, cx + 80, 80, { seed, passes: 1 }), 'rgba(46,45,41,.6)', 2);
-    R(roughPolyline([[cx - 52, 80], [cx - 40, 58], [cx - 28, 80]], { seed: seed + 1, rough: 0.4 }));
-    svgEl('path', { d: `M${cx - 40} 58L${cx + 46} 20`, stroke: C.lagunita, 'stroke-width': 2.4, 'stroke-dasharray': '6 6', fill: 'none' }, svg);
+    R(roughPolyline([[cx - 54, 80], [cx - 42, 62], [cx - 30, 80]], { seed: seed + 1, rough: 0.4 }));
+    // Dish on the pedestal, pointed at the satellite: bowl, feed strut and feed.
+    const px = cx - 40, py = 50, ux = 0.915, uy = -0.404, vx = 0.404, vy = 0.915;
+    svgEl('path', { d: `M${px - 24 * vx} ${py - 24 * vy}Q${px - 28 * ux} ${py - 28 * uy} ${px + 24 * vx} ${py + 24 * vy}Z`, fill: C.board, stroke: C.ink, 'stroke-width': 2.6, 'stroke-linejoin': 'round' }, svg);
+    svgEl('path', { d: `M${px - 13 * ux} ${py - 13 * uy}L${px + 14 * ux} ${py + 14 * uy}`, stroke: C.ink, 'stroke-width': 2.2, fill: 'none' }, svg);
+    svgEl('circle', { cx: px + 14 * ux, cy: py + 14 * uy, r: 3.5, fill: C.ink }, svg);
+    svgEl('path', { d: `M${px + 20 * ux} ${py + 20 * uy}L${cx + 46} 20`, stroke: C.lagunita, 'stroke-width': 2.4, 'stroke-dasharray': '6 6', fill: 'none' }, svg);
     svgEl('circle', { cx: cx + 50, cy: 18, r: 6, fill: C.ink }, svg);
   }
   if (key === 'data') {

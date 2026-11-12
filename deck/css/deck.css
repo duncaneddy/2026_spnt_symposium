@@ -408,11 +408,16 @@ em { font-style: italic; }
 .brahe-point p { font-size: 30px; }
 
 /* ---------- project timeline (figs.js timeline) ---------- */
-.tl-col { position: absolute; top: 0; height: 100%; text-align: center; }
-.tl-col > div { position: absolute; left: 12px; right: 12px; text-wrap: balance; }
-.tl-year { top: 0; font-family: var(--sans); font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.tl-name { font-size: 32px; font-weight: 600; line-height: 1.15; }
-.tl-why { font-family: var(--sans); font-size: 26px; line-height: 1.25; color: var(--ink-50); }
+.tl-row { position: absolute; display: flex; align-items: center; }
+.tl-year { flex: none; text-align: right; font-family: var(--sans); font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tl-text { position: absolute; right: 0; font-family: var(--sans); font-size: 32px; line-height: 1.25; }
+.tl-text b { font-family: var(--serif); font-weight: 600; }
+.tl-today { position: absolute; text-align: center; font-family: var(--sans); font-size: 26px; color: var(--ink-50); }
+
+/* ---------- documentation screenshots ---------- */
+.doc-shot { position: absolute; padding: 10px; }
+.doc-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+.doc-cap { position: absolute; margin: 0; text-align: center; font-family: var(--sans); font-size: 28px; }
 
 /* ---------- adopters, roadmap, backup term table ---------- */
 .close-panel h3 { font-size: 40px; }
