@@ -175,6 +175,7 @@ em { font-style: italic; }
 .stats dd { margin: 0 0 30px; font-size: 64px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; color: var(--ink); }
 .stats dd .unit { font-size: 38px; font-weight: 400; color: var(--ink-50); margin-left: 6px; }
 .stats dd.accent { color: var(--cardinal); }
+.stats dd.resolved { color: var(--paloverde); }
 
 /* ---------- hand-drawn boxes & panels ---------- */
 

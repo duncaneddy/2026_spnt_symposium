@@ -222,6 +222,14 @@ const dateSpan = (a, b) => {
   const sameMonth = ta.getUTCMonth() === tb.getUTCMonth();
   return `${UTC_DAY.format(ta)} to ${sameMonth ? tb.getUTCDate() : UTC_DAY.format(tb)}, ${tb.getUTCFullYear()}`;
 };
+// Latitudes where the Walker in-view curve crosses the GPS curve around the band where it is higher,
+// by linear interpolation between grid latitudes.
+function walkerBand(v) {
+  const dlt = v.walker_mean.map((w, i) => w - v.gps_mean[i]), lat = v.lat_deg;
+  const i0 = dlt.findIndex(x => x > 0), i1 = dlt.length - 1 - [...dlt].reverse().findIndex(x => x > 0);
+  const cross = (a, b) => lat[a] + (lat[b] - lat[a]) * dlt[a] / (dlt[a] - dlt[b]);
+  return [i0 > 0 ? cross(i0 - 1, i0) : lat[0], i1 < lat.length - 1 ? cross(i1, i1 + 1) : last(lat)];
+}
 const listAnd = a => (a.length < 3 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${last(a)}`);
 // Minimum satellites for a position fix: the threshold behind the frac_time_4plus_* keys of mms_visibility.json.
 const MIN_SATS = 4;
@@ -299,7 +307,8 @@ export const binds = {
   'walker.threads': d => String(d.walker_pnt.threads),
   'walker.speedup': d => fmt(d.walker_pnt.speedup, 1),
   'walker.source': d => d.walker_pnt.config.source,
-  'walker.moreLats': d => { const v = d.walker_pnt.in_view; return listAnd(v.lat_deg.filter((_, i) => v.walker_mean[i] > v.gps_mean[i]).map(l => `${fmt(l, 0)}°`)); },
+  'walker.crossLo': d => fmt(walkerBand(d.walker_pnt.in_view)[0], 0),
+  'walker.crossHi': d => fmt(walkerBand(d.walker_pnt.in_view)[1], 0),
   'walker.eqW': d => fmt(d.walker_pnt.in_view.walker_mean[0], 1),
   'walker.eqG': d => fmt(d.walker_pnt.in_view.gps_mean[0], 1),
   'walker.topLat': d => fmt(last(d.walker_pnt.in_view.lat_deg), 0),
@@ -579,12 +588,13 @@ const CODE = {
       '    .base_name("PULSAR")',
       '    .build()',
       ')',
-      'props = walker.as_numerical_propagators(',
+      'serial = walker.as_numerical_propagators(',
       '    prop_config, force_model(), params)',
-      '',
       'for prop in serial:',
       '    prop.propagate_to(t_end)',
       '',
+      'props = walker.as_numerical_propagators(',
+      '    prop_config, force_model(), params)',
       'bh.par_propagate_to(props, t_end)',
     ],
   },
@@ -1223,12 +1233,13 @@ figures.mmsCounts = {
     const ref = svgEl('g', {}, svg);
     svgEl('line', { x1: gx, x2: gx, y1: ax.box.y0, y2: ax.box.y1, stroke: 'rgba(46,45,41,.4)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, ref);
     haloText(ref, gx + 10, ax.box.y1 + 20, 'GPS orbit radius', { size: 22, color: 'rgba(46,45,41,.7)' });
-    svgEl('line', { x1: ax.box.x0, x2: ax.box.x1, y1: ax.y(MIN_SATS), y2: ax.y(MIN_SATS), stroke: 'rgba(140,21,21,.5)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, ref);
-    haloText(ref, ax.box.x1, ax.y(MIN_SATS) - 10, `${MIN_SATS} satellites`, { size: 22, anchor: 'end', color: 'rgba(140,21,21,.8)' });
+    svgEl('line', { x1: ax.box.x0, x2: ax.box.x1, y1: ax.y(MIN_SATS), y2: ax.y(MIN_SATS), stroke: 'rgba(46,45,41,.45)', 'stroke-width': 2, 'stroke-dasharray': '6 7' }, ref);
+    haloText(ref, ax.box.x1, ax.y(MIN_SATS) - 10, `${MIN_SATS} satellites`, { size: 22, anchor: 'end', color: 'rgba(46,45,41,.7)' });
     const pts = n => M.radius_re.map((r, i) => [ax.x(r), ax.y(n[i])]);
     el.__side = svgEl('g', { 'data-step': 1 }, svg);
-    svgEl('path', { d: dotsPath(pts(M.n_side)), stroke: C.sky, 'stroke-width': 8, 'stroke-linecap': 'round', fill: 'none', opacity: 0.4 }, el.__side);
-    haloText(el.__side, ax.x(xr[1]) - 6, ax.y(Math.max(...M.n_side)) - 14, 'main or side lobes', { size: 24, anchor: 'end', color: C.sky, weight: 600 });
+    const ring = svgEl('g', { fill: 'none', stroke: C.lagunita, 'stroke-width': 1.6, opacity: 0.45 }, el.__side);
+    pts(M.n_side).forEach(([x, y]) => svgEl('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 4.5 }, ring));
+    haloText(el.__side, ax.x(xr[1]) - 6, ax.y(Math.max(...M.n_side)) - 14, 'main or side lobes', { size: 24, anchor: 'end', color: C.lagunita });
     el.__main = svgEl('g', {}, svg);
     svgEl('path', { d: dotsPath(pts(M.n_main)), stroke: C.lagunita, 'stroke-width': 8, 'stroke-linecap': 'round', fill: 'none', opacity: 0.7 }, el.__main);
     haloText(el.__main, ax.x(xr[1]) - 6, ax.y(MIN_SATS) + 34, 'main lobe', { size: 24, anchor: 'end', color: C.lagunita, weight: 600 });
@@ -1280,6 +1291,7 @@ figures.walkerGlobe = {
     el.__set(0);
   },
   animate(el, d, s, A) {
+    el.__set(0);
     fadeIn(el.__earth, A, 0, 600);
     el.__planes.forEach((paths, p) => {
       drawOnAnim(paths, A, 250 + p * 150, 700, 0);
