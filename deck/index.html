@@ -464,14 +464,15 @@
 
 <section class="slide" data-label="Next">
   <h2 class="header" data-in="up">Planned work in brahe, and how you can get involved</h2>
-  <div class="panel close-panel" data-rough="box" data-rough-key="next-roadmap" style="left:180px; top:330px; width:740px; height:380px;" data-in="up" data-delay="300">
+  <div class="panel close-panel" data-rough="box" data-rough-key="next-roadmap" style="left:140px; top:270px; width:860px; height:560px;" data-in="up" data-delay="300">
     <h3>On the roadmap</h3>
     <ul>
       <li>GNSS orbit determination support, reading RINEX observation and navigation files</li>
       <li>Estimation with a choice of process noise models</li>
+      <li data-bind-wrap><b>GPU acceleration:</b> Astrojax, an experimental GPU-accelerated framework in JAX. SGP4 at <span data-bind="gpu.rate">--</span> billion propagations per second on <span data-bind="gpu.gpus">--</span> GPUs, about <span data-bind="gpu.vsRust">--</span> times the Rust sgp4 crate on <span data-bind="gpu.threads">--</span> CPU threads</li>
     </ul>
   </div>
-  <div class="panel close-panel" data-rough="box" data-rough-key="next-ask" style="left:1000px; top:330px; width:740px; height:380px;" data-step="1">
+  <div class="panel close-panel" data-rough="box" data-rough-key="next-ask" style="left:1060px; top:270px; width:720px; height:560px;" data-step="1">
     <h3>How you can get involved</h3>
     <ol>
       <li><b>Share data:</b> sources of orbital observations that can be shared for development and testing</li>
@@ -479,7 +480,8 @@
       <li data-step="3"><b>Contribute</b> code, examples or documentation</li>
     </ol>
   </div>
-  <aside class="notes">Where it is going next, and how this room could help. On the roadmap: orbit determination for GNSS, starting from RINEX observation and navigation files, and estimation with a choice of process noise models, beyond the EKF, UKF and batch least squares already in the estimation module. Click: share data. Orbit determination is only as good as the data you test it on. If you have orbital observations you can share, tracking data, GNSS observations from a receiver in orbit, anything with a known truth, I would like to hear from you. Click: request features. Click: contribute.</aside>
+  <p class="cite" data-bind-wrap>SGP4 rates: one satellite, one year at 1 s steps, float64, two NVIDIA H100 NVL GPUs and an AMD EPYC 9554, from <a href="https://github.com/ATTron/astroz/pull/80" target="_blank" rel="noopener">github.com/ATTron/astroz/pull/80</a> · <a href="https://github.com/duncaneddy/astrojax" target="_blank" rel="noopener">github.com/duncaneddy/astrojax</a></p>
+  <aside class="notes">Where it is going next, and how this room could help. On the roadmap: orbit determination for GNSS, starting from RINEX observation and navigation files, and estimation with a choice of process noise models, beyond the EKF, UKF and batch least squares already in the estimation module. And GPU acceleration: Astrojax is an experimental sibling project that puts the same astrodynamics on GPUs with JAX. In a benchmark thread on the astroz project, it ran SGP4 at about 3.3 billion propagations per second on two H100 GPUs, in double precision, for one satellite over a year at one second steps. On the same workload the Rust sgp4 crate on 128 CPU threads did about 330 million per second, so roughly ten times, and it is about three times the fastest CPU result in that thread, astroz with multithreaded SIMD. Single precision reaches about 3.9 billion. It is experimental, and the comparison is GPUs against CPUs, not like for like. Click: share data. Orbit determination is only as good as the data you test it on. If you have orbital observations you can share, tracking data, GNSS observations from a receiver in orbit, anything with a known truth, I would like to hear from you. Click: request features. Click: contribute.</aside>
 </section>
 
 <section class="slide" data-label="Links">

@@ -220,6 +220,12 @@ function spreadLabels(ys, gap = 30) {
 // Project facts shown on the brahe introduction slide.
 const BRAHE = { since: 2014, license: 'MIT', core: 'Rust', bindings: 'Python' };
 
+// SGP4 propagations per second for one satellite over one year at 1 s steps, from the benchmark
+// runs posted in github.com/ATTron/astroz/pull/80 (February 14, 2026; AMD EPYC 9554 with 128
+// threads, two NVIDIA H100 NVL GPUs): Astrojax in float64 on both GPUs, the Rust sgp4 crate with
+// Rayon, and astroz (Zig) with multithreaded SIMD.
+const SGP4_RATES = { astrojaxGpu: 3273165393.18, rustRayon: 332648732.27, astrozSimd: 1091874649.09, gpus: 2, threads: 128 };
+
 const PT_TIME = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' });
 const PT_DATE = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', month: 'long', day: 'numeric', year: 'numeric' });
 const last = a => a[a.length - 1];
@@ -256,6 +262,11 @@ export const binds = {
   'brahe.license': () => BRAHE.license,
   'brahe.core': () => BRAHE.core,
   'brahe.bindings': () => BRAHE.bindings,
+  'gpu.rate': () => fmt(SGP4_RATES.astrojaxGpu / 1e9, 1),
+  'gpu.gpus': () => String(SGP4_RATES.gpus),
+  'gpu.threads': () => String(SGP4_RATES.threads),
+  'gpu.vsRust': () => fmt(SGP4_RATES.astrojaxGpu / SGP4_RATES.rustRayon, 0),
+  'gpu.vsAstroz': () => fmt(SGP4_RATES.astrojaxGpu / SGP4_RATES.astrozSimd, 0),
   'gps.n': d => String(d.gps_constellation.prns.length),
   'gps.date': d => PT_DATE.format(new Date(d.gps_constellation.talk_epoch_utc ?? d.gps_constellation.epoch_utc)),
   'gps.product': d => d.gps_constellation.product.replace(/\.SP3(\.gz)?$/i, ''),
