@@ -9,12 +9,14 @@ import numpy as np
 lla = [-122.1697, 37.4275, 30.0]  # Stanford lon, lat, alt
 correct = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.GPS)
 mistaken = bh.Epoch(2026, 11, 12, 19, 0, 0.0, time_system=bh.UTC)
+start, end = correct - 13620.0, mistaken + 12900.0  # the pass
 
 igs = bh.IGSProductsClient("BKG")
-ultra_rapid = igs.list_products_between(
-    correct, correct, center="IGS", solution="ULT", content="ORB"
+issues = igs.list_products_between(
+    start, end, center="IGS", solution="ULT", content="ORB"
 )
-sp3 = igs.download_sp3(ultra_rapid[-1])  # latest issue
+usable = [p for p in issues if p.file_name.start_epoch <= start]
+sp3 = igs.download_sp3(usable[-1])  # newest issue
 sat = next(s for s in sp3.satellites() if s.get_name() == "G09")
 site = bh.position_geodetic_to_ecef(lla, bh.AngleFormat.DEGREES)
 

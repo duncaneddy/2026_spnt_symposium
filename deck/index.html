@@ -324,7 +324,7 @@
 
 <section class="slide" data-label="Quick frames">
   <h2 class="header" data-in="up">The same GPS orbit in an inertial frame and an Earth-fixed frame</h2>
-  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:960px; height:500px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:960px; height:550px;" data-in="up" data-delay="300"></div>
   <div class="fig" data-fig="eciVsEcef" style="left:1110px; top:250px; width:690px; height:540px;"></div>
   <p class="caption" style="position:absolute; left:1110px; top:810px; width:690px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="2400" data-bind-wrap><span data-bind="qh.prn">--</span> over <span data-bind="qh.frameH">--</span> hours: ITRF as published in the IGS orbit file, GCRF computed by brahe</p>
   <p class="cite">IGS ultra-rapid orbit · snippets/frames.py · full analysis in scripts/quick_hits.py</p>
@@ -335,14 +335,14 @@
 
 <section class="slide" data-label="TLE vs IGS">
   <h2 class="header" data-in="up">How far is the public TLE from the precise orbit for the same GPS satellite?</h2>
-  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:290px; width:930px; height:600px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="tleVsSp3" data-step="1" style="left:1070px; top:290px; width:730px; height:340px;"></div>
-  <dl class="stats compact" data-step="1" style="left:1140px; top:652px; width:640px; margin:0;">
+  <div class="fig" data-fig="code-tleSp3" style="left:120px; top:240px; width:930px; height:650px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="tleVsSp3" data-step="1" style="left:1070px; top:240px; width:730px; height:340px;"></div>
+  <dl class="stats compact" data-step="1" style="left:1140px; top:602px; width:640px; margin:0;">
     <dt>RMS difference over <span data-bind="tle.span">--</span> hours</dt><dd><span data-bind="tle.rms">--</span><span class="unit">km</span></dd>
     <dt>Largest difference</dt><dd><span data-bind="tle.max">--</span><span class="unit">km</span></dd>
   </dl>
   <p class="cite" style="left:120px; right:120px;"><span data-bind="tle.prn">--</span> (NORAD <span data-bind="tle.norad">--</span>): GP elements from <span data-bind="tle.source">--</span> (epoch <span data-bind="tle.epoch">--</span>) with SGP4, against the IGS ultra-rapid orbit <span data-bind="tle.product">--</span> · snippets/tle_vs_sp3.py · full analysis in scripts/tle_vs_sp3.py</p>
-  <aside class="notes">Two data clients in a few lines, for G09, the highest GPS satellite over Stanford at the talk time. Ask the question and wait. Expected guesses run from meters to hundreds of kilometers. Click: about 3 km, almost all along-track. The TLE puts the satellite in the right orbit slightly ahead of where it is, a little under a second of orbital motion. Radial and cross-track stay well under a kilometer. Caveats: the window is 9.3 hours, not a day, because the newest IGS file only reaches about 4.7 hours past the talk time, and the reference is the predicted half of the ultra-rapid file, which the IGS quotes at centimeter level, far below the kilometers on the plot. Planned remark: "The TLE knows exactly where the satellite is going. It just gets there a little early."<br><br>If asked: the IGS files come from the BKG mirror, no login. This run took the GP elements from Space-Track because CelesTrak was unreachable; the card shows the CelesTrak call. G09 is NAVSTAR 71 (catalog number 40105), matched to the catalog by position. The difference is in the radial, along-track and cross-track frame of the IGS orbit. The TLE goes from TEME and the IGS orbit from ITRF to the inertial frame before differencing.</aside>
+  <aside class="notes">Two data clients in a few lines, for G09, the highest GPS satellite over Stanford at the talk time. Ask the question and wait. Expected guesses run from meters to hundreds of kilometers. Click: about 3 km, almost all along-track. The TLE puts the satellite in the right orbit slightly ahead of where it is, a little under a second of orbital motion. Radial and cross-track stay well under a kilometer. Caveats: the window is 9.3 hours, not a day, because the IGS file used for this run ends about 4.7 hours after the talk time, and the reference is the predicted half of the ultra-rapid file, which the IGS quotes at centimeter level, far below the kilometers on the plot. Planned remark: "The TLE knows exactly where the satellite is going. It just gets there a little early."<br><br>If asked: the IGS files come from the BKG mirror, no login. This run took the GP elements from Space-Track because CelesTrak was unreachable; the card shows the CelesTrak call. G09 is NAVSTAR 71 (catalog number 40105), matched to the catalog by position. The difference is in the radial, along-track and cross-track frame of the IGS orbit. The TLE goes from TEME and the IGS orbit from ITRF to the inertial frame before differencing.</aside>
 </section>
 
 <section class="slide" data-label="LEO receiver">
@@ -488,7 +488,7 @@
 
 <section class="slide" data-label="Range mistake">
   <h2 class="header" data-in="up">Range from Stanford to <span data-bind="range.prn">--</span>, with the same epoch labeled GPS time and UTC</h2>
-  <div class="fig" data-fig="code-rangeEpochs" style="left:120px; top:220px; width:960px; height:640px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-rangeEpochs" style="left:120px; top:220px; width:960px; height:690px;" data-in="up" data-delay="300"></div>
   <p style="position:absolute; left:1110px; top:250px; width:690px; margin:0; font-size:52px; line-height:1.2; text-wrap:balance;" data-in="fade" data-delay="900">How big is the error?</p>
   <dl class="stats compact" data-step="1" style="left:1110px; top:350px; width:500px; margin:0;">
     <dt>Satellite position error</dt><dd class="accent"><span data-bind="range.pos">--</span><span class="unit">km</span></dd>
