@@ -35,8 +35,9 @@ pseudorange P = rho + c (dt_r - dt_s) (positive means P is longer):
     about the Earth's spin axis by omega_E * tau into the Earth-fixed axes of
     t_r, accounting for the Earth turning under the signal; the term is the
     resulting range minus the unrotated one.
-  - sat_clock: -c * dt_s, with dt_s the SP3 satellite clock offset (seconds,
-    linearly interpolated between the file's samples). A satellite clock that
+  - sat_clock: -c * dt_s, with dt_s the SP3 satellite clock offset at the
+    transmission time t_tx (seconds, linearly interpolated between the file's
+    samples). A satellite clock that
     reads ahead (dt_s > 0) shortens P, so the term is negative. The receiver
     clock term c dt_r is not modeled.
 The first three terms add up to the full range, geometric + light_time +
@@ -177,7 +178,7 @@ def main() -> None:
         "geometric": geometric,
         "light_time": unrotated_range - geometric,
         "earth_rotation": full_range - unrotated_range,
-        "sat_clock": -clock_offset_s(sat, correct) * bh.C_LIGHT,
+        "sat_clock": -clock_offset_s(sat, correct - tau) * bh.C_LIGHT,
     }
 
     max_range_err_km = float(np.abs(range_err_km).max())
