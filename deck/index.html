@@ -55,14 +55,14 @@
   <div class="fig" data-fig="threeLevels" style="left:140px; top:546px; width:1640px; height:250px;"></div>
   <p data-step="4" style="position:absolute; left:140px; right:140px; top:812px; margin:0; text-align:center; font-size:34px; line-height:1.3; text-wrap:balance;">All three name the same satellites. Each step up locates them better and takes more to implement, so it is often skipped or rebuilt from&nbsp;scratch.</p>
   <p class="cite" data-bind-wrap>IGS ultra-rapid orbit <span data-bind="lv.product">--</span> · GP elements from <span data-bind="lv.gpSource">--</span> · scripts/three_levels.py</p>
-  <aside class="notes">Three ways to answer it. Click: the basic answer, Keplerian orbits around a spinning, spherical Earth, about 24 km off per satellite. Click: TLEs with SGP4, the TEME to Earth-fixed transformation and a geodetic station, under 2 km off. Click: the full answer, the best IGS orbit product with current Earth orientation data, good to centimeters or decimeters; this window is in the predicted half of the product. All three count the same nine satellites, and none changes sides of the mask. Click: the difference is how well each knows where those satellites are, which matters as soon as you compute a range. Each step is more work, so it often gets skipped or rebuilt.<br><br>If asked: the basic level is off by about 24 km because it reads mean elements as osculating, plus no J2: most of the error is already there at the element epoch, and it grows by about 8 to 10 km per day of element age (one to two days here). Its single-rotation frame shortcut costs only a few hundred meters here, because the elements are already close to true-of-date.</aside>
+  <aside class="notes">Three ways to answer it. Click: the basic answer, Keplerian orbits around a spinning, spherical Earth, about 24 km off per satellite. Click: TLEs with SGP4, the TEME to Earth-fixed transformation and a geodetic station, under 2 km off. Click: the full answer, the best IGS orbit product with current Earth orientation data, good to centimeters or decimeters; this window is in the predicted half of the product. All three count the same nine satellites, and none changes sides of the mask. Click: the difference is how well each knows where those satellites are, which matters as soon as you compute a range. Each step is more work, so it often gets skipped or rebuilt.<br><br>If asked: the basic level is off by about 24 km because it reads mean elements as osculating, plus no J2: most of the error is already there at the element epoch, and it grows with element age (about one to three days here). Its single-rotation frame shortcut costs only a few hundred meters here, because the elements are already close to true-of-date.</aside>
 </section>
 
 <section class="slide" data-label="Sky plot">
   <h2 class="header" data-flip="q-sky">Which GPS satellites are above this building right now?</h2>
   <div class="fig" data-fig="skyplot" style="left:120px; top:230px; width:680px; height:680px;"></div>
   <div class="fig" data-fig="code-skyplot" style="left:840px; top:236px; width:960px; height:530px;" data-in="up" data-delay="500"></div>
-  <p class="caption" style="position:absolute; left:840px; top:800px; width:960px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
+  <p class="caption" style="position:absolute; left:840px; top:814px; width:960px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
   <p class="cite">IGS ultra-rapid orbit <span data-bind="sky.product">--</span> at <span data-bind="sky.timeUTC">--</span> · snippets/skyplot.py · full analysis in scripts/skyplot.py</p>
   <aside class="notes">The sky over campus at 11:00 Pacific today, from the predicted half of the IGS ultra-rapid orbit product. Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: above the horizon but below the mask. The code on the right is the full answer as a complete program: find the latest ultra-rapid orbit file, read it, and turn each position into azimuth and elevation from the station. The tracks come from scripts/skyplot.py. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions."</aside>
 </section>
@@ -189,7 +189,7 @@
   <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="600">The same instant in four time scales</p>
   <div class="fig" data-fig="code-modTime" style="left:846px; top:300px; width:954px; height:240px;" data-in="up" data-delay="700"></div>
   <p class="cite">snippets/mod_time.py · brahe 1.8.1 documentation, brahe.space</p>
-  <aside class="notes">Time. An epoch is one instant, stored to the nanosecond. Asking for it in GPS time, TAI, TT or UT1 is one call; leap seconds and Earth orientation are handled for you.<br><br>If asked: GPS, Galileo and BeiDou time are fixed offsets from TAI. There is no GLONASS time scale and no satellite clock modeling.</aside>
+  <aside class="notes">Time. An epoch is one instant, stored to the nanosecond. Asking for it in GPS time, TAI, TT or UT1 is one call; leap seconds and Earth orientation are handled for you.<br><br>If asked: GPS, Galileo and BeiDou time are fixed offsets from TAI. There is no GLONASS time scale and no satellite clock modeling. TDB and TCB are closed-form approximations.</aside>
 </section>
 
 <section class="slide" data-label="Module Frames">
@@ -209,7 +209,7 @@
   <p class="mod-easy" style="left:846px; top:236px;" data-in="fade" data-delay="300">100,000 states between frames in one call, and by frame name</p>
   <div class="fig" data-fig="code-modFrames" style="left:846px; top:286px; width:954px; height:400px;" data-in="up" data-delay="400"></div>
   <p class="cite">snippets/mod_frames.py · brahe 1.8.1 documentation, brahe.space</p>
-  <aside class="notes">Frames and coordinates. The Earth frames you would expect, plus the Moon, Mars and the barycenters. Transformations take whole arrays: 100,000 states change frame in one call, and the router takes any two frames by name.<br><br>If asked: the one GCRF to ITRF call on 100,000 states took 4.6 ms on a laptop, against about 11 s for a Python loop of single calls. ITRF here is the IERS rotation chain; there are no transforms between ITRF realizations.</aside>
+  <aside class="notes">Frames and coordinates. The Earth frames you would expect, plus the Moon, Mars and the barycenters. Transformations take whole arrays: 100,000 states change frame in one call, and the router takes any two frames by name.<br><br>If asked: the one GCRF to ITRF call on 100,000 states takes about 4.6 ms; a Python loop of single calls over the same states would take roughly 11 s (an estimate). Earth orientation parameters are linearly interpolated, with no sub-daily corrections. ITRF here is the IERS rotation chain; there are no transforms between ITRF realizations.</aside>
 </section>
 
 <section class="slide" data-label="Module Orbits">
@@ -220,7 +220,7 @@
     <h4>Elements</h4>
     <ul><li>Keplerian and equinoctial elements, anomalies</li><li>Period, apsides, sun-synchronous inclination</li><li>Osculating to mean: Brouwer-Lyddane (first-order J2) or numerical averaging</li></ul>
     <h4>Element sets</h4>
-    <ul><li>TLE and 3LE read and write, Alpha-5 catalog numbers</li><li>GP records (OMM) to SGP4 or numerical propagators</li></ul>
+    <ul><li>TLE and 3LE parsing; TLE generation</li><li>Alpha-5 catalog numbers</li><li>GP records (OMM) to SGP4 or numerical propagators</li></ul>
     <h4>Constellations</h4>
     <ul><li>Walker Delta and Walker Star generators</li><li>A Keplerian, SGP4 or numerical propagator per satellite</li></ul>
   </div>
@@ -245,7 +245,7 @@
   <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">One day at GPS altitude with 80×80 gravity, Sun, Moon, relativity and the STM</p>
   <div class="fig" data-fig="code-modPropagation" style="left:846px; top:300px; width:954px; height:380px;" data-in="up" data-delay="400"></div>
   <p class="cite">snippets/mod_propagation.py · brahe 1.8.1 documentation, brahe.space</p>
-  <aside class="notes">Propagation. Analytic, SGP4 and numerical propagators share one interface. The force model is a configuration object: this preset is 80 by 80 gravity, Sun, Moon and relativity, propagated one day with the state transition matrix.<br><br>If asked: solar radiation pressure is a cannonball model; there is no GNSS box-wing or ECOM model and no albedo. Numerical propagation is marked experimental in the documentation.</aside>
+  <aside class="notes">Propagation. Analytic, SGP4 and numerical propagators share one interface. The force model is a configuration object: this preset is 80 by 80 gravity, Sun, Moon and relativity, propagated one day with the state transition matrix.<br><br>If asked: tide models are implemented and flagged in the docs as needing validation. Solar radiation pressure is a cannonball model; there is no GNSS box-wing or ECOM model and no albedo. Numerical propagation is marked experimental in the documentation.</aside>
 </section>
 
 <section class="slide" data-label="Module Access">
@@ -272,7 +272,7 @@
   <div class="mod-supports" style="top:250px;" data-in="fade" data-delay="200">
     <p class="lead">Supports</p>
     <h4>GNSS orbit products</h4>
-    <ul><li>IGS products from CDDIS, Garner (SIO) and BKG</li><li>SP3 versions a to d, read and write</li></ul>
+    <ul><li>IGS products from CDDIS, Garner (SIO) and BKG</li><li>SP3 versions a to d read, version d write</li></ul>
     <h4>Orbit catalogs</h4>
     <ul><li>CelesTrak GP and SATCAT</li><li>Space-Track GP, GP history, SATCAT, CDM</li><li>Starlink public ephemerides</li></ul>
     <h4>Reference data</h4>
@@ -283,7 +283,7 @@
   <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">List and read an IGS rapid orbit from the BKG mirror</p>
   <div class="fig" data-fig="code-modData" style="left:846px; top:300px; width:954px; height:300px;" data-in="up" data-delay="400"></div>
   <p class="cite">snippets/mod_data.py · brahe 1.8.1 documentation, brahe.space</p>
-  <aside class="notes">Data clients. IGS orbit products, CelesTrak, Space-Track and reference data, cached locally. Finding and reading an IGS rapid orbit from the BKG mirror is three calls, with no login.<br><br>If asked: only SP3 is parsed. There is no RINEX, broadcast ephemeris, clock, ANTEX or IONEX support.</aside>
+  <aside class="notes">Data clients. IGS orbit products, CelesTrak, Space-Track and reference data, cached locally. Finding and reading an IGS rapid orbit from the BKG mirror is three calls, with no login.<br><br>If asked: only SP3 is parsed. There is no RINEX, broadcast ephemeris, clock, ANTEX or IONEX support. SP3 files labelled with the GLO, QZS or IRN time system are rejected on parse, so they are not yet supported.</aside>
 </section>
 
 <section class="slide" data-label="Module Estimation">
@@ -298,9 +298,10 @@
     <h4>Dynamics and noise</h4>
     <ul><li>Any force model, with the state transition matrix</li><li>Process noise from a user Q matrix, scaled with time</li></ul>
   </div>
-  <div class="fig" data-fig="code-modEstimation" style="left:846px; top:222px; width:954px; height:700px;" data-in="up" data-delay="400"></div>
+  <p class="mod-easy" style="left:846px; top:250px;" data-in="fade" data-delay="300">An extended Kalman filter fed thirty position observations</p>
+  <div class="fig" data-fig="code-modEstimation" style="left:846px; top:300px; width:954px; height:580px;" data-in="up" data-delay="400"></div>
   <p class="cite">snippets/mod_estimation.py · brahe 1.8.1 documentation, brahe.space</p>
-  <aside class="notes">Estimation. Extended and unscented Kalman filters and batch least squares, driven by the same propagators. Here an EKF takes thirty simulated GNSS position fixes with 5 meter noise.<br><br>If asked: there are no pseudorange, carrier-phase or receiver clock states yet; that is on the roadmap. The printed error is one simulated run with one random seed, not a performance figure. The module is marked experimental.</aside>
+  <aside class="notes">Estimation. Extended and unscented Kalman filters and batch least squares, driven by the same propagators. Here an EKF is set up and fed thirty position observations, one call each.<br><br>If asked: there are no pseudorange, carrier-phase or receiver clock states yet; that is on the roadmap. The module is marked experimental.</aside>
 </section>
 
 <section class="slide" data-label="Quick TLE">
@@ -346,7 +347,7 @@
 
 <section class="slide" data-label="LEO receiver">
   <h2 class="header" data-in="up">Move the receiver from Stanford to the ISS by changing one argument</h2>
-  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:216px; width:980px; height:670px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-leoReceiver" style="left:120px; top:200px; width:980px; height:670px;" data-in="up" data-delay="300"></div>
   <p class="caption" style="position:absolute; left:1130px; top:790px; width:670px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap>The <span data-bind="leo.rx">--</span> at the talk time, about <span data-bind="leo.alt">--</span> km up, with lines of sight to the <span data-bind="leo.nLinks">--</span> GPS satellites it sees above a <span data-bind="leo.mask">--</span>° mask</p>
   <div class="fig" data-fig="leoLinks" style="left:1130px; top:220px; width:670px; height:550px;"></div>
   <p class="cite">ISS GP elements from <span data-bind="leo.source">--</span> with SGP4 · IGS ultra-rapid orbit <span data-bind="leo.product">--</span> · drawn to scale · snippets/leo_receiver.py · full analysis in scripts/leo_receiver.py</p>
@@ -369,7 +370,7 @@
     <dt>GPS satellites in the main lobe</dt><dd><span data-readout="main">--</span></dd>
     <dt>In the main or side lobes</dt><dd><span data-readout="side">--</span></dd>
   </dl>
-  <div data-mms-trace data-step="1" style="position:absolute; left:1320px; top:588px; width:480px; height:176px;"></div>
+  <div data-mms-trace data-step="1" style="position:absolute; left:1320px; top:600px; width:480px; height:164px;"></div>
   <p class="caption" data-step="1" style="position:absolute; left:1320px; top:778px; width:480px; margin:0;">Geometric visibility, no link budget</p>
   <p class="caption" style="position:absolute; left:1320px; top:820px; width:480px; margin:0; line-height:1.25; text-wrap:balance;" data-in="fade" data-delay="1600" data-bind-wrap><span data-bind="mms.name">--</span> over one orbit, <span data-bind="mms.span">--</span>, to scale with the Earth and the GPS orbit radius</p>
   <p class="cite"><span data-bind="mms.name">--</span> GP elements from <span data-bind="mms.source">--</span> with SGP4; GPS from IGS rapid orbits; transmit pattern after Donaldson et al. (NAVIGATION, 2020; ION GNSS+ 2018) · scripts/mms_visibility.py</p>
@@ -442,7 +443,7 @@
 <section class="slide" data-label="Modules recap">
   <h2 class="header center" data-in="up">The modules in brahe, after these examples</h2>
   <div class="fig" data-fig="moduleMap" style="left:120px; top:330px; width:1680px; height:320px;"></div>
-  <aside class="notes">The same row of modules. The examples used time, frames and coordinates, orbits, propagation and the data clients. Access appears in the backup, and estimation is where the roadmap goes next.</aside>
+  <aside class="notes">The same row of modules. Each module had its own slide, and the examples used time, frames and coordinates, orbits, propagation and the data clients. Access returns in the backup with custom window properties, and estimation is where the roadmap goes next.</aside>
 </section>
 
 <section class="slide" data-label="Adopters">
@@ -546,7 +547,7 @@
   <h2 class="header" data-in="up">Custom access window properties with a property computer</h2>
   <div class="fig" data-fig="code-propertyComputer" style="left:96px; top:240px; width:830px; height:430px;" data-in="up" data-delay="300"></div>
   <div class="fig" data-fig="code-propertyAccess" style="left:944px; top:240px; width:882px; height:380px;" data-in="up" data-delay="500"></div>
-  <p style="position:absolute; left:946px; top:640px; width:854px; margin:0; font-size:32px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="900">brahe's access computation currently takes ground locations, so the satellite-to-satellite geometry in the MMS example is computed from propagated states directly.</p>
+  <p style="position:absolute; left:946px; top:656px; width:854px; margin:0; font-size:32px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="900">brahe's access computation currently takes ground locations, so the satellite-to-satellite geometry in the MMS example is computed from propagated states directly.</p>
   <p class="cite">snippets/property_computer.py · after brahe examples/access/properties/custom_property_computer.py</p>
   <aside class="notes">An access property computer is a small class with three methods: where to sample each window, what to compute from the sampled satellite states and the location, and the names of the properties it returns. brahe calls it for every access window it finds, so any custom quantity (range, Doppler, an antenna angle) arrives attached to the windows. Today the access search takes ground locations; satellite-to-satellite access, which the MMS example needed, is on the list.</aside>
 </section>
