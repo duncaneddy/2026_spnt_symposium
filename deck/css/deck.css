@@ -401,3 +401,12 @@ em { font-style: italic; }
 .term-row .f { color: var(--ink-50); }
 .term-row.head { font-family: var(--sans); font-size: 24px; color: var(--ink-50); }
 .term-row.head .v { font-weight: 400; }
+
+/* ---------- three levels of the sky-plot answer ---------- */
+.level-card { padding: 28px 32px; }
+.level-card h3 { margin-bottom: 12px; }
+.level-card ul { font-family: var(--sans); }
+.level-card li { font-size: 27px; line-height: 1.25; margin-bottom: 8px; }
+.level-stats { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; align-content: start; }
+.level-stats dt { font-size: 24px; line-height: 1.2; }
+.level-stats .note { grid-column: 1 / -1; margin: 0; font-size: 24px; color: var(--ink-50); }

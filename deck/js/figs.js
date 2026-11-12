@@ -2,7 +2,7 @@
 // Hand-drawn strokes (sketch.js) for frames, axes and diagrams; exact paths for orbits and data.
 import { roughLine, roughRect, roughEllipse, roughArrow, roughPolyline, svgEl, strokePath, hashSeed, mulberry32 } from './sketch.js';
 
-export const DATA_FILES = ['skyplot', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt', 'gravity_crossover', 'benchmarks'];
+export const DATA_FILES = ['skyplot', 'three_levels', 'quick_hits', 'land', 'gps_constellation', 'tle_vs_sp3', 'station_range', 'leo_receiver', 'mms_visibility', 'walker_pnt', 'gravity_crossover', 'benchmarks'];
 
 const EASE_IN = 'cubic-bezier(.2,.7,.2,1)';
 const EASE_MOVE = 'cubic-bezier(.65,0,.25,1)';
@@ -266,6 +266,8 @@ export const binds = {
   'sky.datePT': d => PT_DATE.format(new Date(d.skyplot.epoch_utc)),
   'sky.timeUTC': d => `${d.skyplot.epoch_utc.slice(0, 10)} ${d.skyplot.epoch_utc.slice(11, 16)} UTC`,
   'sky.product': d => d.skyplot.product.replace(/\.SP3(\.gz)?$/i, ''),
+  'lv.product': d => d.three_levels.product.replace(/\.SP3(\.gz)?$/i, ''),
+  'lv.gpSource': d => GP_SOURCE[d.three_levels.gp_source] ?? d.three_levels.gp_source,
   'qh.nGps': d => String(d.quick_hits.tle.n),
   'qh.nTracks': d => String(d.quick_hits.tle.tracks.length),
   'qh.object': d => d.quick_hits.propagate.object,
@@ -580,14 +582,48 @@ figures.skyplot = {
   },
 };
 
+/* ---------- three levels of the sky-plot answer ---------- */
+// Under each .level-card on the slide, revealed with its card: satellites counted above the mask,
+// and for the two simpler levels the median satellite position error against the precise level
+// with the median error in sky direction beneath.
+const LEVEL_KEYS = ['basic', 'tle', 'precise'];
+
+figures.threeLevels = {
+  needs: ['three_levels'],
+  render(el, d) {
+    const L = d.three_levels, mask = fmt(L.el_mask_deg, 0);
+    const cards = [...el.closest('section').querySelectorAll('.level-card')];
+    const cell = (label, value, cls = '') => `<div><dt>${label}</dt><dd class="${cls}">${value}</dd></div>`;
+    LEVEL_KEYS.forEach((key, i) => {
+      const lv = L.levels.find(l => l.key === key), card = cards[i];
+      if (!lv || !card) return;
+      const dl = document.createElement('dl');
+      dl.className = 'stats compact level-stats';
+      dl.dataset.step = card.dataset.step;
+      dl.style.cssText = `left:${card.offsetLeft - el.offsetLeft}px; top:0; width:${card.offsetWidth}px; margin:0;`;
+      const above = `Above the ${mask}° mask`;
+      dl.innerHTML = key === 'precise'
+        ? `${cell(above, lv.n_visible, 'resolved')}<p class="note">IGS ultra-rapid orbit, centimeter to decimeter level</p>`
+        : `${cell(above, lv.n_visible)}${cell('Median position error', `${fmt(lv.pos_err_km.median, 1)}<span class="unit">km</span>`, 'accent')}<p class="note">Median error in sky direction ${fmt(lv.sky_err_deg.median, 3)}°</p>`;
+      el.appendChild(dl);
+    });
+  },
+};
+
 /* ---------- tool families and the four properties ---------- */
-// Each family is a row under the property cards (.prop-slot on the same slide): a check where the
-// family tends to have the property, a gray dash where it tends not to, a gray word for "it depends".
+// Each family is a row under the property cards (.prop-slot on the same slide), one hand-drawn
+// symbol per property at the same size: a check in Palo Verde (yes), a tilde in ink (sometimes),
+// an x in ink at 45% (no).
 const TOOL_FAMILIES = [
-  { name: 'Commercial tools', eg: 'STK, FreeFlyer', has: ['yes', 'yes', 'no', 'no'] },
-  { name: 'Research scripts and small packages', eg: 'university and personal projects', has: ['no', 'no', 'sometimes', 'yes'] },
-  { name: 'Established open-source toolkits', eg: 'Orekit, GMAT', has: ['yes', 'sometimes', 'no', 'yes'] },
+  { name: 'Commercial tools', eg: 'STK, FreeFlyer', has: ['yes', 'sometimes', 'no', 'no'] },
+  { name: 'Research scripts and small packages', eg: 'university and personal projects', has: ['yes', 'no', 'no', 'yes'] },
+  { name: 'Established open-source toolkits', eg: 'Orekit, GMAT', has: ['no', 'no', 'sometimes', 'yes'] },
 ];
+
+function tildePath(cx, cy, seed) {
+  const rnd = mulberry32(seed), j = () => (rnd() - 0.5) * 2.4;
+  return `M${cx - 20 + j()} ${cy + 4 + j()}C${cx - 13} ${cy - 13 + j()} ${cx - 5} ${cy - 11 + j()} ${cx} ${cy + j()}S${cx + 13} ${cy + 13 + j()} ${cx + 20 + j()} ${cy - 5 + j()}`;
+}
 
 figures.tradeoff = {
   render(el) {
