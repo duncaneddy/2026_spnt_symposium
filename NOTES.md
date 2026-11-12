@@ -159,7 +159,7 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | 20 | Section Speed | `moduleMap` | divider: propagation lit |
 | 21 | Gravity | `gravityCrossover` / gravity_crossover.json | fresh; log-log axes, serial line with interquartile band draws on, serial values at the low and highest degree; click 1: parallel line and band (Lagunita) draw on, parallel values; click 2: brahe's automatic threshold as an exact vertical line, measured crossover range as a shaded band, sentence on the automatic switch |
 | 22 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one panel per task in file order, bars from the brahe (Rust) 1x line to each library's median ratio on a shared log axis (brahe Python in Lagunita), key in the last row; panels fade in one by one |
-| 23 | Adopters | `adopters` | fresh; nine logos plus Xona Space Systems and AWS by name, cells fade in |
+| 23 | Adopters | `adopters` | fresh; nine logos in a 3 x 3 grid, cells fade in |
 | 24 | Next | none | fresh; roadmap panel; click 1: the request for shareable orbital observations |
 | 25 | Links | `closeLinks` | fresh; two QR codes side by side at the same size, each with its label and URLs beneath: brahe (`img/brahe-qr.webp`, brahe.space and github.com/duncaneddy/brahe) and the talk repository (`img/repo-qr.webp`, github.com/duncaneddy/2026_spnt_symposium) |
 | B | Backup | none | divider |
@@ -227,8 +227,3 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
   one period per 20 s) return cancel functions. With reduced motion, `mmsOrbit` stays at the apogee
   sample and `walkerGlobe` at the start epoch. `mmsOrbit` writes its readout into the slide's
   `[data-readout="r|main|side"]` fields.
-
-## Needed from Duncan
-
-- `deck/img/logos/xona.png` (or svg): Xona Space Systems logo for the adopters slide (shown by name until then).
-- `deck/img/logos/aws.png` (or svg): AWS logo for the adopters slide (shown by name until then).

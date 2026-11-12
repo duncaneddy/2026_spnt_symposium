@@ -1310,13 +1310,12 @@ figures.check = {
 };
 
 /* ---------- adopters ---------- */
-// Organizations without a logo file in img/logos/ are shown by name in the same cell.
+// One logo per organization from img/logos/, in a centered 3 x 3 grid.
 figures.adopters = {
   render(el) {
-    const logos = [['Northwood', 'northwood.svg'], ['Xona Space Systems', null], ['Capella', 'capella.svg'], ['AWS', null], ['D-Orbit USA', 'd-orbit-usa.svg'], ['KSAT', 'ksat.svg'], ['HEO', 'heo.png'], ['Trusted Space', 'trusted-space.png'], ['K2 Space', 'k2-space.svg'], ['Vyoma', 'vyoma.svg'], ['Orbital Sidekick', 'orbital-sidekick.svg']];
-    const cols = 4, pitch = 405, cw = 370, W = (cols - 1) * pitch + cw;
-    const left = i => { const row = Math.floor(i / cols), inRow = Math.min(cols, logos.length - row * cols); return (W - ((inRow - 1) * pitch + cw)) / 2 + (i % cols) * pitch; };
-    el.innerHTML = logos.map(([n, file], i) => `<div class="logo-cell" data-rough="box" data-color="dim" data-rough-key="ad${i}" style="position:absolute; left:${left(i)}px; top:${Math.floor(i / cols) * 190}px; width:370px; height:150px; display:flex; align-items:center; justify-content:center; padding:24px 16px;">${file ? `<img src="img/logos/${file}" alt="${n}" style="width:100%; height:100%; object-fit:contain;">` : `<span class="logo-name">${n}</span>`}</div>`).join('');
+    const logos = [['Northwood', 'northwood.svg'], ['Capella', 'capella.svg'], ['D-Orbit USA', 'd-orbit-usa.svg'], ['KSAT', 'ksat.svg'], ['HEO', 'heo.png'], ['Trusted Space', 'trusted-space.png'], ['K2 Space', 'k2-space.svg'], ['Vyoma', 'vyoma.svg'], ['Orbital Sidekick', 'orbital-sidekick.svg']];
+    const cols = 3, pitch = 500, cw = 440, x0 = (el.offsetWidth - ((cols - 1) * pitch + cw)) / 2;
+    el.innerHTML = logos.map(([n, file], i) => `<div class="logo-cell" data-rough="box" data-color="dim" data-rough-key="ad${i}" style="position:absolute; left:${x0 + (i % cols) * pitch}px; top:${Math.floor(i / cols) * 190}px; width:${cw}px; height:150px; display:flex; align-items:center; justify-content:center; padding:24px 16px;"><img src="img/logos/${file}" alt="${n}" style="width:100%; height:100%; object-fit:contain;"></div>`).join('');
   },
   animate(el, d, s, A) { [...el.children].forEach((c, i) => A.push(c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, delay: 200 + i * 90, easing: EASE_IN, ...FILL }))); },
 };

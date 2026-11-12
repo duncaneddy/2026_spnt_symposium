@@ -390,7 +390,6 @@ em { font-style: italic; }
 .design-panel p { font-family: var(--sans); font-size: 28px; color: var(--ink-50); }
 
 /* ---------- adopters, roadmap, backup term table ---------- */
-.logo-name { font-family: var(--sans); font-size: 36px; font-weight: 600; color: var(--ink); text-align: center; line-height: 1.15; }
 .close-panel h3 { font-size: 40px; }
 .close-panel li { font-family: var(--sans); font-size: 32px; line-height: 1.35; margin-bottom: 14px; }
 .term-row { position: absolute; left: 180px; width: 1560px; display: grid; grid-template-columns: 760px 380px 420px; align-items: baseline; font-size: 32px; }
