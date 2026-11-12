@@ -140,7 +140,7 @@ Numbers are the footer numbers (deck.js gives a continuation the number of the s
 
 | # | Label | Figure / data | Transition |
 |---|---|---|---|
-| 1 | Title | `gpsConstellation` / gps_constellation.json | fresh; orbits draw on, satellites fade in and loop over one period from the talk-time sample (75 s per period) |
+| 1 | Title | `gpsConstellation` / gps_constellation.json | fresh; title only on entry; click 1: Earth and orbits draw on, satellites fade in and loop over one period from the talk-time sample (75 s per period), with the source line |
 | 2 | Sky Q | none | fresh; question alone (`data-flip="q-sky"`) |
 | 3 | Three levels | `threeLevels` / three_levels.json | magic move: question becomes the header; clicks 1 to 3: Basic, Better and Full cards, each with its median position error centered beneath (Basic in Cardinal and Better in Poppy, both against the ultra-rapid orbit; Full in Palo Verde, the ultra-rapid prediction against the IGS rapid orbit seven days earlier, `check`) |
 | 4 | Sky plot | `skyplot`, `code-skyplot` / skyplot.json | same header as Three levels (no move); plot draws on, code card rises, count caption fades |

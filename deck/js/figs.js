@@ -960,10 +960,23 @@ figures.gpsConstellation = {
     el.__t0 = t0;
     el.__set(t0);
   },
+  // With data-step on the figure, the Earth, orbits and satellites draw on at that click.
   animate(el, d, s, A) {
-    fadeIn(el.__earth, A, 0, 600);
-    drawOnAnim(el.__paths, A, 200, 1600, 0);
-    fadeIn(el.__dotLayer, A, 1500, 700);
+    const intro = anims => {
+      fadeIn(el.__earth, anims, 0, 600);
+      drawOnAnim(el.__paths, anims, 200, 1600, 0);
+      fadeIn(el.__dotLayer, anims, 1500, 700);
+    };
+    intro(A);
+    const sec = el.closest('section');
+    if (el.dataset.step && !el.__stepHooked) {
+      el.__stepHooked = true;
+      sec.addEventListener('deckstep', e => {
+        if (e.detail.step !== +el.dataset.step || !e.detail.animate) return;
+        el.getAnimations().forEach(x => x.cancel());
+        intro(sec.__anims ||= []);
+      });
+    }
     return loop(t => { el.__set((el.__t0 + t / GPS_LOOP_MS * el.__nI) % el.__nI); });
   },
 };
