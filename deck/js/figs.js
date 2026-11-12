@@ -532,11 +532,11 @@ function snippetLines({ file, from, to, hide = [] }) {
 
 Object.entries(CODE).forEach(([key, c]) => {
   figures[`code-${key}`] = {
-    needs: c.output ? ['snippet_outputs'] : [],
+    needs: [],
     render(el, d) {
       const lines = snippetLines(c);
       if (!lines) { el.insertAdjacentHTML('beforeend', `<div class="pending">snippet pending: deck/snippets/${c.file}.py</div>`); return; }
-      const run = c.output && d.snippet_outputs.snippets[c.file];
+      const run = c.output && d.snippet_outputs?.snippets?.[c.file];
       if (!run) { codeCard(el, lines, { ...c.opts, key }); return; }
       const stack = document.createElement('div');
       stack.className = 'code-stack';

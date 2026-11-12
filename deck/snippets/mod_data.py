@@ -8,7 +8,7 @@ import brahe as bh
 igs = bh.IGSProductsClient("BKG")
 epc = bh.Epoch(2026, 11, 1, 12, 0, 0.0, time_system=bh.GPS)
 
-# List the IGS rapid orbit products covering the epoch
+# List the IGS rapid orbit products for the epoch's GPS week
 products = igs.list_products(
     epc, center="IGS", solution="RAP", content="ORB", format="SP3"
 )

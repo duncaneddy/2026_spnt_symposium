@@ -8,7 +8,9 @@ Runs each deck/snippets/mod_*.py in a fresh Python process RUNS times and record
 prints and how long it takes. The run time is the wall-clock time of the snippet body in a
 process that has already imported brahe and numpy, so it excludes interpreter start and the
 imports, and includes everything the snippet does: loading Earth orientation data, and for
-mod_data the network requests to the IGS mirror. The median of the runs is reported.
+mod_data reading the product listing and orbit file from brahe's local cache, or the network
+requests to the IGS mirror when they are not cached yet. The median of the runs is reported,
+so it reflects cached access.
 
 Run:
   uv run scripts/snippet_outputs.py [--out path.json]
