@@ -1,0 +1,6 @@
+pocs/
+.DS_Store
+__pycache__/
+.venv/
+deck/data/raw/
+.superpowers/
