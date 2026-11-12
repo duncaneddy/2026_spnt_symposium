@@ -39,10 +39,10 @@
 <section class="slide" data-label="Sky plot">
   <h2 class="header" data-flip="q-sky">Which GPS satellites are above this building right now?</h2>
   <div class="fig" data-fig="skyplot" style="left:120px; top:230px; width:680px; height:680px;"></div>
-  <div class="fig" data-fig="code-skyplot" style="left:900px; top:236px; width:880px; height:580px;" data-in="up" data-delay="500"></div>
-  <p class="caption" style="position:absolute; left:900px; top:836px; width:880px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
+  <div class="fig" data-fig="code-skyplot" style="left:840px; top:236px; width:960px; height:530px;" data-in="up" data-delay="500"></div>
+  <p class="caption" style="position:absolute; left:840px; top:800px; width:960px; margin:0; font-size:30px; color:var(--ink); text-wrap:balance;" data-in="fade" data-delay="1500"><b data-bind="sky.nVisible">--</b> GPS satellites above <span data-bind="sky.mask">--</span>° elevation at Stanford, <span data-bind="sky.timePT">--</span> Pacific time on <span data-bind="sky.datePT">--</span></p>
   <p class="cite">IGS ultra-rapid orbit <span data-bind="sky.product">--</span> at <span data-bind="sky.timeUTC">--</span> · snippets/skyplot.py · full analysis in scripts/skyplot.py</p>
-  <aside class="notes">This is the sky over campus at 11:00 Pacific today, from the IGS ultra-rapid orbit product (predicted half of the file, issued before the talk). Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: satellites above the horizon but below the mask. The code on the right is a complete program (snippets/skyplot.py) that prints these same nine satellites: download the SP3 file, read it, and turn each position into azimuth and elevation from the station. That is all of it; the tracks on the plot come from the full analysis in scripts/skyplot.py. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions." The rest of the talk is about what is behind those few lines.</aside>
+  <aside class="notes">The sky over campus at 11:00 Pacific today, from the predicted half of the IGS ultra-rapid orbit product. Blue tracks: the hour before and after for each satellite above the 10 degree mask; gray: above the horizon but below the mask. The code on the right is the full answer as a complete program: find the latest ultra-rapid orbit file, read it, and turn each position into azimuth and elevation from the station. The tracks come from scripts/skyplot.py. Planned remark: "This was computed last night from a predicted orbit. If the sky disagrees with the slide, I am blaming the predictions."</aside>
 </section>
 
 <section class="slide" data-label="Errors">
@@ -145,16 +145,16 @@
 
 <section class="slide" data-label="Quick TLE">
   <h2 class="header" data-in="up">Download public GPS orbit elements and plot ground tracks</h2>
-  <div class="fig" data-fig="code-tle" style="left:120px; top:250px; width:920px; height:500px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="groundTracks" style="left:1080px; top:290px; width:720px; height:360px;"></div>
-  <p class="caption" style="position:absolute; left:1080px; top:680px; width:720px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1400">Ground tracks of <span data-bind="qh.nTracks">--</span> of the <span data-bind="qh.nGps">--</span> GPS satellites in the public GP catalog, one per orbital plane, starting at the talk time</p>
+  <div class="fig" data-fig="code-tle" style="left:120px; top:250px; width:960px; height:470px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="groundTracks" style="left:1110px; top:290px; width:690px; height:345px;"></div>
+  <p class="caption" style="position:absolute; left:1110px; top:665px; width:690px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1400">Ground tracks of <span data-bind="qh.nTracks">--</span> of the <span data-bind="qh.nGps">--</span> GPS satellites in the public GP catalog, one per orbital plane, starting at the talk time</p>
   <p class="cite">Public GP element sets, propagated with SGP4 · snippets/ground_tracks.py · full analysis in scripts/quick_hits.py</p>
   <aside class="notes">First quick hit: query the GP element sets for the operational GPS satellites, build an SGP4 propagator from each, and convert to longitude and latitude. The code computes the track of every satellite in the group; the map shows six, one per orbital plane, chosen in scripts/quick_hits.py. In this run CelesTrak was unreachable from the build machine, so the script fell back to the same GP data from Space-Track; the code shown is the CelesTrak path, and the script records which source it used.</aside>
 </section>
 
 <section class="slide" data-label="Quick force model">
   <h2 class="header" data-in="up">Propagate an orbit with two-body and full force-model dynamics</h2>
-  <div class="fig" data-fig="code-propagate" style="left:120px; top:220px; width:950px; height:700px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-propagate" style="left:120px; top:220px; width:960px; height:640px;" data-in="up" data-delay="300"></div>
   <div class="fig" data-fig="forceModelEffect" style="left:1110px; top:250px; width:690px; height:540px;"></div>
   <p class="caption" style="position:absolute; left:1110px; top:810px; width:690px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="1800" data-bind-wrap><span data-bind="qh.object">--</span>: the two predictions are <span data-bind="qh.drEnd">--</span> km apart after <span data-bind="qh.days">--</span> days, and drag alone moves it <span data-bind="qh.drDragEnd">--</span> km</p>
   <p class="cite">brahe default force model · snippets/force_model.py · full analysis in scripts/quick_hits.py</p>
@@ -163,9 +163,9 @@
 
 <section class="slide" data-label="Quick frames">
   <h2 class="header" data-in="up">The same GPS orbit in an inertial frame and an Earth-fixed frame</h2>
-  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:910px; height:480px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="eciVsEcef" style="left:1070px; top:250px; width:730px; height:560px;"></div>
-  <p class="caption" style="position:absolute; left:1070px; top:830px; width:730px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="2400" data-bind-wrap><span data-bind="qh.prn">--</span> over <span data-bind="qh.frameH">--</span> hours: ITRF as published in the IGS orbit file, GCRF computed by brahe</p>
+  <div class="fig" data-fig="code-frames" style="left:120px; top:250px; width:960px; height:500px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="eciVsEcef" style="left:1110px; top:250px; width:690px; height:540px;"></div>
+  <p class="caption" style="position:absolute; left:1110px; top:810px; width:690px; margin:0; font-size:28px; text-wrap:balance;" data-in="fade" data-delay="2400" data-bind-wrap><span data-bind="qh.prn">--</span> over <span data-bind="qh.frameH">--</span> hours: ITRF as published in the IGS orbit file, GCRF computed by brahe</p>
   <p class="cite">IGS ultra-rapid orbit · snippets/frames.py · full analysis in scripts/quick_hits.py</p>
   <aside class="notes">Third quick hit: one GPS satellite from the IGS orbit file, in the Earth-fixed frame the file uses and in the inertial frame. Inertial: a closed orbit, twice per sidereal day. Earth-fixed: the familiar repeating pattern. The transformation includes precession, nutation, Earth rotation and polar motion, with Earth orientation data that brahe downloads and caches. It is one method call.</aside>
 </section>
@@ -373,7 +373,7 @@
 
 <section class="slide" data-label="Events">
   <h2 class="header" data-in="up">Detect an event defined by any function of the state</h2>
-  <div class="fig" data-fig="code-valueEvent" style="left:487px; top:250px; width:946px; height:600px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-valueEvent" style="left:455px; top:250px; width:1010px; height:580px;" data-in="up" data-delay="300"></div>
   <p class="cite">snippets/value_event.py · after brahe examples/numerical_propagation/custom_value_event.py</p>
   <aside class="notes">A ValueEvent watches any function of the epoch and state and records when it crosses a target value in a chosen direction. Here it is the z component of position crossing zero going up: the ascending node. The propagator refines the crossing time and keeps going. The same mechanism covers altitude thresholds, eclipse entry and exit, element values, and events with callbacks that change the state, such as maneuvers.</aside>
 </section>
@@ -381,7 +381,7 @@
 <section class="slide" data-label="Extensible dynamics">
   <h2 class="header" data-in="up">Additional state dynamics and consider-parameter sensitivity</h2>
   <p class="sans" style="position:absolute; left:120px; top:214px; margin:0; font-size:28px; color:var(--ink-50);" data-in="fade" data-delay="200">Battery charge as an extra state</p>
-  <div class="fig" data-fig="code-additionalDynamics" style="left:120px; top:256px; width:946px; height:650px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-additionalDynamics" style="left:120px; top:256px; width:980px; height:610px;" data-in="up" data-delay="300"></div>
   <p class="cite">snippets/battery.py · after brahe examples/numerical_propagation/battery_tracking.py</p>
   <aside class="notes">Two ways to extend the numerical propagator, one per slide. Here: append your own states to the orbit state and give their derivatives; a battery that charges in sunlight and drains in eclipse, integrated alongside the orbit with the same integrator (the brahe example also clamps the charge to the battery limits, omitted here). Next slide: parameter sensitivity.</aside>
 </section>
@@ -389,16 +389,16 @@
 <section class="slide" data-label="Sensitivity">
   <h2 class="header">Additional state dynamics and consider-parameter sensitivity</h2>
   <p class="sans" style="position:absolute; left:120px; top:214px; margin:0; font-size:28px; color:var(--ink-50);" data-in="fade" data-delay="200">Sensitivity of the state to spacecraft parameters</p>
-  <div class="fig" data-fig="code-sensitivity" style="left:120px; top:256px; width:966px; height:500px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-sensitivity" style="left:120px; top:256px; width:1060px; height:500px;" data-in="up" data-delay="300"></div>
   <p class="cite">snippets/sensitivity.py · after brahe examples/numerical_propagation/sensitivity_analysis.py</p>
   <aside class="notes">Turn on sensitivity and the propagator integrates the partial derivatives of the state with respect to the spacecraft parameters (mass, drag area, drag coefficient, SRP area, reflectivity), which is what consider covariance analysis in estimation needs. The program prints how far the position moves after one orbit for a 1 percent change in each parameter.</aside>
 </section>
 
 <section class="slide" data-label="Property computer">
   <h2 class="header" data-in="up">Custom access window properties with a property computer</h2>
-  <div class="fig" data-fig="code-propertyComputer" style="left:108px; top:240px; width:814px; height:480px;" data-in="up" data-delay="300"></div>
-  <div class="fig" data-fig="code-propertyAccess" style="left:946px; top:240px; width:866px; height:430px;" data-in="up" data-delay="500"></div>
-  <p style="position:absolute; left:946px; top:700px; width:854px; margin:0; font-size:32px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="900">brahe's access computation currently takes ground locations, so the satellite-to-satellite geometry in the MMS example is computed from propagated states directly.</p>
+  <div class="fig" data-fig="code-propertyComputer" style="left:96px; top:240px; width:830px; height:430px;" data-in="up" data-delay="300"></div>
+  <div class="fig" data-fig="code-propertyAccess" style="left:944px; top:240px; width:882px; height:380px;" data-in="up" data-delay="500"></div>
+  <p style="position:absolute; left:946px; top:640px; width:854px; margin:0; font-size:32px; line-height:1.3; text-wrap:balance;" data-in="fade" data-delay="900">brahe's access computation currently takes ground locations, so the satellite-to-satellite geometry in the MMS example is computed from propagated states directly.</p>
   <p class="cite">snippets/property_computer.py · after brahe examples/access/properties/custom_property_computer.py</p>
   <aside class="notes">An access property computer is a small class with three methods: where to sample each window, what to compute from the sampled satellite states and the location, and the names of the properties it returns. brahe calls it for every access window it finds, so any custom quantity (range, Doppler, an antenna angle) arrives attached to the windows. Today the access search takes ground locations; satellite-to-satellite access, which the MMS example needed, is on the list.</aside>
 </section>

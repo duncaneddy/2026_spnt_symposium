@@ -356,18 +356,22 @@ em { font-style: italic; }
 .code-full.half pre { font-size: 20px; }
 
 /* ---------- code cards (figs.js codeCard) ---------- */
-.code-card { position: absolute; left: 0; top: 0; width: 100%; padding: 22px 28px; }
+.code-card { position: absolute; left: 0; top: 0; width: 100%; padding: 22px 20px; }
 .code-card pre { margin: 0; font-family: "Source Code Pro", ui-monospace, "SF Mono", Menlo, monospace; font-size: inherit; line-height: 1.25; color: var(--ink); white-space: pre; }
 .code-card .ln { position: relative; }
 .code-card .ln.blank { height: 0.625em; overflow: hidden; }
-.code-card .kw { font-weight: 600; }
+.code-card .lnum { display: inline-block; width: 2ch; margin-right: 0.6ch; text-align: right; color: var(--ink-50); font-weight: 400; font-variant-numeric: tabular-nums; user-select: none; }
+.code-card .kw { color: var(--paloverde); font-weight: 600; }
 .code-card .bh { color: var(--lagunita); }
-.code-card .st { color: rgba(46, 45, 41, 0.72); }
+.code-card .st { color: rgba(46, 45, 41, 0.62); }
+.code-card .nu { color: var(--sky); }
 .code-card .cm { color: var(--gray); font-style: italic; }
 .code-card .ln.hl, .code-card .ln.hl span { color: var(--cardinal); font-weight: 600; }
-.code-card .tok-cardinal, .code-card .tok-cardinal span { color: var(--cardinal); font-weight: 600; }
+.code-card .tok-cardinal, .code-card .tok-cardinal span { color: var(--cardinal); font-weight: 700; }
+.code-card .tok-cardinal { text-decoration: underline; text-decoration-color: var(--cardinal); text-decoration-thickness: 3px; text-underline-offset: 6px; }
 .code-card .tok-green, .code-card .tok-green span { color: var(--paloverde); font-weight: 600; }
-.code-card .ln-hl { position: absolute; left: 0; top: 0; right: 0; display: block; background: var(--board); color: var(--cardinal); font-weight: 600; white-space: pre; }
+.code-card .ln.hl .lnum { color: var(--ink-50); font-weight: 400; }
+.code-card .ln-hl { position: absolute; left: 2.6ch; top: 0; right: 0; display: block; background: var(--board); color: var(--cardinal); font-weight: 600; white-space: pre; }
 
 /* ---------- module map cards (figs.js moduleMap) ---------- */
 .card.mod-card { padding: 22px 12px; }

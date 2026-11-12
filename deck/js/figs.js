@@ -400,12 +400,13 @@ function sampleAt(ts, xs, t) {
 }
 
 /* ---------- code cards ---------- */
-// Python source lines with brahe calls in Lagunita, keywords semibold, comments gray.
+// Python source lines with brahe calls in Lagunita, keywords in Palo Verde, numbers in Sky,
+// strings in dimmed ink, comments gray.
 const PY_KW = /^(?:import|from|as|for|in|if|else|elif|def|return|with|lambda|not|and|or|None|True|False|class|try|except|while)$/;
 const escHTML = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function pyHTML(line) {
-  const re = /(#.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(bh(?:\.[A-Za-z_]\w*)+)|\b([A-Za-z_]\w*)\b/g;
+  const re = /(#.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|\b(bh(?:\.[A-Za-z_]\w*)+)|\b([A-Za-z_]\w*)\b|(\b\d[\d_]*(?:\.\d*)?(?:[eE][-+]?\d+)?|\.\d+)/g;
   let out = '', i = 0, m;
   while ((m = re.exec(line))) {
     out += escHTML(line.slice(i, m.index));
@@ -413,12 +414,14 @@ function pyHTML(line) {
     if (m[1]) out += `<span class="cm">${escHTML(m[1])}</span>`;
     else if (m[2]) out += `<span class="st">${escHTML(m[2])}</span>`;
     else if (m[3]) out += `<span class="bh">${m[3]}</span>`;
-    else out += PY_KW.test(m[4]) ? `<span class="kw">${m[4]}</span>` : m[4];
+    else if (m[4]) out += PY_KW.test(m[4]) ? `<span class="kw">${m[4]}</span>` : m[4];
+    else out += `<span class="nu">${m[5]}</span>`;
   }
   return out + escHTML(line.slice(i));
 }
 
 // Monospace code inside a hand-drawn box that spans the width of el; its height follows the lines.
+// Non-blank lines are numbered 1..n in a gutter.
 //   lines      source lines, one string per line ('' for a blank line, drawn at half height)
 //   highlight  line matches drawn in Cardinal; [match, step] turns that line Cardinal on click `step`
 //   steps      {match: step}: the line stays hidden until that click
@@ -443,10 +446,11 @@ function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22
   const lineOf = match => lines.findIndex(ln => ln.includes(match));
   const hl = new Map(highlight.map(h => (Array.isArray(h) ? [lineOf(h[0]), h[1]] : [lineOf(h), 0])));
   const stepAt = new Map(Object.entries(steps).map(([m, k]) => [lineOf(m), k]));
+  let num = 0;
   lines.forEach((ln, i) => {
     const row = document.createElement('div');
     row.className = ln ? 'ln' : 'ln blank';
-    row.innerHTML = markedHTML(ln, marks.find(m => lineOf(m[0]) === i)) || '​';
+    row.innerHTML = ln ? `<span class="lnum" aria-hidden="true">${++num}</span>${markedHTML(ln, marks.find(m => lineOf(m[0]) === i))}` : '​';
     if (hl.get(i) === 0) row.classList.add('hl');
     else if (hl.has(i)) {
       const over = document.createElement('span');
@@ -464,24 +468,25 @@ function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22
 }
 
 // Code shown on slides: the complete programs in deck/snippets/<file>.py, loaded when the deck
-// starts. A card shows the file below its PEP 723 header and the blank line after it, verbatim.
+// starts. A card shows the file below its PEP 723 header and the blank line after it, verbatim,
+// except the lines listed in `hide` (line matches, e.g. alias constants and the closing print).
 // `from`/`to` (line matches) show part of a file on one card when a program spans two cards.
 // Each entry becomes the figure `code-<key>` (use <div class="fig" data-fig="code-<key>">); a
 // snippet file that fails to load shows a pending note.
 const CODE = {
-  skyplot: { file: 'skyplot' },
-  tle: { file: 'ground_tracks' },
-  propagate: { file: 'force_model' },
-  frames: { file: 'frames' },
-  tleSp3: { file: 'tle_vs_sp3' },
-  rangeEpochs: { file: 'gps_time_as_utc', opts: { marks: [['correct = bh.Epoch(', 'bh.GPS', 'green'], ['mistaken = bh.Epoch(', 'bh.UTC', 'cardinal']] } },
-  leoReceiver: { file: 'leo_receiver', opts: { marks: [['n_iss = gps_in_view(', 'iss.state_itrf(epoch)[:3]', 'cardinal']] } },
-  walker: { file: 'walker' },
-  valueEvent: { file: 'value_event' },
-  additionalDynamics: { file: 'battery' },
-  sensitivity: { file: 'sensitivity' },
+  skyplot: { file: 'skyplot', hide: ['GEODETIC = ', 'print('] },
+  tle: { file: 'ground_tracks', hide: ['DEG = ', 'print('], opts: { size: 23 } },
+  propagate: { file: 'force_model', hide: ['DEG = ', 'print('] },
+  frames: { file: 'frames', hide: ['print('], opts: { size: 23 } },
+  tleSp3: { file: 'tle_vs_sp3', hide: ['print('] },
+  rangeEpochs: { file: 'gps_time_as_utc', hide: ['print('], opts: { marks: [['correct = bh.Epoch(', 'bh.GPS', 'green'], ['mistaken = bh.Epoch(', 'bh.UTC', 'cardinal']] } },
+  leoReceiver: { file: 'leo_receiver', hide: ['DEG = ', 'GEODETIC = ', 'print('], opts: { marks: [['n_iss = gps_in_view(', 'iss.state_itrf(epoch)[:3]', 'cardinal']] } },
+  walker: { file: 'walker', hide: ['print('] },
+  valueEvent: { file: 'value_event', hide: ['print('], opts: { size: 23 } },
+  additionalDynamics: { file: 'battery', hide: ['print('] },
+  sensitivity: { file: 'sensitivity', hide: ['print('], opts: { size: 24 } },
   propertyComputer: { file: 'property_computer', to: 't0 = bh.Epoch(' },
-  propertyAccess: { file: 'property_computer', from: 't0 = bh.Epoch(' },
+  propertyAccess: { file: 'property_computer', from: 't0 = bh.Epoch(', hide: ['DEG = ', 'print('] },
 };
 
 const snippetBody = src => {
@@ -500,11 +505,13 @@ const SNIPPETS = Object.fromEntries(await Promise.all([...new Set(Object.values(
   } catch { return [file, null]; }
 })));
 
-function snippetLines({ file, from, to }) {
+function snippetLines({ file, from, to, hide = [] }) {
   let lines = SNIPPETS[file];
   if (!lines) return null;
   const at = m => lines.findIndex(ln => ln.includes(m));
   lines = lines.slice(from ? at(from) : 0, to ? at(to) : lines.length);
+  const drop = new Set(hide.map(m => lines.findIndex(ln => ln.includes(m))));
+  lines = lines.filter((_, i) => !drop.has(i));
   while (lines.length && !lines[0]) lines = lines.slice(1);
   while (lines.length && !lines[lines.length - 1]) lines = lines.slice(0, -1);
   return lines;
