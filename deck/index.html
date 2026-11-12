@@ -40,22 +40,22 @@
 
 <section class="slide" data-label="Three levels">
   <h2 class="header" data-flip="q-sky">Which GPS satellites are above this building right now?</h2>
-  <div class="panel level-card" data-rough="box" data-rough-key="lv-basic" data-step="1" style="left:140px; top:220px; width:520px; height:300px;">
+  <div class="panel level-card" data-rough="box" data-rough-key="lv-basic" data-step="1" style="left:140px; top:220px; width:520px; height:340px;">
     <h3>Basic</h3>
     <ul><li>Keplerian two-body orbits</li><li>Earth spun about its axis</li><li>Spherical Earth, geocentric latitude</li></ul>
   </div>
-  <div class="panel level-card" data-rough="box" data-rough-key="lv-tle" data-step="2" style="left:700px; top:220px; width:520px; height:300px;">
+  <div class="panel level-card" data-rough="box" data-rough-key="lv-tle" data-step="2" style="left:700px; top:220px; width:520px; height:340px;">
     <h3>Better</h3>
-    <ul><li>TLEs with SGP4</li><li>TEME to Earth-fixed frame transformation</li><li>Geodetic station position</li></ul>
+    <ul><li>TLEs with SGP4</li><li>TEME to Earth-fixed, with Earth orientation parameters</li><li>Geodetic station position</li></ul>
   </div>
-  <div class="panel level-card" data-rough="box" data-rough-key="lv-precise" data-step="3" style="left:1260px; top:220px; width:520px; height:300px;">
+  <div class="panel level-card" data-rough="box" data-rough-key="lv-precise" data-step="3" style="left:1260px; top:220px; width:520px; height:340px;">
     <h3>Full</h3>
-    <ul><li>IGS SP3 orbit products, choosing the best one</li><li>Latest Earth orientation parameters</li><li>Geodetic station on the reference ellipsoid</li></ul>
+    <ul><li>IGS SP3 orbit products, choosing the best one</li><li>Earth-fixed positions, time-tagged in GPS time</li><li>Geodetic station on the reference ellipsoid</li></ul>
   </div>
-  <div class="fig" data-fig="threeLevels" style="left:140px; top:546px; width:1640px; height:250px;"></div>
+  <div class="fig" data-fig="threeLevels" style="left:140px; top:586px; width:1640px; height:250px;"></div>
   <p data-step="4" style="position:absolute; left:140px; right:140px; top:812px; margin:0; text-align:center; font-size:34px; line-height:1.3; text-wrap:balance;">All three name the same satellites. Each step up locates them better and takes more to implement, so it is often skipped or rebuilt from&nbsp;scratch.</p>
   <p class="cite" data-bind-wrap>IGS ultra-rapid orbit <span data-bind="lv.product">--</span> · GP elements from <span data-bind="lv.gpSource">--</span> · scripts/three_levels.py</p>
-  <aside class="notes">Three ways to answer it. Click: the basic answer, Keplerian orbits around a spinning, spherical Earth, about 24 km off per satellite. Click: TLEs with SGP4, the TEME to Earth-fixed transformation and a geodetic station, under 2 km off. Click: the full answer, the best IGS orbit product with current Earth orientation data, good to centimeters or decimeters; this window is in the predicted half of the product. All three count the same nine satellites, and none changes sides of the mask. Click: the difference is how well each knows where those satellites are, which matters as soon as you compute a range. Each step is more work, so it often gets skipped or rebuilt.<br><br>If asked: the basic level is off by about 24 km because it reads mean elements as osculating, plus no J2: most of the error is already there at the element epoch, and it grows with element age (about one to three days here). Its single-rotation frame shortcut costs only a few hundred meters here, because the elements are already close to true-of-date.</aside>
+  <aside class="notes">Three ways to answer it. Click: the basic answer, Keplerian orbits around a spinning, spherical Earth, a median of about 24 km off per satellite (at most 36 km). Click: TLEs with SGP4, the TEME to Earth-fixed transformation with Earth orientation parameters and a geodetic station, a median of 1.7 km off (at most 3.8 km). Click: the full answer, the best IGS orbit product, with Earth-fixed positions time-tagged in GPS time, good to centimeters or decimeters; this window is in the predicted half of the product. All three count the same nine satellites, and none changes sides of the mask. Click: the difference is how well each knows where those satellites are, which matters as soon as you compute a range. Each step is more work, so it often gets skipped or rebuilt.<br><br>If asked: the basic level is off by a median of about 24 km because it reads mean elements as osculating, plus no J2: most of the error is already there at the element epoch, and it grows with element age (about one to four days here). Its single-rotation frame shortcut costs only a few hundred meters here, because the elements are already close to true-of-date.<br><br>If asked: the SP3 positions are already Earth-fixed, so Earth orientation data matters for the TLE route here and for any inertial-frame work such as propagation.</aside>
 </section>
 
 <section class="slide" data-label="Sky plot">
