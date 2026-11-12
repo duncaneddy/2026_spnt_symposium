@@ -401,7 +401,7 @@ function sampleAt(ts, xs, t) {
 }
 
 /* ---------- code cards ---------- */
-// Python source lines with brahe calls in Lagunita, keywords in Palo Verde, numbers in Sky,
+// Python source lines with brahe calls in Lagunita, keywords in Stanford Plum, numbers in Sky,
 // strings in dimmed ink, comments gray.
 const PY_KW = /^(?:import|from|as|for|in|if|else|elif|def|return|with|lambda|not|and|or|None|True|False|class|try|except|while)$/;
 const escHTML = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -470,24 +470,25 @@ function codeCard(el, lines, { highlight = [], steps = {}, marks = [], size = 22
 
 // Code shown on slides: the complete programs in deck/snippets/<file>.py, loaded when the deck
 // starts. A card shows the file below its PEP 723 header and the blank line after it, verbatim,
-// except the lines listed in `hide` (line matches, e.g. alias constants and the closing print).
+// except the lines listed in `hide` (line matches, e.g. the closing print and timing lines that
+// only feed it).
 // `from`/`to` (line matches) show part of a file on one card when a program spans two cards.
 // Each entry becomes the figure `code-<key>` (use <div class="fig" data-fig="code-<key>">); a
 // snippet file that fails to load shows a pending note.
 const CODE = {
-  skyplot: { file: 'skyplot', hide: ['GEODETIC = ', 'print('] },
-  tle: { file: 'ground_tracks', hide: ['DEG = ', 'print('], opts: { size: 23 } },
-  propagate: { file: 'force_model', hide: ['DEG = ', 'print('] },
+  skyplot: { file: 'skyplot', hide: ['print('] },
+  tle: { file: 'ground_tracks', hide: ['print('], opts: { size: 23 } },
+  propagate: { file: 'force_model', hide: ['print('] },
   frames: { file: 'frames', hide: ['print('], opts: { size: 23 } },
   tleSp3: { file: 'tle_vs_sp3', hide: ['print('] },
   rangeEpochs: { file: 'gps_time_as_utc', hide: ['print('], opts: { marks: [['correct = bh.Epoch(', 'bh.GPS', 'green'], ['mistaken = bh.Epoch(', 'bh.UTC', 'cardinal']] } },
-  leoReceiver: { file: 'leo_receiver', hide: ['DEG = ', 'GEODETIC = ', 'print('], opts: { marks: [['n_iss = gps_in_view(', 'iss.state_itrf(epoch)[:3]', 'cardinal']] } },
-  walker: { file: 'walker', hide: ['print('] },
+  leoReceiver: { file: 'leo_receiver', hide: ['print('], opts: { marks: [['n_iss = gps_in_view(', 'iss.state_itrf(epoch)[:3]', 'cardinal']] } },
+  walker: { file: 'walker', hide: ['import time', 't1 = time.', 't2 = time.', 't3 = time.', 'print('] },
   valueEvent: { file: 'value_event', hide: ['print('], opts: { size: 23 } },
   additionalDynamics: { file: 'battery', hide: ['print('] },
   sensitivity: { file: 'sensitivity', hide: ['print('], opts: { size: 24 } },
   propertyComputer: { file: 'property_computer', to: 't0 = bh.Epoch(' },
-  propertyAccess: { file: 'property_computer', from: 't0 = bh.Epoch(', hide: ['DEG = ', 'print('] },
+  propertyAccess: { file: 'property_computer', from: 't0 = bh.Epoch(', hide: ['print('] },
 };
 
 // Module slides and benchmarks (modules.js).
