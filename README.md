@@ -4,26 +4,47 @@ Talk at the 2026 Stanford Center for Position, Navigation and Time (SPNT) Sympos
 
 The slides are a single HTML page in `deck/`. Every figure is drawn from data produced by a small
 standalone script in `scripts/`, built on the open-source [brahe](https://github.com/duncaneddy/brahe)
-astrodynamics library. Each script runs on its own with [uv](https://docs.astral.sh/uv/); no
-environment setup is needed beyond a Rust toolchain on first run, because the scripts pin brahe to a
-git branch.
+astrodynamics library. Each script runs on its own with [uv](https://docs.astral.sh/uv/).
 
 ## Running the scripts
 
 ```bash
-uv run scripts/skyplot.py
+uv run scripts/<name>.py
 ```
 
-Each script writes `deck/data/<name>.json`. To regenerate everything:
+Each script writes `deck/data/<name>.json`. To regenerate everything, in dependency order:
 
 ```bash
 just data
 ```
 
+- **brahe version:** the scripts pin brahe to a commit on its main branch that includes the IGS/SP3
+  orbit product client, until a released version with that client is published. The pin builds brahe
+  from source, so the first run needs a Rust toolchain and takes several minutes; later runs reuse the
+  build.
+- **Space-Track credentials:** GP element sets come from CelesTrak. When CelesTrak is unreachable the
+  scripts fall back to Space-Track, which needs an account, read from the environment variables
+  `SPACETRACK_USER` and `SPACETRACK_PASS`. They are not needed while CelesTrak responds.
+- **`benchmarks.py`** reads the results of brahe's comparative benchmark suite from a brahe checkout
+  (`~/repos/brahe/benchmarks/comparative/results/run_latest.json` by default; pass `--results` for
+  another path).
+- **IGS orbit products** come from the BKG mirror of the IGS archive, which needs no login.
+
 Downloads are cached under `deck/data/raw/`, so the deck does not need the network during the talk.
 
 | Script | What it computes |
 |---|---|
+| `basemap.py` | Natural Earth 1:110m land outline as longitude/latitude polylines, for the maps |
+| `skyplot.py` | Azimuth and elevation of every GPS satellite from the Stanford campus at the talk time, from an IGS ultra-rapid orbit, with tracks one hour either side |
+| `gps_constellation.py` | Every GPS satellite's position in GCRF over one orbital period, from the IGS ultra-rapid orbit, for the title animation |
+| `quick_hits.py` | Three short examples: GPS ground tracks from public GP elements with SGP4, two-body against full force-model propagation, and one GPS orbit in GCRF and ITRF |
+| `tle_vs_sp3.py` | Difference between SGP4 from the public GP elements and the IGS orbit for one GPS satellite, in radial, along-track and cross-track components |
+| `station_range.py` | Range from Stanford to a GPS satellite over its pass, the error from labeling GPS time as UTC, and the pseudorange terms at the reference instant |
+| `leo_receiver.py` | GPS satellites in view of a receiver on the ground and on the ISS, from one visibility function called with each receiver |
+| `mms_visibility.py` | GPS satellites usable by MMS 1 over one orbit through the transmit antenna main lobe and through the main or side lobes, with Earth blockage |
+| `walker_pnt.py` | A LEO PNT Walker shell propagated serially and in parallel with a numerical force model, and satellites in view and PDOP by latitude against GPS |
+| `gravity_crossover.py` | Time per spherical-harmonic gravity evaluation against degree, with brahe's parallel mode forced off and on, measured through the numerical propagator |
+| `benchmarks.py` | Median run time of common tasks in brahe and other open-source libraries, relative to brahe, from brahe's comparative benchmark suite |
 
 ## Viewing the slides
 

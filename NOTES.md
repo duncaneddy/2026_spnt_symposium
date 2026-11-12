@@ -105,7 +105,8 @@ MMS detail shortens to one slide, then beat 16 detail, then beat 11's mistake re
 ## Data contracts (scripts -> deck/data/*.json)
 
 All scripts: PEP 723 header with `requires-python = ">=3.12"` and dependencies
-`["brahe @ git+https://github.com/duncaneddy/brahe@sp3/9-igs-rate-limit", "numpy"]`, runnable as
+brahe pinned to a commit on brahe's main branch that includes the IGS/SP3 client (to be replaced by a
+released version when one is published) plus `numpy`, runnable as
 `uv run scripts/<name>.py [--out path]`, default output `deck/data/<name>.json` resolved from the script
 location, `generated_utc` in every file, each file under 2 MB. Units in key names (`_km`, `_m`, `_s`, `_h`,
 `_deg`). ECI means GCRF unless the key says otherwise. Talk epoch 2026-11-12 19:00:00 UTC. Ground station:
@@ -121,7 +122,9 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | `station_range.json` | `{generated_utc, product, prn, station, gps_minus_utc_s, t_h, range_km, range_wrong_km, range_err_km, pos_err_km, max_range_err_km, terms_m:{geometric, light_time, earth_rotation, sat_clock}}` |
 | `leo_receiver.json` | `{generated_utc, epoch_utc, product, gp_source, gp_epoch_utc, el_mask_deg, receiver:{name, norad, alt_km}, ground_station, t_min, n_visible_leo, n_visible_ground, mean_leo, mean_ground, orbit_xyz_km, links_at_epoch:{rx_xyz_km, gps_xyz_km, visible}}` |
 | `mms_visibility.json` | `{generated_utc, gp_source, gps_source, span_utc, gps_products, object:{name, norad, gp_epoch_utc, perigee_alt_km, apogee_re}, gps_radius_km, pattern:{main_half_angle_deg, side_lobe_max_deg, earth_mask_alt_km, model, source}, receiver_note, t_h, radius_re, n_main, n_side, orbit_xyz_km, apogee_t_h, gps_xyz_at_apogee_km, gps_lobe_at_apogee, frac_time_4plus_main, frac_time_4plus_with_side}` |
-| `walker_pnt.json` | `{generated_utc, config:{pattern, t, p, f, alt_km, inc_deg, source, force_model, integrator, mass_kg, drag_area_m2, cd, srp_area_m2, cr}, span_h, threads, wall_s_serial, wall_s_parallel, speedup, snapshot_xyz_km, planes, one_orbit_xyz_km, in_view:{lat_deg, walker_mean, gps_mean, el_mask_deg}, dop:{...}}` |
+| `walker_pnt.json` | `{generated_utc, config:{pattern, t, p, f, alt_km, inc_deg, source, force_model, integrator, mass_kg, drag_area_m2, cd, srp_area_m2, cr}, span_h, threads, wall_s_serial, wall_s_parallel, speedup, snapshot_xyz_km, planes, one_orbit_xyz_km, in_view:{lat_deg, walker_mean, gps_mean, el_mask_deg}, dop:{lat_deg, walker_pdop_median, gps_pdop_median, skipped:{walker, gps}, samples_per_lat}}` (a null median PDOP means no sample had 4 satellites in view) |
+| `gravity_crossover.json` | `{generated_utc, machine:{cpu, threads, load_avg_1min_start, load_avg_1min_end}, model, model_file_bytes, max_degree_available, kernel, integrator, steps, passes, repeats_per_pass, stages_per_step, method, degrees, serial_us, parallel_us, serial_us_q25, serial_us_q75, parallel_us_q25, parallel_us_q75, overhead_us_degree2, auto_threshold_nmax, measured_crossover_nmax, crossover_range_nmax}` |
+| `benchmarks.json` | `{generated_utc, brahe_version, benchmark_run_utc, statistic, source, tasks:[{name, label, results:[{library, language, median_s, ratio_to_brahe}]}]}` |
 
 ## Slide registry
 
@@ -153,6 +156,19 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 | 18 | Section Walker | `moduleMap` | divider: orbits and propagation lit again |
 | 19 | Walker build | `code-walker`, `walkerGlobe` / walker_pnt.json | fresh; planes draw on one by one, then satellites move (kinematic, one period per 20 s); click 1: serial, parallel, threads, speedup |
 | 19 | Walker in view | `inViewByLat` / walker_pnt.json | fresh; GPS by latitude; click 1: Walker shell with inclination line, GPS dims, comparison sentence; cite is `config.source` |
+| 20 | Section Speed | `moduleMap` | divider: propagation lit |
+| 21 | Gravity | `gravityCrossover` / gravity_crossover.json | fresh; log-log axes, serial line with interquartile band draws on, serial values at the low and highest degree; click 1: parallel line and band (Lagunita) draw on, parallel values; click 2: brahe's automatic threshold as an exact vertical line, measured crossover range as a shaded band, sentence on the automatic switch |
+| 22 | Benchmarks | `benchmarkRatios` / benchmarks.json | fresh; one panel per task in file order, bars from the brahe (Rust) 1x line to each library's median ratio on a shared log axis (brahe Python in Lagunita), key in the last row; panels fade in one by one |
+| 23 | Adopters | `adopters` | fresh; nine logos plus Xona Space Systems and AWS by name, cells fade in |
+| 24 | Next | none | fresh; roadmap panel; click 1: the request for shareable orbital observations |
+| 25 | Links | `closeLinks` | fresh; brahe QR (brahe.space) with brahe.space and the GitHub repository, then the talk repository URL as text |
+| B | Backup | none | divider |
+| B1 | Pseudorange | none / station_range.json (`terms_m`) | fresh; equation and geometric range; clicks 1 to 3: light time, Earth rotation, satellite clock |
+| B2 | PDOP | `pdopByLat` / walker_pnt.json (`dop`) | fresh; GPS median PDOP by latitude (log); click 1: Walker shell with a gap and label where the median is null, GPS dims, skipped-sample counts |
+| B3 | Events | `code-valueEvent` | fresh; brahe example custom_value_event.py |
+| B4 | Extensible dynamics | `code-additionalDynamics`, `code-sensitivity` | fresh; brahe examples battery_tracking.py and sensitivity_analysis.py |
+| B5 | Property computer | `code-propertyComputer` | fresh; brahe example custom_property_computer.py, note that access takes ground locations |
+| B6 | History | none | fresh; two panels: examples and tests in CI, tests and LLM-assisted maintenance |
 
 ## Deck implementation
 
@@ -198,6 +214,5 @@ Stanford campus, 37.4275 N, 122.1697 W, 30 m.
 
 ## Needed from Duncan
 
-- `deck/img/logos/xona.png` (or svg): Xona Space Systems logo for the adopters slide.
-- `deck/img/logos/aws.png` (or svg): AWS logo for the adopters slide.
-- QR code image for `github.com/duncaneddy/2026_spnt_symposium` (the closing slide shows the URL as text until then).
+- `deck/img/logos/xona.png` (or svg): Xona Space Systems logo for the adopters slide (shown by name until then).
+- `deck/img/logos/aws.png` (or svg): AWS logo for the adopters slide (shown by name until then).

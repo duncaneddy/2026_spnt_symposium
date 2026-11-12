@@ -1,4 +1,4 @@
-scripts := ""
+scripts := "basemap skyplot gps_constellation quick_hits tle_vs_sp3 station_range leo_receiver mms_visibility walker_pnt gravity_crossover benchmarks"
 
 # Regenerate every data file the deck uses
 data:
