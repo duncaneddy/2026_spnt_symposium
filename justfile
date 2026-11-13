@@ -20,3 +20,7 @@ serve:
 # Run every code snippet shown on the slides
 snippets:
     for f in deck/snippets/*.py; do echo "$f"; uv run "$f" || exit 1; done
+
+# Export the main-path slides (no backup) to practical-astrodynamics-spnt-2026.pdf
+pdf:
+    uv run scripts/export_pdf.py

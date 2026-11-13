@@ -61,6 +61,7 @@ Downloads are cached under `deck/data/raw/`, so the deck does not need the netwo
 | `gravity_crossover.py` | Time per spherical-harmonic gravity evaluation against degree, with brahe's parallel mode forced off and on, measured through the numerical propagator |
 | `benchmarks.py` | Median run time of common tasks in brahe and other open-source libraries, relative to brahe, from brahe's comparative benchmark suite |
 | `snippet_outputs.py` | What each module snippet prints and how long it takes to run (imports excluded, median of three runs), for the output boxes on the module slides |
+| `export_pdf.py` | Not an analysis: exports the main-path slides (everything before the Backup divider) to `practical-astrodynamics-spnt-2026.pdf`, one page per slide in its final state, using the installed Google Chrome |
 
 ## Code on the slides
 
